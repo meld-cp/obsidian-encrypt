@@ -2,8 +2,9 @@
 
 Hide secrets in your [Obsidian.md](https://obsidian.md/) vaults.
 
+## Usage
 
-## Encrypt text
+### Encrypt text
 
 - Select the text to encrypt
 - Run the Encrypt/Decrypt command from the pallet (or bind a keyboard shortcut to it).
@@ -11,9 +12,12 @@ Hide secrets in your [Obsidian.md](https://obsidian.md/) vaults.
 
 <!-- TODO: add gif -->
 
-## Reveal encrypted text
+### Reveal encrypted text
 - Select the encrypted line to decrypt
 - Run the Encrypt/Decrypt command from the pallet.
 - Enter the correct password
 
 <!-- TODO: add gif -->
+
+<!-- ## Installation
+You can install the plugin via the Community Plugins tab within Obsidian. Just search for "Encrypt" -->
