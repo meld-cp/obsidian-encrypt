@@ -1,9 +1,9 @@
 {
-	"id": "meld-encrypt-dev",
-	"name": "Meld Encrypt (Dev)",
-	"version": "0.0.1",
+	"id": "meld-encrypt",
+	"name": "Meld Encrypt",
+	"version": "1.0.0",
 	"minAppVersion": "0.9.12",
-	"description": "Hide secrets in your vault",
+	"description": "Hide secrets in your vaults",
 	"author": "meld-cp",
 	"authorUrl": "https://github.com/meld-cp/obsidian-encrypt",
 	"isDesktopOnly": true
