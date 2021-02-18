@@ -4,7 +4,7 @@ Here are further details in case you ever need to decrypt snippets without Obsid
 
 The plugin uses the SubtleCrypto interface of the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto).
 
-The result of the AES-GCM encryption is surrounded by markers and Base64 encoded so it can be shown in notes, for example:
+The result of the AES-GCM encryption is Base64 encoded and surrounded by markers so it can be shown in notes, for example:
 
 ```
 %%🔐 iWPmKEJm7dzCJze3p6TAzVv+F2kYh29kd3FXyOEmHiU= 🔐%%
@@ -21,7 +21,7 @@ const algorithm = {
 	iv: new Uint8Array([196, 190, 240, 190, 188, 78, 41, 132, 15, 220, 84, 211]),
 	tagLength: 128
 }
-//See: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt
+//See: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/decrypt
 
 const key = await crypto.subtle.importKey(
 	'raw',
