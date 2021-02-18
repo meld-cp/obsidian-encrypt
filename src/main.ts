@@ -1,63 +1,28 @@
-import { App, Modal, Notice, Plugin, MarkdownView, PluginSettingTab, Setting } from 'obsidian';
+import { App, Modal, Notice, Plugin, MarkdownView } from 'obsidian';
 import CryptoES from 'crypto-es';
 
 
-// interface MyPluginSettings {
-// 	mySetting: string;
-// }
+const _PREFIX:string = '%%🔐 ';
+const _SUFFIX:string = ' 🔐%%';
 
-// const DEFAULT_SETTINGS: MyPluginSettings = {
-// 	mySetting: 'default'
-// }
-
-export default class MyPlugin extends Plugin {
-	//settings: MyPluginSettings;
-
+export default class MeldEncrypt extends Plugin {
 	async onload() {
-		//await this.loadSettings();
-
-		// this.addRibbonIcon('dice', 'Sample Plugin', () => {
-		// 	new Notice('This is a notice!');
-		// });
-
-		//this.addStatusBarItem().setText('Status Bar Text');
 
 		this.addCommand({
 			id: 'encrypt-decrypt',
 			name: 'Encrypt/Decrypt',
 			checkCallback: this._processEncryptDecryptCommand.bind(this)
 		});
-
-		//this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// this.registerCodeMirror((cm: CodeMirror.Editor) => {
-		// 	console.log('codemirror', cm);
-		// 	//cm.hasFocus()
-		// 	this.editors.push(cm);
-		// });
-
-		// this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-		// 	//console.log('click', evt);
-		// });
-
-		//this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-
-		//this.registerMarkdownCodeBlockProcessor()
 	}
 
 	_processEncryptDecryptCommand( checking: boolean ) : boolean {
 
-		let leaf = this.app.workspace.activeLeaf;
-		if (!leaf) {
+		let mdview = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!mdview) {
 			return false;
 		}
 
-		let editor : CodeMirror.Editor = null;
-
-		if ( leaf.view instanceof MarkdownView ) {
-			editor = leaf.view.sourceMode.cmEditor;
-		}
-
+		let editor = mdview.sourceMode.cmEditor;
 		if (!editor){
 		 	return false;
 		}
@@ -66,6 +31,8 @@ export default class MyPlugin extends Plugin {
 		var endPos = editor.listSelections().last().to();
 		var lastCharPos = editor.lineInfo(endPos.line).text.length;
 
+		// TODO: This causes the selection to expand, need to find a way
+		// to extract text without extending the selection.
 		editor.extendSelection(
 			{ line:startPos.line, ch:0 },
 			{ line:endPos.line, ch: lastCharPos }
@@ -77,8 +44,8 @@ export default class MyPlugin extends Plugin {
 			return false;
 		}
 		
-		const decrypt = selectionText.startsWith(MyPlugin._PREFIX) && selectionText.endsWith(MyPlugin._SUFFIX);
-		const encrypt = !selectionText.contains(MyPlugin._PREFIX) && !selectionText.contains(MyPlugin._SUFFIX);
+		const decrypt = selectionText.startsWith(_PREFIX) && selectionText.endsWith(_SUFFIX);
+		const encrypt = !selectionText.contains(_PREFIX) && !selectionText.contains(_SUFFIX);
 		
 		if ( !decrypt && !encrypt ){
 			return false;
@@ -90,28 +57,26 @@ export default class MyPlugin extends Plugin {
 		
 
 		// Fetch password from user
-		const modal = new PasswordModal( this.app );
-		const textModal = new TextModal( this.app, '🔓' );
-		textModal.onClose = () =>{
-			editor.focus();
-		}
-		
-		modal.onClose = () => {
-			if (modal.password){
+		const pwModal = new PasswordModal( this.app );
+		pwModal.onClose = () => {
+			if ( pwModal.password ){
 				// what should we do with it?
-				if (decrypt){
+				if ( decrypt ){
 					// decrypt
-					const decryptedText = this._decrypt( selectionText, modal.password );
+					const decryptedText = this._decrypt( selectionText, pwModal.password );
 					if (decryptedText === null){
 						new Notice('❌ Decryption failed!');
 					}else{
+						const textModal = new TextModal( this.app, '🔓' );
 						textModal.text = decryptedText;
-
+						textModal.onClose = () =>{
+							editor.focus();
+						}
 						textModal.open();
 					}
 				}else if(encrypt){
 					//encrypt
-					const encryptedText = this._encrypt( selectionText, modal.password );
+					const encryptedText = this._encrypt( selectionText, pwModal.password );
 					editor.replaceSelection( encryptedText );
 				}else{
 					return false;
@@ -119,44 +84,30 @@ export default class MyPlugin extends Plugin {
 			}
 			
 		}
-		modal.open();
+		pwModal.open();
 
 		return true;
 	}
 
-	static _PREFIX:string = '%%🔐 '
-	static _SUFFIX:string = ' 🔐%%'
+
 
 	private _encrypt( text: string, password: string): string {
-		return MyPlugin._PREFIX + CryptoES.AES.encrypt(text, password).toString()+ MyPlugin._SUFFIX;
-		//return '%%ENCRYPTED::' + text.replace('\n', '{EOL}') + '::ENCRYPTED%%'; // TODO
+		return _PREFIX + CryptoES.AES.encrypt(text, password).toString()+ _SUFFIX;
 	}
 
 	private _decrypt( text: string, password: string ):string {
 		try{
-			const ciphertext = text.replace(MyPlugin._PREFIX, '').replace(MyPlugin._SUFFIX, '');
+			const ciphertext = text.replace(_PREFIX, '').replace(_SUFFIX, '');
 			const bytes = CryptoES.AES.decrypt(ciphertext, password);
 			if ( bytes.sigBytes > 0 ){
 				return bytes.toString(CryptoES.enc.Utf8);
 			}
-			return null;
+			return null; // decrypt failed
 		}catch{
-			return null;
+			return null; // decrypt failed
 		}
-		//return ciphertext.replace('%%ENCRYPTED::', '').replace('::ENCRYPTED%%', '').replace('{EOL}','\n'); // TODO: 
 	}
 
-	onunload() {
-		//console.log('unloading plugin');
-	}
-
-	// async loadSettings() {
-	// 	this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	// }
-
-	// async saveSettings() {
-	// 	await this.saveData(this.settings);
-	// }
 }
 
 class PasswordModal extends Modal {
@@ -205,40 +156,9 @@ class TextModal extends Modal {
 		textEl.style.height = '100%';
 		textEl.rows = 10;
 		textEl.readOnly = true;
-		//textEl.focus();
-		
-
-		setImmediate(() =>{textEl.focus()});
+		//textEl.focus(); // Doesn't see to work here...
+		setImmediate(() =>{textEl.focus()}); //... but this does
 
 	}
 	
 }
-
-// class SampleSettingTab extends PluginSettingTab {
-// 	plugin: MyPlugin;
-
-// 	constructor(app: App, plugin: MyPlugin) {
-// 		super(app, plugin);
-// 		this.plugin = plugin;
-// 	}
-
-// 	display(): void {
-// 		let {containerEl} = this;
-
-// 		containerEl.empty();
-
-// 		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
-
-// 		new Setting(containerEl)
-// 			.setName('Setting #1')
-// 			.setDesc('It\'s a secret')
-// 			.addText(text => text
-// 				.setPlaceholder('Enter your secret')
-// 				.setValue('')
-// 				.onChange(async (value) => {
-// 					console.log('Secret: ' + value);
-// 					this.plugin.settings.mySetting = value;
-// 					await this.plugin.saveSettings();
-// 				}));
-// 	}
-// }
