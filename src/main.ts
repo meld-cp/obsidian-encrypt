@@ -92,7 +92,7 @@ export default class MeldEncrypt extends Plugin {
 
 
 	private _encrypt( text: string, password: string): string {
-		return _PREFIX + CryptoES.AES.encrypt(text, password).toString()+ _SUFFIX;
+		return _PREFIX + CryptoES.AES.encrypt(text, password).toString() + _SUFFIX;
 	}
 
 	private _decrypt( text: string, password: string ):string {
@@ -156,7 +156,7 @@ class TextModal extends Modal {
 		textEl.style.height = '100%';
 		textEl.rows = 10;
 		textEl.readOnly = true;
-		//textEl.focus(); // Doesn't see to work here...
+		//textEl.focus(); // Doesn't seem to work here...
 		setImmediate(() =>{textEl.focus()}); //... but this does
 
 	}
