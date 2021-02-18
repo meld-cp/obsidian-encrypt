@@ -4,7 +4,7 @@ Hide secrets in your [Obsidian.md](https://obsidian.md/) notes.
 
 This plugin allows you to encrypt portions of your notes allowing you to store sensitive details along with other information.
 
-Under the hood it uses the Advanced Encryption Standard (AES) cipher from the [Crypro-ES](https://github.com/entronad/crypto-es) module.
+Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 
 > NOTE: Your passwords are never stored anywhere, if you forget your password you can't decrypt your text.
 
@@ -53,3 +53,6 @@ Thank you for your support 🙏
 
 <a href="https://www.buymeacoffee.com/cleon"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=cleon&button_colour=40DCA5&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00"></a>
 
+
+## More info
+- [Crypto details](docs/crypto-details.md)
