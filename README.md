@@ -13,7 +13,7 @@ Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 ### How to encrypt text
 
 1. Select the text lines to encrypt  
-![](docs/assets/eg_e_text.png)
+![](docs/assets/eg_e_text.png)  
 Partial, selection is ok, it will be expanded to include the whole line.
 
 1. Run the Encrypt/Decrypt command from the palette (or bind a keyboard shortcut to it)  
