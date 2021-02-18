@@ -1,11 +1,12 @@
 import typescript from '@rollup/plugin-typescript';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import copy from "rollup-plugin-copy-assets-to";
 
 export default {
-  input: './src/main.ts',
+  input: 'src/main.ts',
   output: {
-    dir: './dist',
+    file: 'dist/main.js',
     sourcemap: 'inline',
     format: 'cjs',
     exports: 'default'
@@ -15,5 +16,13 @@ export default {
     typescript(),
     nodeResolve({browser: true}),
     commonjs(),
-  ]
+    copy({
+      assets: [
+        'manifest.json',
+        'src/style.css'
+      ],
+      outputDir: 'dist'
+    }),
+  ],
+
 };

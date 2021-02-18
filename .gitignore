@@ -7,5 +7,5 @@ node_modules
 package-lock.json
 
 # build
-main.js
+dist/*
 *.js.map
