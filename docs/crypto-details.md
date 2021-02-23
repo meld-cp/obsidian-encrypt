@@ -10,7 +10,7 @@ The result of the AES-GCM encryption is Base64 encoded and surrounded by markers
 %%🔐 iWPmKEJm7dzCJze3p6TAzVv+F2kYh29kd3FXyOEmHiU= 🔐%%
 ```
 
-After stripping the prefix (%%🔐 ) and suffix ( 🔐%%) from the text, you'll need to convert the base64 encoding back to an array of bytes.  Form here, you can decrypt using:
+After stripping the prefix (%%🔐 ) and suffix ( 🔐%%) from the text, you'll need to convert the base64 encoding back to an array of bytes.  From here, you can decrypt using:
 ```js
 const decryptedBytes = crypto.subtle.decrypt(algorithm, key, bytesToDecrypt)
 ```
