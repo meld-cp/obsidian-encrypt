@@ -12,11 +12,17 @@ export default class MeldEncrypt extends Plugin {
 		this.addCommand({
 			id: 'encrypt-decrypt',
 			name: 'Encrypt/Decrypt',
-			checkCallback: this.processEncryptDecryptCommand.bind(this)
+			checkCallback: (checking) => this.processEncryptDecryptCommand(checking, false)
+		});
+
+		this.addCommand({
+			id: 'encrypt-decrypt-in-place',
+			name: 'Encrypt/Decrypt In-place',
+			checkCallback: (checking) => this.processEncryptDecryptCommand(checking, true)
 		});
 	}
 
-	processEncryptDecryptCommand(checking: boolean): boolean {
+	processEncryptDecryptCommand(checking: boolean, decryptInPlace: boolean): boolean {
 
 		const mdview = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!mdview) {
@@ -68,7 +74,8 @@ export default class MeldEncrypt extends Plugin {
 				selectionText,
 				pwModal.password,
 				startPos,
-				endPos
+				endPos,
+				decryptInPlace
 			);
 		}
 		pwModal.open();
@@ -96,6 +103,7 @@ export default class MeldEncrypt extends Plugin {
 		password: string,
 		selectionStart: CodeMirror.Position,
 		selectionEnd: CodeMirror.Position,
+		decryptInPlace: boolean
 	) {
 		// decrypt
 		const base64CipherText = this.removeMarkers(selectionText);
@@ -104,15 +112,21 @@ export default class MeldEncrypt extends Plugin {
 		if (decryptedText === null) {
 			new Notice('❌ Decryption failed!');
 		} else {
-			const decryptModal = new DecryptModal(this.app, '🔓', decryptedText);
-			decryptModal.onClose = () => {
-				editor.focus();
-				if (decryptModal.decryptInPlace) {
-					editor.setSelection(selectionStart, selectionEnd);
-					editor.replaceSelection(decryptedText, 'around');
+
+			if (decryptInPlace) {
+				editor.setSelection(selectionStart, selectionEnd);
+				editor.replaceSelection(decryptedText, 'around');
+			} else {
+				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText);
+				decryptModal.onClose = () => {
+					editor.focus();
+					if (decryptModal.decryptInPlace) {
+						editor.setSelection(selectionStart, selectionEnd);
+						editor.replaceSelection(decryptedText, 'around');
+					}
 				}
+				decryptModal.open();
 			}
-			decryptModal.open();
 		}
 	}
 
