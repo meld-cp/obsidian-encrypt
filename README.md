@@ -15,32 +15,32 @@ Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 ### How to encrypt text
 
 1. Select the text lines to encrypt  
-![](/docs/assets/eg_e_text.png)  
+![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/eg_e_text.png)  
 Partial, selection is ok, it will be expanded to include the whole line.
 
 1. Run the Encrypt/Decrypt command from the palette (or bind a keyboard shortcut to it)  
-![](/docs/assets/eg_ed_cp.png)
+![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_ed_cp.png)
 
 1. Enter a password to use  
-![](docs/assets/eg_ed_pw.png)
+![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_ed_pw.png)
 
 1. Your selected lines are now encrypted  
-![](/docs/assets/eg_e_r.png)  
+![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_e_r.png)  
 
 <!-- TODO: add gif -->
 
 ### How to reveal your encrypted text
 1. Place your cursor on the encrypted line  
-![](docs/assets/eg_d_text.png)
+![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_d_text.png)
 
 1. Run the Encrypt/Decrypt command from the palette  
-![](/docs/assets/eg_ed_cp.png)
+![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_ed_cp.png)
 
 1. Enter the correct password  
-![](/docs/assets/eg_ed_pw.png)
+![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_ed_pw.png)
 
 1. Your decrypted text is revealed  
-![](/docs/assets/eg_d_r.png)
+![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_d_r.png)
 
 <!-- TODO: add gif -->
 
@@ -57,4 +57,4 @@ Thank you for your support 🙏
 
 
 ## More info
-- [Crypto details](/docs/crypto-details.md)
+- [Crypto details](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/crypto-details.md)
