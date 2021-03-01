@@ -8,7 +8,7 @@ This plugin allows you to encrypt portions of your notes allowing you to store s
 
 Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 
-> NOTE: Your passwords are never stored anywhere, if you forget your password you can't decrypt your text.
+> WARNING: Your passwords are never stored anywhere, if you forget your password you can't decrypt your text.
 
 ## Usage
 
