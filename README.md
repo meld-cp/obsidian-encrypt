@@ -15,32 +15,32 @@ Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 ### How to encrypt text
 
 1. Select the text lines to encrypt  
-![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/eg_e_text.png)  
+<img alt="Select the text lines to encrypt" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_e_text.png" /> 
 Partial, selection is ok, it will be expanded to include the whole line.
 
 1. Run the Encrypt/Decrypt command from the palette (or bind a keyboard shortcut to it)  
-![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_ed_cp.png)
+<img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
 
 1. Enter a password to use  
-![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_ed_pw.png)
+<img alt="Enter a password to use" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_pw.png" /> 
 
 1. Your selected lines are now encrypted  
-![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_e_r.png)  
+<img alt="Your selected lines are now encrypted" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_e_r.png" /> 
 
 <!-- TODO: add gif -->
 
 ### How to reveal your encrypted text
 1. Place your cursor on the encrypted line  
-![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_d_text.png)
+<img alt="Place your cursor on the encrypted line" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_d_text.png" /> 
 
 1. Run the Encrypt/Decrypt command from the palette  
-![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_ed_cp.png)
+<img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
 
 1. Enter the correct password  
-![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_ed_pw.png)
+<img alt="Enter the correct password" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_pw.png" /> 
 
 1. Your decrypted text is revealed  
-![](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/assets/eg_d_r.png)
+<img alt="Your decrypted text is revealed" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_d_r.png" /> 
 
 <!-- TODO: add gif -->
 
