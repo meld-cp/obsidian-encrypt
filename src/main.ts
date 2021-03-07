@@ -2,13 +2,35 @@ import { Notice, Plugin, MarkdownView } from 'obsidian';
 import DecryptModal from './DecryptModal';
 import PasswordModal from './PasswordModal';
 import CryptoHelper from './CryptoHelper';
+import MeldEncryptSettingsTab from './MeldEncryptSettingsTab';
 
 const _PREFIX: string = '%%🔐 ';
 const _SUFFIX: string = ' 🔐%%';
 
+interface MeldEncryptPluginSettings {
+	confirmPassword: boolean;
+	rememberPassword: boolean;
+	rememberPasswordTimeout: number;
+}
+
+const DEFAULT_SETTINGS: MeldEncryptPluginSettings = {
+	confirmPassword: true,
+	rememberPassword: true,
+	rememberPasswordTimeout: 30
+}
+
 export default class MeldEncrypt extends Plugin {
 
+	settings: MeldEncryptPluginSettings;
+	passwordLastUsedExpiry: number
+	passwordLastUsed: string;
+
 	async onload() {
+
+		await this.loadSettings();
+
+		this.addSettingTab(new MeldEncryptSettingsTab(this.app, this));
+
 		this.addCommand({
 			id: 'encrypt-decrypt',
 			name: 'Encrypt/Decrypt',
@@ -20,6 +42,14 @@ export default class MeldEncrypt extends Plugin {
 			name: 'Encrypt/Decrypt In-place',
 			checkCallback: (checking) => this.processEncryptDecryptCommand(checking, true)
 		});
+	}
+
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	async saveSettings() {
+		await this.saveData(this.settings);
 	}
 
 	processEncryptDecryptCommand(checking: boolean, decryptInPlace: boolean): boolean {
@@ -59,24 +89,57 @@ export default class MeldEncrypt extends Plugin {
 		}
 
 		// Fetch password from user
-		const pwModal = new PasswordModal(this.app);
-		if (encrypt) {
-			pwModal.onClose = () => this.encryptSelection(
-				editor,
-				selectionText,
-				pwModal.password,
-				startPos,
-				endPos
-			);
-		} else {
-			pwModal.onClose = () => this.decryptSelection(
-				editor,
-				selectionText,
-				pwModal.password,
-				startPos,
-				endPos,
-				decryptInPlace
-			);
+
+		// determine default password
+		const isRememberPasswordExpired =
+			!this.settings.rememberPassword
+			|| (
+				this.passwordLastUsedExpiry != null
+				&& Date.now() > this.passwordLastUsedExpiry
+			)
+			;
+
+		if (isRememberPasswordExpired) {
+			this.passwordLastUsed = '';
+		}
+
+		const confirmPassword = encrypt && this.settings.confirmPassword;
+
+		const pwModal = new PasswordModal(this.app, confirmPassword, this.passwordLastUsed);
+		pwModal.onClose = () => {
+			const pw = pwModal.password ?? ''
+			if (pw.length == 0) {
+				return;
+			}
+
+			// remember password?
+			if (this.settings.rememberPassword) {
+				this.passwordLastUsed = pw;
+				this.passwordLastUsedExpiry =
+					this.settings.rememberPasswordTimeout == 0
+						? null
+						: Date.now() + this.settings.rememberPasswordTimeout * 1000 * 60// new expiry
+					;
+			}
+
+			if (encrypt) {
+				this.encryptSelection(
+					editor,
+					selectionText,
+					pw,
+					startPos,
+					endPos
+				);
+			} else {
+				this.decryptSelection(
+					editor,
+					selectionText,
+					pw,
+					startPos,
+					endPos,
+					decryptInPlace
+				);
+			}
 		}
 		pwModal.open();
 
