@@ -15,6 +15,8 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		let { containerEl } = this;
 
 		containerEl.empty();
+		
+		containerEl.createEl('h2', {text: 'Settings for Meld Encrypt'});
 
 		new Setting(containerEl)
 		.setName('Confirm password?')
