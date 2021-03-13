@@ -57,4 +57,4 @@ Thank you for your support 🙏
 
 
 ## More info
-- [Crypto details](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/assets/docs/crypto-details.md)
+- [Crypto details](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/crypto-details.md)
