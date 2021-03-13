@@ -4,7 +4,7 @@
 
 Hide secrets in your [Obsidian.md](https://obsidian.md/) notes.
 
-This plugin allows you to encrypt portions of your notes allowing you to store sensitive details along with other information.
+This plugin allows you to encrypt portions of text so you can store sensitive details within and alongside your notes.
 
 Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 
@@ -12,48 +12,53 @@ Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 
 ## Usage
 
+<!-- https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/ -->
+
 ### How to encrypt text
 
 1. Select the text lines to encrypt  
-<img alt="Select the text lines to encrypt" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_e_text.png" /> 
-Partial, selection is ok, it will be expanded to include the whole line.
+<img alt="Select the text lines to encrypt" src="docs/assets/eg_e_text.png" />  
+	> Note: Partial, selection is ok, it will be expanded to include the whole line.
 
 1. Run the Encrypt/Decrypt command from the palette (or bind a keyboard shortcut to it)  
-<img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
+<img alt="Run the Encrypt/Decrypt command" src="docs/assets/eg_ed_cp.png" /> 
 
-1. Enter a password to use  
-<img alt="Enter a password to use" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_pw.png" /> 
+1. Enter and confirm a password to use  
+<img alt="Enter a password to use" src="docs/assets/eg_e_pw.png" /> 
 
 1. Your selected lines are now encrypted  
-<img alt="Your selected lines are now encrypted" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_e_r.png" /> 
+<img alt="Your selected lines are now encrypted" src="docs/assets/eg_e_r.png" /> 
 
-<!-- TODO: add gif -->
 
 ### How to reveal your encrypted text
 1. Place your cursor on the encrypted line  
-<img alt="Place your cursor on the encrypted line" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_d_text.png" /> 
+<img alt="Place your cursor on the encrypted line" src="docs/assets/eg_d_text.png" /> 
 
 1. Run the Encrypt/Decrypt command from the palette  
-<img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
+<img alt="Run the Encrypt/Decrypt command" src="docs/assets/eg_ed_cp.png" /> 
+	> Note: If you choose 'Encrypt/Decrypt In-place' your text will be decrypted directly into the editor without showing the dialog in step 4 below.
 
 1. Enter the correct password  
-<img alt="Enter the correct password" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_pw.png" /> 
+<img alt="Enter the correct password" src="docs/assets/eg_d_pw.png" /> 
+	> Note: Your previously used password is filled in by default (You can change this in the plugin settings).
 
 1. Your decrypted text is revealed  
-<img alt="Your decrypted text is revealed" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_d_r.png" /> 
+<img alt="Your decrypted text is revealed" src="docs/assets/eg_d_r.png" /> 
+	> Note: Click 'Decrypt In-place' to replace the encrypted text in the editor.
 
-<!-- TODO: add gif -->
+## Settings
+<img alt="Your decrypted text is revealed" src="docs/assets/eg_settings.png" /> 
 
 ## Installation
 
 You can install the plugin via the Community Plugins tab within Obsidian by searching for "Encrypt"
 
 
-## Find this plugin useful?
-
-Thank you for your support 🙏
+## Do you find this plugin useful?
 
 <a href="https://www.buymeacoffee.com/cleon"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=cleon&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
 
-## More info
-- [Crypto details](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/crypto-details.md)
+Thank you for your support 🙏
+
+## More information
+- [Encryption details](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/crypto-details.md)
