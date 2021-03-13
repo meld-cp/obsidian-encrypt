@@ -17,37 +17,37 @@ Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 ### How to encrypt text
 
 1. Select the text lines to encrypt  
-<img alt="Select the text lines to encrypt" src="docs/assets/eg_e_text.png" />  
+<img alt="Select the text lines to encrypt" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_e_text.png" />  
 	> Note: Partial, selection is ok, it will be expanded to include the whole line.
 
 1. Run the Encrypt/Decrypt command from the palette (or bind a keyboard shortcut to it)  
-<img alt="Run the Encrypt/Decrypt command" src="docs/assets/eg_ed_cp.png" /> 
+<img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
 
 1. Enter and confirm a password to use  
-<img alt="Enter a password to use" src="docs/assets/eg_e_pw.png" /> 
+<img alt="Enter a password to use" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_e_pw.png" /> 
 
 1. Your selected lines are now encrypted  
-<img alt="Your selected lines are now encrypted" src="docs/assets/eg_e_r.png" /> 
+<img alt="Your selected lines are now encrypted" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_e_r.png" /> 
 
 
 ### How to reveal your encrypted text
 1. Place your cursor on the encrypted line  
-<img alt="Place your cursor on the encrypted line" src="docs/assets/eg_d_text.png" /> 
+<img alt="Place your cursor on the encrypted line" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_d_text.png" /> 
 
 1. Run the Encrypt/Decrypt command from the palette  
-<img alt="Run the Encrypt/Decrypt command" src="docs/assets/eg_ed_cp.png" /> 
+<img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
 	> Note: If you choose 'Encrypt/Decrypt In-place' your text will be decrypted directly into the editor without showing the dialog in step 4 below.
 
 1. Enter the correct password  
-<img alt="Enter the correct password" src="docs/assets/eg_d_pw.png" /> 
+<img alt="Enter the correct password" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_d_pw.png" /> 
 	> Note: Your previously used password is filled in by default (You can change this in the plugin settings).
 
 1. Your decrypted text is revealed  
-<img alt="Your decrypted text is revealed" src="docs/assets/eg_d_r.png" /> 
+<img alt="Your decrypted text is revealed" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_d_r.png" /> 
 	> Note: Click 'Decrypt In-place' to replace the encrypted text in the editor.
 
 ## Settings
-<img alt="Your decrypted text is revealed" src="docs/assets/eg_settings.png" /> 
+<img alt="Your decrypted text is revealed" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_settings.png" /> 
 
 ## Installation
 
