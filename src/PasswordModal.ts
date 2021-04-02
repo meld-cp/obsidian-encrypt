@@ -19,7 +19,7 @@ export default class PasswordModal extends Modal {
 		const pwInputEl = contentEl.createDiv()
 			.createSpan({ text: '🔑 ' })
 			.createEl('input', { type: 'password', value: this.defaultPassword ?? '' })
-			;
+		;
 
 		pwInputEl.placeholder = 'Enter your password';
 		pwInputEl.style.width = '93%';
@@ -30,13 +30,16 @@ export default class PasswordModal extends Modal {
 		const pwConfirmInputEl = confirmPwContainerEl
 			.createSpan({ text: '🔑 ' })
 			.createEl('input', { type: 'password', value: this.defaultPassword ?? '' })
-			;
+		;
 
 		pwConfirmInputEl.placeholder = 'Confirm your password';
 		pwConfirmInputEl.style.width = '93%';
 
 		pwConfirmInputEl.addEventListener('keypress', (ev) => {
-			if (ev.code === 'Enter' && pwConfirmInputEl.value.length > 0) {
+			if (
+				( ev.code === 'Enter' || ev.code === 'NumpadEnter' )
+				&& pwConfirmInputEl.value.length > 0
+			) {
 				ev.preventDefault();
 
 				if (pwInputEl.value == pwConfirmInputEl.value){
@@ -62,7 +65,10 @@ export default class PasswordModal extends Modal {
 		messageEl.hide();
 
 		pwInputEl.addEventListener('keypress', (ev) => {
-			if (ev.code === 'Enter' && pwInputEl.value.length > 0) {
+			if (
+				( ev.code === 'Enter' || ev.code === 'NumpadEnter' )
+				&& pwInputEl.value.length > 0
+			) {
 				ev.preventDefault();
 				if (this.confirmPassword) {
 					// confim password
