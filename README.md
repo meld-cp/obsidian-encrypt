@@ -19,7 +19,7 @@ Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 1. Select the text lines to encrypt  
 <img alt="Select the text lines to encrypt" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_e_text.png" />  
 	
-> Note: Partial, selection is ok, it will be expanded to include the whole line.
+> Note: Partial selection is ok, it will be expanded to include the whole line.
 
 2. Run the Encrypt/Decrypt command from the palette (or bind a keyboard shortcut to it)  
 <img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
