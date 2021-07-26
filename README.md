@@ -8,7 +8,9 @@ This plugin allows you to encrypt portions of text so you can store sensitive de
 
 Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 
-> WARNING: Use at your own risk.  Your passwords are never stored anywhere, if you forget your password you can't decrypt your text.
+> WARNING: Use at your own risk.
+> - Your passwords are never stored anywhere, if you forget your password you can't decrypt your text.
+> - There havn't been any audits for the soundness of encryption methods being used.  Unwanted decyption by a 3rd party may still be possible if they have access to your files.
 
 ## Usage
 
