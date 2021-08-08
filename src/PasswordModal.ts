@@ -27,6 +27,7 @@ export default class PasswordModal extends Modal {
 		const inputInputNextBtnEl = inputPwContainerEl.createEl('button', { text: '→' });
 		inputInputNextBtnEl.style.display = 'inline';
 		inputInputNextBtnEl.style.marginLeft = "1em";
+		inputInputNextBtnEl.style.width = "4em";
 		inputInputNextBtnEl.addEventListener('click', (ev) => {
 			inputPasswordHandler();
 		});
@@ -43,6 +44,7 @@ export default class PasswordModal extends Modal {
 		const confirmInputNextBtnEl = confirmPwContainerEl.createEl('button', { text: '→' });
 		confirmInputNextBtnEl.style.display = 'inline';
 		confirmInputNextBtnEl.style.marginLeft = "1em";
+		confirmInputNextBtnEl.style.width = "4em";
 		confirmInputNextBtnEl.addEventListener('click', (ev) => {
 			confirmPasswordHandler();
 		});
