@@ -10,7 +10,7 @@ Under the hood it uses the Advanced Encryption Standard (AES) in GCM mode.
 
 > WARNING: Use at your own risk.
 > - Your passwords are never stored anywhere, if you forget your password you can't decrypt your text.
-> - There havn't been any audits for the soundness of encryption methods being used.  Unwanted decyption by a 3rd party may still be possible if they have access to your files.
+> - There haven't been any audits for the soundness of encryption methods being used.  Unwanted decryption by a 3rd party may still be possible if they have access to your files.
 
 ## Usage
 
@@ -65,6 +65,3 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 <a href="https://www.buymeacoffee.com/cleon"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=cleon&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
 
 Thank you for your support 🙏
-
-## More information
-- [Encryption details](https://github.com/meld-cp/obsidian-encrypt/blob/main/docs/crypto-details.md)

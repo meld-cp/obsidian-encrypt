@@ -1,11 +1,105 @@
+const vectorSize	= 16;
+const utf8Encoder	= new TextEncoder();
+const utf8Decoder	= new TextDecoder();
+const iterations	= 1000;
+const salt			= utf8Encoder.encode(navigator.userAgent);
 
-const algorithm = {
+export class CryptoHelperV2 {
+
+	private async deriveKey(password:string) :Promise<CryptoKey> {
+		const buffer     = utf8Encoder.encode(password);
+		const key        = await crypto.subtle.importKey('raw', buffer, {name: 'PBKDF2'}, false, ['deriveKey']);
+		const privateKey = crypto.subtle.deriveKey(
+			{
+				name: 'PBKDF2',
+				hash: {name: 'SHA-256'},
+				iterations,
+				salt
+			},
+			key,
+			{
+				name: 'AES-GCM',
+				length: 256
+			},
+			false,
+			['encrypt', 'decrypt']
+		);
+		
+		return privateKey;
+	}
+
+	public async encryptToBase64(text: string, password: string): Promise<string> {
+
+		const key = await this.deriveKey(password);
+		
+		const textBytesToEncrypt = utf8Encoder.encode(text);
+		const vector = crypto.getRandomValues(new Uint8Array(vectorSize));
+		
+		// encrypt into bytes
+		const encryptedBytes = new Uint8Array(
+			await crypto.subtle.encrypt(
+				{name: 'AES-GCM', iv: vector},
+				key,
+				textBytesToEncrypt
+			)
+		);
+		
+		const finalBytes = new Uint8Array( vector.byteLength + encryptedBytes.byteLength );
+		finalBytes.set( vector, 0 );
+		finalBytes.set( encryptedBytes, vector.byteLength );
+
+		//convert array to base64
+		const base64Text = btoa( String.fromCharCode(...finalBytes) );
+
+		return base64Text;
+	}
+
+	private stringToArray(str: string): Uint8Array {
+		var result = [];
+		for (var i = 0; i < str.length; i++) {
+			result.push(str.charCodeAt(i));
+		}
+		return new Uint8Array(result);
+	}
+
+	public async decryptFromBase64(base64Encoded: string, password: string): Promise<string> {
+		try {
+
+			let bytesToDecode = this.stringToArray(atob(base64Encoded));
+			
+			// extract iv
+			const vector = bytesToDecode.slice(0,vectorSize);
+
+			// extract encrypted text
+			const encryptedTextBytes = bytesToDecode.slice(vectorSize);
+
+			const key = await this.deriveKey(password);
+
+			// decrypt into bytes
+			let decryptedBytes = await crypto.subtle.decrypt(
+				{name: 'AES-GCM', iv: vector},
+				key,
+				encryptedTextBytes
+			);
+
+			// convert bytes to text
+			let decryptedText = utf8Decoder.decode(decryptedBytes);
+			return decryptedText;
+		} catch (e) {
+			//console.error(e);
+			return null;
+		}
+	}
+
+}
+
+const algorithmObsolete = {
 	name: 'AES-GCM',
 	iv: new Uint8Array([196, 190, 240, 190, 188, 78, 41, 132, 15, 220, 84, 211]),
 	tagLength: 128
 }
 
-export default class CryptoHelper {
+export class CryptoHelperObsolete {
 
 	private async buildKey(password: string) {
 		let utf8Encode = new TextEncoder();
@@ -16,7 +110,7 @@ export default class CryptoHelper {
 		let key = await crypto.subtle.importKey(
 			'raw',
 			passwordDigest,
-			algorithm,
+			algorithmObsolete,
 			false,
 			['encrypt', 'decrypt']
 		);
@@ -32,7 +126,7 @@ export default class CryptoHelper {
 
 		// encrypt into bytes
 		let encryptedBytes = new Uint8Array(await crypto.subtle.encrypt(
-			algorithm, key, bytesToEncrypt
+			algorithmObsolete, key, bytesToEncrypt
 		));
 
 		//convert array to base64
@@ -57,7 +151,7 @@ export default class CryptoHelper {
 			let key = await this.buildKey(password);
 
 			// decrypt into bytes
-			let decryptedBytes = await crypto.subtle.decrypt(algorithm, key, bytesToDecrypt);
+			let decryptedBytes = await crypto.subtle.decrypt(algorithmObsolete, key, bytesToDecrypt);
 
 			// convert bytes to text
 			let utf8Decode = new TextDecoder();

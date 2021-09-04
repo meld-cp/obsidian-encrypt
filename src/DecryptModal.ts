@@ -19,7 +19,7 @@ export default class DecryptModal extends Modal {
 		textEl.rows = 10;
 		textEl.readOnly = true;
 		//textEl.focus(); // Doesn't seem to work here...
-		setImmediate(() => { textEl.focus() }); //... but this does
+		setTimeout(() => { textEl.focus() },100); //... but this does
 
 
 		const btnContainerEl = contentEl.createDiv('');

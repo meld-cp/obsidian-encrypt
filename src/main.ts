@@ -1,10 +1,11 @@
-import { Notice, Plugin, MarkdownView } from 'obsidian';
+import { Notice, Plugin, MarkdownView, Editor } from 'obsidian';
 import DecryptModal from './DecryptModal';
 import PasswordModal from './PasswordModal';
-import CryptoHelper from './CryptoHelper';
+import { CryptoHelperV2, CryptoHelperObsolete} from './CryptoHelper';
 import MeldEncryptSettingsTab from './MeldEncryptSettingsTab';
 
-const _PREFIX: string = '%%🔐 ';
+const _PREFIX_OBSOLETE: string = '%%🔐 ';
+const _PREFIX_A: string = '%%🔐α ';
 const _SUFFIX: string = ' 🔐%%';
 
 interface MeldEncryptPluginSettings {
@@ -59,7 +60,7 @@ export default class MeldEncrypt extends Plugin {
 			return false;
 		}
 
-		const editor = mdview.sourceMode.cmEditor;
+		const editor = mdview.editor;
 		if (!editor) {
 			return false;
 		}
@@ -77,8 +78,11 @@ export default class MeldEncrypt extends Plugin {
 			return false;
 		}
 
-		const decrypt = selectionText.startsWith(_PREFIX) && selectionText.endsWith(_SUFFIX);
-		const encrypt = !selectionText.contains(_PREFIX) && !selectionText.contains(_SUFFIX);
+		const decrypt_obs = selectionText.startsWith(_PREFIX_OBSOLETE) && selectionText.endsWith(_SUFFIX);
+		const decrypt_a = selectionText.startsWith(_PREFIX_A) && selectionText.endsWith(_SUFFIX);
+
+		const decrypt = decrypt_obs || decrypt_a;
+		const encrypt = !selectionText.contains(_PREFIX_OBSOLETE) && !selectionText.contains(_SUFFIX);
 
 		if (!decrypt && !encrypt) {
 			return false;
@@ -99,11 +103,12 @@ export default class MeldEncrypt extends Plugin {
 			)
 			;
 
-		if (isRememberPasswordExpired) {
+		const confirmPassword = encrypt && this.settings.confirmPassword;
+
+		if ( isRememberPasswordExpired || confirmPassword ) {
+			// forget password
 			this.passwordLastUsed = '';
 		}
-
-		const confirmPassword = encrypt && this.settings.confirmPassword;
 
 		const pwModal = new PasswordModal(this.app, confirmPassword, this.passwordLastUsed);
 		pwModal.onClose = () => {
@@ -131,14 +136,26 @@ export default class MeldEncrypt extends Plugin {
 					endPos
 				);
 			} else {
-				this.decryptSelection(
-					editor,
-					selectionText,
-					pw,
-					startPos,
-					endPos,
-					decryptInPlace
-				);
+
+				if (decrypt_a){
+					this.decryptSelection_a(
+						editor,
+						selectionText,
+						pw,
+						startPos,
+						endPos,
+						decryptInPlace
+					);
+				}else{
+					this.decryptSelectionObsolete(
+						editor,
+						selectionText,
+						pw,
+						startPos,
+						endPos,
+						decryptInPlace
+					);
+				}
 			}
 		}
 		pwModal.open();
@@ -147,30 +164,32 @@ export default class MeldEncrypt extends Plugin {
 	}
 
 	private async encryptSelection(
-		editor: CodeMirror.Editor,
+		editor: Editor,
 		selectionText: string,
 		password: string,
 		finalSelectionStart: CodeMirror.Position,
 		finalSelectionEnd: CodeMirror.Position,
 	) {
 		//encrypt
-		const crypto = new CryptoHelper();
+		const crypto = new CryptoHelperV2();
 		const base64EncryptedText = this.addMarkers(await crypto.encryptToBase64(selectionText, password));
 		editor.setSelection(finalSelectionStart, finalSelectionEnd);
-		editor.replaceSelection(base64EncryptedText, 'around');
+		editor.replaceSelection(base64EncryptedText);
 	}
 
-	private async decryptSelection(
-		editor: CodeMirror.Editor,
+	private async decryptSelection_a(
+		editor: Editor,
 		selectionText: string,
 		password: string,
 		selectionStart: CodeMirror.Position,
 		selectionEnd: CodeMirror.Position,
 		decryptInPlace: boolean
 	) {
+		//console.log('decryptSelection_a');
 		// decrypt
 		const base64CipherText = this.removeMarkers(selectionText);
-		const crypto = new CryptoHelper();
+
+		const crypto = new CryptoHelperV2();
 		const decryptedText = await crypto.decryptFromBase64(base64CipherText, password);
 		if (decryptedText === null) {
 			new Notice('❌ Decryption failed!');
@@ -178,14 +197,48 @@ export default class MeldEncrypt extends Plugin {
 
 			if (decryptInPlace) {
 				editor.setSelection(selectionStart, selectionEnd);
-				editor.replaceSelection(decryptedText, 'around');
+				editor.replaceSelection(decryptedText);
 			} else {
 				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText);
 				decryptModal.onClose = () => {
 					editor.focus();
 					if (decryptModal.decryptInPlace) {
 						editor.setSelection(selectionStart, selectionEnd);
-						editor.replaceSelection(decryptedText, 'around');
+						editor.replaceSelection(decryptedText);
+					}
+				}
+				decryptModal.open();
+			}
+		}
+	}
+
+	private async decryptSelectionObsolete(
+		editor: Editor,
+		selectionText: string,
+		password: string,
+		selectionStart: CodeMirror.Position,
+		selectionEnd: CodeMirror.Position,
+		decryptInPlace: boolean
+	) {
+		//console.log('decryptSelectionObsolete');
+		// decrypt
+		const base64CipherText = this.removeMarkers(selectionText);
+		const crypto = new CryptoHelperObsolete();
+		const decryptedText = await crypto.decryptFromBase64(base64CipherText, password);
+		if (decryptedText === null) {
+			new Notice('❌ Decryption failed!');
+		} else {
+
+			if (decryptInPlace) {
+				editor.setSelection(selectionStart, selectionEnd);
+				editor.replaceSelection(decryptedText);
+			} else {
+				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText);
+				decryptModal.onClose = () => {
+					editor.focus();
+					if (decryptModal.decryptInPlace) {
+						editor.setSelection(selectionStart, selectionEnd);
+						editor.replaceSelection(decryptedText);
 					}
 				}
 				decryptModal.open();
@@ -194,15 +247,18 @@ export default class MeldEncrypt extends Plugin {
 	}
 
 	private removeMarkers(text: string): string {
-		if (text.startsWith(_PREFIX) && text.endsWith(_SUFFIX)) {
-			return text.replace(_PREFIX, '').replace(_SUFFIX, '');
+		if (text.startsWith(_PREFIX_A) && text.endsWith(_SUFFIX)) {
+			return text.replace(_PREFIX_A, '').replace(_SUFFIX, '');
+		}
+		if (text.startsWith(_PREFIX_OBSOLETE) && text.endsWith(_SUFFIX)) {
+			return text.replace(_PREFIX_OBSOLETE, '').replace(_SUFFIX, '');
 		}
 		return text;
 	}
 
 	private addMarkers(text: string): string {
-		if (!text.contains(_PREFIX) && !text.contains(_SUFFIX)) {
-			return _PREFIX.concat(text, _SUFFIX);
+		if (!text.contains(_PREFIX_OBSOLETE) && !text.contains(_PREFIX_A) && !text.contains(_SUFFIX)) {
+			return _PREFIX_A.concat(text, _SUFFIX);
 		}
 		return text;
 	}

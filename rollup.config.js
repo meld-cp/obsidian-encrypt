@@ -29,14 +29,7 @@ export default {
           src: 'dist/*',
           dest: 'test-vault/.obsidian/plugins/meld-encrypt/'
         },
-        // { src: 'assets/images/**/*', dest: 'dist/public/images' }
       ]
-      // assets: [
-      //   'dest/main.js',
-      //   'manifest.json',
-      //   'src/style.css',
-      // ],
-      // outputDir: 'test-vault/.obsidian/plugins/meld-encrypt'
     })
   ],
 
