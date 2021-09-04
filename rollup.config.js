@@ -1,7 +1,7 @@
 import typescript from '@rollup/plugin-typescript';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import copy from "rollup-plugin-copy-assets-to";
+import copy from "rollup-plugin-copy";
 
 export default {
   input: 'src/main.ts',
@@ -17,12 +17,27 @@ export default {
     nodeResolve({browser: true}),
     commonjs(),
     copy({
-      assets: [
-        'manifest.json',
-        'src/style.css'
-      ],
-      outputDir: 'dist'
-    }),
+      targets: [
+        {
+          src: [
+            'manifest.json',
+            'src/style.css',
+          ],
+          dest: 'dist'
+        },
+        {
+          src: 'dist/*',
+          dest: 'test-vault/.obsidian/plugins/meld-encrypt/'
+        },
+        // { src: 'assets/images/**/*', dest: 'dist/public/images' }
+      ]
+      // assets: [
+      //   'dest/main.js',
+      //   'manifest.json',
+      //   'src/style.css',
+      // ],
+      // outputDir: 'test-vault/.obsidian/plugins/meld-encrypt'
+    })
   ],
 
 };
