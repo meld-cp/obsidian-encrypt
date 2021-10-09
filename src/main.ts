@@ -55,6 +55,11 @@ export default class MeldEncrypt extends Plugin {
 
 	processEncryptDecryptCommand(checking: boolean, decryptInPlace: boolean): boolean {
 
+		if (checking && this.app.workspace.activeLeaf){
+			// ensures this command can show up in other plugins which list commands e.g. customizable-sidebar
+			return true; 
+		}
+
 		const mdview = this.app.workspace.getActiveViewOfType(MarkdownView);
 		if (!mdview) {
 			return false;
