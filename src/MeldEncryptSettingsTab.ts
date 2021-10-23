@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, SliderComponent } from "obsidian";
+import { App, PluginSettingTab, Setting } from "obsidian";
 import MeldEncrypt from "./main";
 
 export default class MeldEncryptSettingsTab extends PluginSettingTab {
@@ -18,19 +18,34 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		
 		containerEl.createEl('h2', {text: 'Settings for Meld Encrypt'});
 
+
 		new Setting(containerEl)
-		.setName('Confirm password?')
-		.setDesc('Confirm password when encrypting.')
-		.addToggle( toggle =>{
-			toggle
-				.setValue(this.plugin.settings.confirmPassword)
-				.onChange( async value =>{
-					this.plugin.settings.confirmPassword = value;
-					await this.plugin.saveSettings();
-					this.updateSettingsUi();
-				})
-		})
-	;
+			.setName('Expand selection to whole line?')
+			.setDesc('Partial selections will get expanded to the whole line.')
+			.addToggle( toggle =>{
+				toggle
+					.setValue(this.plugin.settings.expandToWholeLines)
+					.onChange( async value =>{
+						this.plugin.settings.expandToWholeLines = value;
+						await this.plugin.saveSettings();
+						//this.updateSettingsUi();
+					})
+			})
+		;
+
+		new Setting(containerEl)
+			.setName('Confirm password?')
+			.setDesc('Confirm password when encrypting.')
+			.addToggle( toggle =>{
+				toggle
+					.setValue(this.plugin.settings.confirmPassword)
+					.onChange( async value =>{
+						this.plugin.settings.confirmPassword = value;
+						await this.plugin.saveSettings();
+						this.updateSettingsUi();
+					})
+			})
+		;
 
 		new Setting(containerEl)
 			.setName('Remember password?')
@@ -68,6 +83,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 
 	updateSettingsUi():void{
 		this.pwTimeoutSetting.setName(this.buildPasswordTimeoutSettingName());
+
 
 		if ( this.plugin.settings.rememberPassword ){
 			this.pwTimeoutSetting.settingEl.show();
