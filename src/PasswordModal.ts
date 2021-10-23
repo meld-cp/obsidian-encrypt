@@ -1,4 +1,4 @@
-import { App, Modal } from 'obsidian';
+import { App, Modal, Platform } from 'obsidian';
 
 export default class PasswordModal extends Modal {
 	password: string = null;
@@ -14,41 +14,80 @@ export default class PasswordModal extends Modal {
 	onOpen() {
 		let { contentEl } = this;
 
-		contentEl.empty();
+		contentEl.addClass( 'meld-e-password' );
+		if (Platform.isMobile){
+			contentEl.addClass( 'meld-e-platform-mobile' );
+		}else if (Platform.isDesktop){
+			contentEl.addClass( 'meld-e-platform-desktop' );
+		}
 
-		const inputPwContainerEl = contentEl.createDiv();
-		inputPwContainerEl.createSpan({ text: '🔑 ' });
+		/* Main password input row */
+		const inputPwContainerEl = contentEl.createDiv( { cls:'meld-e-row' } );
+		inputPwContainerEl.createSpan({ cls:'meld-e-icon', text: '🔑' });
 		
 		const pwInputEl = inputPwContainerEl.createEl('input', { type: 'password', value: this.defaultPassword ?? '' });
+
 		pwInputEl.placeholder = 'Enter your password';
-		pwInputEl.style.width = '70%';
 		pwInputEl.focus();
 
-		const inputInputNextBtnEl = inputPwContainerEl.createEl('button', { text: '→' });
-		inputInputNextBtnEl.style.display = 'inline';
-		inputInputNextBtnEl.style.marginLeft = "1em";
-		inputInputNextBtnEl.style.width = "4em";
-		inputInputNextBtnEl.addEventListener('click', (ev) => {
-			inputPasswordHandler();
-		});
+		if (Platform.isMobile){
+			// Add 'Next' button for mobile
+			const inputInputNextBtnEl = inputPwContainerEl.createEl('button', {
+				text: '→',
+				cls:'meld-e-button-next'
+			});
+			inputInputNextBtnEl.addEventListener('click', (ev) => {
+				inputPasswordHandler();
+			});
+		}
 
+		/* End Main password input row */
 
-		const confirmPwContainerEl = contentEl.createDiv();
-		confirmPwContainerEl.style.marginTop = '1em';
-		confirmPwContainerEl.createSpan({ text: '🔑 ' });
+		/* Confirm password input row */
+
+		const confirmPwContainerEl = contentEl.createDiv( { cls:'meld-e-row' } );
+		confirmPwContainerEl.createSpan( { cls:'meld-e-icon', text: '🔑' } );
 		
-		const pwConfirmInputEl = confirmPwContainerEl.createEl('input', { type: 'password', value: this.defaultPassword ?? '' });
+		const pwConfirmInputEl = confirmPwContainerEl.createEl( 'input', {
+			type: 'password',
+			value: this.defaultPassword ?? ''
+		});
 		pwConfirmInputEl.placeholder = 'Confirm your password';
-		pwConfirmInputEl.style.width = '70%';
 
-		const confirmInputNextBtnEl = confirmPwContainerEl.createEl('button', { text: '→' });
-		confirmInputNextBtnEl.style.display = 'inline';
-		confirmInputNextBtnEl.style.marginLeft = "1em";
-		confirmInputNextBtnEl.style.width = "4em";
-		confirmInputNextBtnEl.addEventListener('click', (ev) => {
-			confirmPasswordHandler();
-		});
+		const messageEl = contentEl.createDiv({ cls:'meld-e-message' });
+		messageEl.hide();
 		
+		
+		if (Platform.isMobile){
+			// Add 'Next' button for mobile
+			const confirmInputNextBtnEl = confirmPwContainerEl.createEl('button', {
+				text: '→',
+				cls:'meld-e-button-next'
+			});
+			confirmInputNextBtnEl.addEventListener('click', (ev) => {
+				confirmPasswordHandler();
+			});
+		}
+		/* End Confirm password input row */
+
+		const confirmPwButtonEl = contentEl.createEl( 'button', {
+			text:'Confirm',
+			cls:'meld-e-button-confirm'
+		});
+		confirmPwButtonEl.addEventListener( 'click', (ev) =>{
+			if (this.confirmPassword){
+				if ( pwInputEl.value == pwConfirmInputEl.value ){
+					this.password = pwConfirmInputEl.value;
+					this.close();
+				}else{
+					// passwords don't match
+					messageEl.setText('Passwords don\'t match');
+					messageEl.show();
+				}
+			}
+		})
+
+
 		const inputPasswordHandler = () =>{
 			if (this.confirmPassword) {
 				// confim password
@@ -86,10 +125,6 @@ export default class PasswordModal extends Modal {
 			confirmPwContainerEl.hide();
 		}
 
-		const messageEl = contentEl.createDiv();
-		messageEl.style.marginTop = '1em';
-		messageEl.hide();
-
 		pwInputEl.addEventListener('keypress', (ev) => {
 			if (
 				( ev.code === 'Enter' || ev.code === 'NumpadEnter' )
@@ -99,21 +134,6 @@ export default class PasswordModal extends Modal {
 				inputPasswordHandler();
 			}
 		});
-
-		// const btnContainerEl = contentEl.createDiv('');
-		// btnContainerEl.style.marginTop = '1em';
-
-		// const okBtnEl = btnContainerEl.createEl('button', { text: 'OK' });
-		// okBtnEl.addEventListener('click', () => {
-		// 	this.password = pwInputEl.value;
-		// 	this.close();
-		// });
-
-		// const cancelBtnEl = btnContainerEl.createEl('button', { text: 'Cancel' });
-		// cancelBtnEl.addEventListener('click', () => {
-		// 	this.close();
-		// });
-
 
 	}
 
