@@ -21,7 +21,7 @@ export default {
         {
           src: [
             'manifest.json',
-            'src/style.css',
+            'src/styles.css',
           ],
           dest: 'dist'
         },
