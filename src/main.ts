@@ -9,12 +9,14 @@ const _PREFIX_A: string = '%%🔐α ';
 const _SUFFIX: string = ' 🔐%%';
 
 interface MeldEncryptPluginSettings {
+	expandToWholeLines: boolean,
 	confirmPassword: boolean;
 	rememberPassword: boolean;
 	rememberPasswordTimeout: number;
 }
 
 const DEFAULT_SETTINGS: MeldEncryptPluginSettings = {
+	expandToWholeLines: true,
 	confirmPassword: true,
 	rememberPassword: true,
 	rememberPasswordTimeout: 30
@@ -70,12 +72,17 @@ export default class MeldEncrypt extends Plugin {
 			return false;
 		}
 
-		const startLine = editor.getCursor('from').line;
-		const startPos = { line: startLine, ch: 0 }; // want the start of the first line
+		let startPos = editor.getCursor('from');
+		let endPos = editor.getCursor('to');
 
-		const endLine = editor.getCursor('to').line;
-		const endLineText = editor.getLine(endLine);
-		const endPos = { line: endLine, ch: endLineText.length }; // want the end of last line
+		if (this.settings.expandToWholeLines){
+			const startLine = startPos.line;
+			startPos = { line: startLine, ch: 0 }; // want the start of the first line
+
+			const endLine = endPos.line;
+			const endLineText = editor.getLine(endLine);
+			endPos = { line: endLine, ch: endLineText.length }; // want the end of last line
+		}
 
 		const selectionText = editor.getRange(startPos, endPos);
 
