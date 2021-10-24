@@ -34,24 +34,16 @@ export default class MeldEncrypt extends Plugin {
 
 		this.addSettingTab(new MeldEncryptSettingsTab(this.app, this));
 
-		// this.addCommand({
-		// 	id: 'meld-encrypt-test',
-		// 	name: 'Test',
-		// 	checkCallback: (checking) => {console.debug('encrypt-decrypt-test','checkCallback',{checking})},
-		// 	editorCheckCallback: (checking,editor, view) => {console.debug('encrypt-decrypt-test','editorCheckCallback', {checking,editor,view})},
-		// 	editorCallback: (editor, view) => {console.debug('encrypt-decrypt-test','editorCallback', {editor,view})},
-		// });
-
 		this.addCommand({
 			id: 'meld-encrypt',
 			name: 'Encrypt/Decrypt',
-			checkCallback: (checking) => this.processEncryptDecryptCommand(checking, false)
+			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand(checking, editor, view, false)
 		});
 
 		this.addCommand({
 			id: 'meld-encrypt-in-place',
 			name: 'Encrypt/Decrypt In-place',
-			checkCallback: (checking) => this.processEncryptDecryptCommand(checking, true)
+			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand(checking, editor, view, true)
 		});
 
 		this.addCommand({
@@ -70,8 +62,18 @@ export default class MeldEncrypt extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	isSettingsModalOpen() : boolean{
+		return document.querySelector('.mod-settings') !== null;
+	} 
 
 	processEncryptDecryptWholeNoteCommand(checking: boolean, editor: Editor, view: MarkdownView): boolean {
+
+		if ( checking && this.isSettingsModalOpen() ){
+			// Settings is open, ensures this command can show up in other
+			// plugins which list commands e.g. customizable-sidebar
+			return true;
+		}
+
 		const startPos = editor.offsetToPos(0);
 		const endPos = { line: editor.lastLine(), ch: editor.getLine(editor.lastLine()).length };
 
@@ -87,22 +89,12 @@ export default class MeldEncrypt extends Plugin {
 		);
 	}
 
-	processEncryptDecryptCommand(checking: boolean, decryptInPlace: boolean): boolean {
-
-		if (checking && this.app.workspace.activeLeaf){
-			// Fix Me: causes none of the validation below to run
-			// ensures this command can show up in other plugins which list commands e.g. customizable-sidebar
-			return true; 
-		}
-
-		const mdview = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!mdview) {
-			return false;
-		}
-
-		const editor = mdview.editor;
-		if (!editor) {
-			return false;
+	processEncryptDecryptCommand(checking: boolean, editor: Editor, view: MarkdownView, decryptInPlace: boolean): boolean {
+		if ( checking && this.isSettingsModalOpen() ){
+			// Settings is open, ensures this command can show up in other
+			// plugins which list commands e.g. customizable-sidebar
+			console.log('Settings screen is open');
+			return true;
 		}
 
 		let startPos = editor.getCursor('from');
@@ -165,11 +157,17 @@ export default class MeldEncrypt extends Plugin {
 
 		const selectionAnalysis = this.analyseSelection(selectionText);
 
+		if (selectionAnalysis.isEmpty) {
+			if (!checking){
+				new Notice('Nothing to Encrypt.');
+			}
+			return false;
+		}
+
 		if (!selectionAnalysis.canDecrypt && !selectionAnalysis.canEncrypt) {
 			if (!checking){
 				new Notice('Unable to Encrypt or Decrypt that.');
 			}
-			//console.debug('processSelection','nothing to do');
 			return false;
 		}
 

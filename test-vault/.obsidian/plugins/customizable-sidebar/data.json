@@ -1,4 +1,15 @@
 {
-  "sidebarCommands": [],
+  "sidebarCommands": [
+    {
+      "id": "meld-encrypt:meld-encrypt-note",
+      "name": "Meld Encrypt: Encrypt/Decrypt Whole Note",
+      "icon": "feather-lock"
+    },
+    {
+      "id": "meld-encrypt:meld-encrypt",
+      "name": "Meld Encrypt: Encrypt/Decrypt",
+      "icon": "feather-lock"
+    }
+  ],
   "hiddenCommands": []
 }
