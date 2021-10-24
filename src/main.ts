@@ -34,17 +34,32 @@ export default class MeldEncrypt extends Plugin {
 
 		this.addSettingTab(new MeldEncryptSettingsTab(this.app, this));
 
+		// this.addCommand({
+		// 	id: 'meld-encrypt-test',
+		// 	name: 'Test',
+		// 	checkCallback: (checking) => {console.debug('encrypt-decrypt-test','checkCallback',{checking})},
+		// 	editorCheckCallback: (checking,editor, view) => {console.debug('encrypt-decrypt-test','editorCheckCallback', {checking,editor,view})},
+		// 	editorCallback: (editor, view) => {console.debug('encrypt-decrypt-test','editorCallback', {editor,view})},
+		// });
+
 		this.addCommand({
-			id: 'encrypt-decrypt',
+			id: 'meld-encrypt',
 			name: 'Encrypt/Decrypt',
 			checkCallback: (checking) => this.processEncryptDecryptCommand(checking, false)
 		});
 
 		this.addCommand({
-			id: 'encrypt-decrypt-in-place',
+			id: 'meld-encrypt-in-place',
 			name: 'Encrypt/Decrypt In-place',
 			checkCallback: (checking) => this.processEncryptDecryptCommand(checking, true)
 		});
+
+		this.addCommand({
+			id: 'meld-encrypt-note',
+			name: 'Encrypt/Decrypt Whole Note',
+			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptWholeNoteCommand(checking, editor, view)
+		});
+
 	}
 
 	async loadSettings() {
@@ -55,9 +70,27 @@ export default class MeldEncrypt extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+
+	processEncryptDecryptWholeNoteCommand(checking: boolean, editor: Editor, view: MarkdownView): boolean {
+		const startPos = editor.offsetToPos(0);
+		const endPos = { line: editor.lastLine(), ch: editor.getLine(editor.lastLine()).length };
+
+		const selectionText = editor.getRange(startPos, endPos).trim();
+
+		return this.processSelection(
+			checking,
+			editor,
+			selectionText,
+			startPos,
+			endPos,
+			true
+		);
+	}
+
 	processEncryptDecryptCommand(checking: boolean, decryptInPlace: boolean): boolean {
 
 		if (checking && this.app.workspace.activeLeaf){
+			// Fix Me: causes none of the validation below to run
 			// ensures this command can show up in other plugins which list commands e.g. customizable-sidebar
 			return true; 
 		}
@@ -86,17 +119,57 @@ export default class MeldEncrypt extends Plugin {
 
 		const selectionText = editor.getRange(startPos, endPos);
 
-		if (selectionText.length == 0) {
-			return false;
-		}
+		return this.processSelection(
+			checking,
+			editor,
+			selectionText,
+			startPos,
+			endPos,
+			decryptInPlace
+		);
+	}
 
-		const decrypt_obs = selectionText.startsWith(_PREFIX_OBSOLETE) && selectionText.endsWith(_SUFFIX);
-		const decrypt_a = selectionText.startsWith(_PREFIX_A) && selectionText.endsWith(_SUFFIX);
+	private analyseSelection( selectionText: string ):SelectionAnalysis{
+		
+		const result = new SelectionAnalysis();
 
-		const decrypt = decrypt_obs || decrypt_a;
-		const encrypt = !selectionText.contains(_PREFIX_OBSOLETE) && !selectionText.contains(_SUFFIX);
+		result.isEmpty = selectionText.length === 0;
 
-		if (!decrypt && !encrypt) {
+		result.hasObsoleteEncryptedPrefix = selectionText.startsWith(_PREFIX_OBSOLETE);
+		result.hasEncryptedPrefix = result.hasObsoleteEncryptedPrefix || selectionText.startsWith(_PREFIX_A);
+
+		result.hasDecryptSuffix = selectionText.endsWith(_SUFFIX);
+
+		result.containsEncryptedMarkers =
+			selectionText.contains(_PREFIX_OBSOLETE)
+			|| selectionText.contains(_PREFIX_A)
+			|| selectionText.contains(_SUFFIX)
+		;
+
+		result.canDecrypt = result.hasEncryptedPrefix && result.hasDecryptSuffix;
+		result.canEncrypt = !result.hasEncryptedPrefix && !result.containsEncryptedMarkers;
+		
+		//console.debug(result);
+
+		return result;
+	}
+
+	private processSelection(
+		checking: boolean,
+		editor: Editor,
+		selectionText: string,
+		finalSelectionStart: CodeMirror.Position,
+		finalSelectionEnd: CodeMirror.Position,
+		decryptInPlace: boolean
+	){
+
+		const selectionAnalysis = this.analyseSelection(selectionText);
+
+		if (!selectionAnalysis.canDecrypt && !selectionAnalysis.canEncrypt) {
+			if (!checking){
+				new Notice('Unable to Encrypt or Decrypt that.');
+			}
+			//console.debug('processSelection','nothing to do');
 			return false;
 		}
 
@@ -113,9 +186,9 @@ export default class MeldEncrypt extends Plugin {
 				this.passwordLastUsedExpiry != null
 				&& Date.now() > this.passwordLastUsedExpiry
 			)
-			;
+		;
 
-		const confirmPassword = encrypt && this.settings.confirmPassword;
+		const confirmPassword = selectionAnalysis.canEncrypt && this.settings.confirmPassword;
 
 		if ( isRememberPasswordExpired || confirmPassword ) {
 			// forget password
@@ -139,23 +212,23 @@ export default class MeldEncrypt extends Plugin {
 					;
 			}
 
-			if (encrypt) {
+			if (selectionAnalysis.canEncrypt) {
 				this.encryptSelection(
 					editor,
 					selectionText,
 					pw,
-					startPos,
-					endPos
+					finalSelectionStart,
+					finalSelectionEnd
 				);
 			} else {
 
-				if (decrypt_a){
+				if (!selectionAnalysis.hasObsoleteEncryptedPrefix){
 					this.decryptSelection_a(
 						editor,
 						selectionText,
 						pw,
-						startPos,
-						endPos,
+						finalSelectionStart,
+						finalSelectionEnd,
 						decryptInPlace
 					);
 				}else{
@@ -163,8 +236,8 @@ export default class MeldEncrypt extends Plugin {
 						editor,
 						selectionText,
 						pw,
-						startPos,
-						endPos,
+						finalSelectionStart,
+						finalSelectionEnd,
 						decryptInPlace
 					);
 				}
@@ -275,4 +348,14 @@ export default class MeldEncrypt extends Plugin {
 		return text;
 	}
 
+}
+
+class SelectionAnalysis{
+	isEmpty: boolean;
+	hasObsoleteEncryptedPrefix: boolean;
+	hasEncryptedPrefix: boolean;
+	hasDecryptSuffix: boolean;
+	canDecrypt: boolean;
+	canEncrypt: boolean;
+	containsEncryptedMarkers: boolean;
 }

@@ -1,10 +1,4 @@
 {
-  "sidebarCommands": [
-    {
-      "id": "meld-encrypt:encrypt-decrypt-in-place",
-      "name": "Meld Encrypt: Encrypt/Decrypt In-place",
-      "icon": "feather-lock"
-    }
-  ],
+  "sidebarCommands": [],
   "hiddenCommands": []
 }

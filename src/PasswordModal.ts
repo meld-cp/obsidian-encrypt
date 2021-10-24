@@ -14,6 +14,8 @@ export default class PasswordModal extends Modal {
 	onOpen() {
 		let { contentEl } = this;
 
+		contentEl.empty();
+
 		contentEl.addClass( 'meld-e-password' );
 		if (Platform.isMobile){
 			contentEl.addClass( 'meld-e-platform-mobile' );
@@ -84,6 +86,9 @@ export default class PasswordModal extends Modal {
 					messageEl.setText('Passwords don\'t match');
 					messageEl.show();
 				}
+			}else{
+				this.password = pwInputEl.value;
+				this.close();
 			}
 		})
 
