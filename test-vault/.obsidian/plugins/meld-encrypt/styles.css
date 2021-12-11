@@ -36,3 +36,7 @@
 	margin: 0 0 0 1em;
 	width: auto;
 }
+
+.meld-e-hint{
+	flex: 20;
+}
