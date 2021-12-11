@@ -2,13 +2,17 @@ import { App, Modal, Platform } from 'obsidian';
 
 export default class PasswordModal extends Modal {
 	password: string = null;
+	hint: string = null;
 	defaultPassword: string = null;
 	confirmPassword: boolean;
+	isEncrypting: boolean;
 
-	constructor(app: App, confirmPassword: boolean, defaultPassword: string = null) {
+	constructor(app: App, isEncrypting:boolean, confirmPassword: boolean, defaultPassword: string = null, hint:string ) {
 		super(app);
 		this.defaultPassword = defaultPassword;
 		this.confirmPassword = confirmPassword;
+		this.isEncrypting = isEncrypting;
+		this.hint = hint;
 	}
 
 	onOpen() {
@@ -46,7 +50,7 @@ export default class PasswordModal extends Modal {
 		/* End Main password input row */
 
 		/* Confirm password input row */
-
+		const confirmPwShown = this.confirmPassword;
 		const confirmPwContainerEl = contentEl.createDiv( { cls:'meld-e-row' } );
 		confirmPwContainerEl.createSpan( { cls:'meld-e-icon', text: '🔑' } );
 		
@@ -70,50 +74,116 @@ export default class PasswordModal extends Modal {
 				confirmPasswordHandler();
 			});
 		}
+		
+		if (!confirmPwShown) {
+			confirmPwContainerEl.hide();
+		}
 		/* End Confirm password input row */
+
+		/* Hint input row */
+		const hintInputShown = this.isEncrypting;
+		const inputHintContainerEl = contentEl.createDiv( { cls:'meld-e-row' } );
+		inputHintContainerEl.createSpan({ cls:'meld-e-icon', text: '💡' });
+		const hintInputEl = inputHintContainerEl.createEl('input', { type: 'text', value: this.hint });
+		hintInputEl.placeholder = 'Enter an optional password hint';
+		if (Platform.isMobile){
+			// Add 'Next' button for mobile
+			const hintInputNextBtnEl = inputHintContainerEl.createEl('button', {
+				text: '→',
+				cls:'meld-e-button-next'
+			});
+			hintInputNextBtnEl.addEventListener('click', (ev) => {
+				hintPasswordHandler();
+			});
+		}
+		if (!hintInputShown){
+			inputHintContainerEl.hide();
+		}
+		/* End Hint input row */
+
+		/* Hint text row */
+		const spanHintContainerEl = contentEl.createDiv( { cls:'meld-e-row' } );
+		spanHintContainerEl.createSpan({ cls:'meld-e-icon', text: '💡' });
+		spanHintContainerEl.createSpan( {cls: 'meld-e-hint', text:`Hint: '${this.hint}'`});
+
+		if (hintInputShown || (this.hint ?? '').length==0){
+			spanHintContainerEl.hide();
+		}
+
+		/* END Hint text row */
 
 		const confirmPwButtonEl = contentEl.createEl( 'button', {
 			text:'Confirm',
 			cls:'meld-e-button-confirm'
 		});
 		confirmPwButtonEl.addEventListener( 'click', (ev) =>{
-			if (this.confirmPassword){
-				if ( pwInputEl.value == pwConfirmInputEl.value ){
-					this.password = pwConfirmInputEl.value;
-					this.close();
-				}else{
-					// passwords don't match
-					messageEl.setText('Passwords don\'t match');
-					messageEl.show();
-				}
-			}else{
-				this.password = pwInputEl.value;
+			if (validate()){
 				this.close();
+			}else{
+				pwInputEl.focus();
 			}
 		})
 
+		const validate = () : boolean => {
+			if (confirmPwShown){
+				if (pwInputEl.value != pwConfirmInputEl.value){
+					// passwords don't match
+					messageEl.setText('Passwords don\'t match');
+					messageEl.show();
+					return false;
+				}
+			}
+
+			this.password = pwInputEl.value;
+			
+			this.hint = hintInputEl.value;
+
+			return true;
+		}
 
 		const inputPasswordHandler = () =>{
-			if (this.confirmPassword) {
-				// confim password
+			if (confirmPwShown){
 				pwConfirmInputEl.focus();
-			} else {
-				this.password = pwInputEl.value;
+				return;
+			}
+
+			if (hintInputShown){
+				hintInputEl.focus();
+				return;
+			}
+
+			if ( validate() ){
 				this.close();
 			}
 		}
 
 		const confirmPasswordHandler = () => {
-			if (pwInputEl.value == pwConfirmInputEl.value){
-				this.password = pwConfirmInputEl.value;
-				this.close();
-			}else{
-				// passwords don't match
-				messageEl.setText('Passwords don\'t match');
-				messageEl.show();
+			if ( validate() ){
+				if (hintInputShown){
+					hintInputEl.focus();
+				}else{
+					this.close();
+				}
 			}
 		}
 
+		const hintPasswordHandler = () => {
+			if (validate()){
+				this.close();
+			}else{
+				pwInputEl.focus();
+			}
+		}
+		
+		hintInputEl.addEventListener('keypress', (ev) => {
+			if (
+				( ev.code === 'Enter' || ev.code === 'NumpadEnter' )
+				&& pwInputEl.value.length > 0
+			) {
+				ev.preventDefault();
+				hintPasswordHandler();
+			}
+		});
 
 		pwConfirmInputEl.addEventListener('keypress', (ev) => {
 			if (
@@ -124,11 +194,7 @@ export default class PasswordModal extends Modal {
 				confirmPasswordHandler();
 			}
 		});
-		
 
-		if (!this.confirmPassword) {
-			confirmPwContainerEl.hide();
-		}
 
 		pwInputEl.addEventListener('keypress', (ev) => {
 			if (

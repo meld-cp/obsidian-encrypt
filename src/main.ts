@@ -9,6 +9,8 @@ const _PREFIX_OBSOLETE: string = _PREFIX + ' ';
 const _PREFIX_A: string = _PREFIX + 'α ';
 const _SUFFIX: string = ' 🔐%%';
 
+const _HINT: string = '💡';
+
 interface MeldEncryptPluginSettings {
 	expandToWholeLines: boolean,
 	confirmPassword: boolean;
@@ -184,6 +186,13 @@ export default class MeldEncrypt extends Plugin {
 		result.canDecrypt = result.hasEncryptedPrefix && result.hasDecryptSuffix;
 		result.canEncrypt = !result.hasEncryptedPrefix && !result.containsEncryptedMarkers;
 		
+		if (result.canDecrypt){
+			result.decryptable = this.parseDecryptableContent(selectionText);
+			if (result.decryptable == null){
+				result.canDecrypt = false;
+			}
+		}
+
 		return result;
 	}
 
@@ -234,12 +243,19 @@ export default class MeldEncrypt extends Plugin {
 			this.passwordLastUsed = '';
 		}
 
-		const pwModal = new PasswordModal(this.app, confirmPassword, this.passwordLastUsed);
+		const pwModal = new PasswordModal(
+			this.app,
+			selectionAnalysis.canEncrypt,
+			confirmPassword,
+			this.passwordLastUsed,
+			selectionAnalysis.decryptable?.hint
+		);
 		pwModal.onClose = () => {
 			const pw = pwModal.password ?? ''
 			if (pw.length == 0) {
 				return;
 			}
+			const hint = pwModal.hint;
 
 			// remember password?
 			if (this.settings.rememberPassword) {
@@ -252,19 +268,23 @@ export default class MeldEncrypt extends Plugin {
 			}
 
 			if (selectionAnalysis.canEncrypt) {
+				const encryptable = new Encryptable();
+				encryptable.text = selectionText;
+				encryptable.hint = hint;
+
 				this.encryptSelection(
 					editor,
-					selectionText,
+					encryptable,
 					pw,
 					finalSelectionStart,
 					finalSelectionEnd
 				);
 			} else {
 
-				if (!selectionAnalysis.hasObsoleteEncryptedPrefix){
+				if (selectionAnalysis.decryptable.version == 1){
 					this.decryptSelection_a(
 						editor,
-						selectionText,
+						selectionAnalysis.decryptable,
 						pw,
 						finalSelectionStart,
 						finalSelectionEnd,
@@ -273,7 +293,7 @@ export default class MeldEncrypt extends Plugin {
 				}else{
 					this.decryptSelectionObsolete(
 						editor,
-						selectionText,
+						selectionAnalysis.decryptable,
 						pw,
 						finalSelectionStart,
 						finalSelectionEnd,
@@ -289,31 +309,33 @@ export default class MeldEncrypt extends Plugin {
 
 	private async encryptSelection(
 		editor: Editor,
-		selectionText: string,
+		encryptable: Encryptable,
 		password: string,
 		finalSelectionStart: CodeMirror.Position,
 		finalSelectionEnd: CodeMirror.Position,
 	) {
 		//encrypt
 		const crypto = new CryptoHelperV2();
-		const base64EncryptedText = this.addMarkers(await crypto.encryptToBase64(selectionText, password));
+		const encodedText = this.encodeEncryption(
+			await crypto.encryptToBase64(encryptable.text, password),
+			encryptable.hint
+		);
 		editor.setSelection(finalSelectionStart, finalSelectionEnd);
-		editor.replaceSelection(base64EncryptedText);
+		editor.replaceSelection(encodedText);
 	}
 
 	private async decryptSelection_a(
 		editor: Editor,
-		selectionText: string,
+		decryptable: Decryptable,
 		password: string,
 		selectionStart: CodeMirror.Position,
 		selectionEnd: CodeMirror.Position,
 		decryptInPlace: boolean
 	) {
 		// decrypt
-		const base64CipherText = this.removeMarkers(selectionText);
 
 		const crypto = new CryptoHelperV2();
-		const decryptedText = await crypto.decryptFromBase64(base64CipherText, password);
+		const decryptedText = await crypto.decryptFromBase64(decryptable.base64CipherText, password);
 		if (decryptedText === null) {
 			new Notice('❌ Decryption failed!');
 		} else {
@@ -337,14 +359,14 @@ export default class MeldEncrypt extends Plugin {
 
 	private async decryptSelectionObsolete(
 		editor: Editor,
-		selectionText: string,
+		decryptable: Decryptable,
 		password: string,
 		selectionStart: CodeMirror.Position,
 		selectionEnd: CodeMirror.Position,
 		decryptInPlace: boolean
 	) {
 		// decrypt
-		const base64CipherText = this.removeMarkers(selectionText);
+		const base64CipherText = this.removeMarkers(decryptable.base64CipherText);
 		const crypto = new CryptoHelperObsolete();
 		const decryptedText = await crypto.decryptFromBase64(base64CipherText, password);
 		if (decryptedText === null) {
@@ -368,6 +390,39 @@ export default class MeldEncrypt extends Plugin {
 		}
 	}
 
+	private parseDecryptableContent(text: string) : Decryptable{
+		const result = new Decryptable();
+
+		let content = text;
+		if (content.startsWith(_PREFIX_A) && content.endsWith(_SUFFIX)) {
+			result.version=1;
+			content = content.replace(_PREFIX_A, '').replace(_SUFFIX, '');
+		}else if (content.startsWith(_PREFIX_OBSOLETE) && content.endsWith(_SUFFIX)) {
+			result.version=0;
+			content = content.replace(_PREFIX_OBSOLETE, '').replace(_SUFFIX, '');
+		}else {
+			return null; // invalid format
+		}
+
+		// check if there is a hint
+		//console.table(content);
+		if (content.substr(0,_HINT.length) == _HINT){
+			const endHintMarker = content.indexOf(_HINT,_HINT.length);
+			if (endHintMarker<0){
+				return null; // invalid format
+			}
+			result.hint = content.substring(_HINT.length,endHintMarker)
+			result.base64CipherText = content.substring(endHintMarker+_HINT.length);
+		}else{
+			result.base64CipherText = content;
+		}
+		
+		//console.table(result);
+
+		return result;
+
+	}
+
 	private removeMarkers(text: string): string {
 		if (text.startsWith(_PREFIX_A) && text.endsWith(_SUFFIX)) {
 			return text.replace(_PREFIX_A, '').replace(_SUFFIX, '');
@@ -378,11 +433,14 @@ export default class MeldEncrypt extends Plugin {
 		return text;
 	}
 
-	private addMarkers(text: string): string {
-		if (!text.contains(_PREFIX_OBSOLETE) && !text.contains(_PREFIX_A) && !text.contains(_SUFFIX)) {
-			return _PREFIX_A.concat(text, _SUFFIX);
+	private encodeEncryption( encryptedText: string, hint: string ): string {
+		if (!encryptedText.contains(_PREFIX_OBSOLETE) && !encryptedText.contains(_PREFIX_A) && !encryptedText.contains(_SUFFIX)) {
+			if (hint){
+				return _PREFIX_A.concat(_HINT, hint, _HINT, encryptedText, _SUFFIX);	
+			}
+			return _PREFIX_A.concat(encryptedText, _SUFFIX);
 		}
-		return text;
+		return encryptedText;
 	}
 
 }
@@ -395,4 +453,16 @@ class SelectionAnalysis{
 	canDecrypt: boolean;
 	canEncrypt: boolean;
 	containsEncryptedMarkers: boolean;
+	decryptable : Decryptable;
+}
+
+class Encryptable{
+	text:string;
+	hint:string;
+}
+
+class Decryptable{
+	version: number;
+	base64CipherText:string;
+	hint:string;
 }
