@@ -1,11 +1,12 @@
-import { Notice, Plugin, MarkdownView, Editor } from 'obsidian';
+import { Notice, Plugin, MarkdownView, Editor, EditorPosition } from 'obsidian';
 import DecryptModal from './DecryptModal';
 import PasswordModal from './PasswordModal';
 import { CryptoHelperV2, CryptoHelperObsolete} from './CryptoHelper';
 import MeldEncryptSettingsTab from './MeldEncryptSettingsTab';
 
-const _PREFIX_OBSOLETE: string = '%%🔐 ';
-const _PREFIX_A: string = '%%🔐α ';
+const _PREFIX: string = '%%🔐';
+const _PREFIX_OBSOLETE: string = _PREFIX + ' ';
+const _PREFIX_A: string = _PREFIX + 'α ';
 const _SUFFIX: string = ' 🔐%%';
 
 interface MeldEncryptPluginSettings {
@@ -93,7 +94,6 @@ export default class MeldEncrypt extends Plugin {
 		if ( checking && this.isSettingsModalOpen() ){
 			// Settings is open, ensures this command can show up in other
 			// plugins which list commands e.g. customizable-sidebar
-			console.log('Settings screen is open');
 			return true;
 		}
 
@@ -107,6 +107,12 @@ export default class MeldEncrypt extends Plugin {
 			const endLine = endPos.line;
 			const endLineText = editor.getLine(endLine);
 			endPos = { line: endLine, ch: endLineText.length }; // want the end of last line
+		}else{
+			if ( !editor.somethingSelected() ){
+				// nothing selected, assume user wants to decrypt, expand to start and end markers
+				startPos = this.getClosestPrevTextCursorPos(editor, _PREFIX, startPos );
+				endPos = this.getClosestNextTextCursorPos(editor, _SUFFIX, endPos );
+			}
 		}
 
 		const selectionText = editor.getRange(startPos, endPos);
@@ -119,6 +125,43 @@ export default class MeldEncrypt extends Plugin {
 			endPos,
 			decryptInPlace
 		);
+	}
+
+	private getClosestPrevTextCursorPos(editor: Editor, text: string, defaultValue:EditorPosition ): EditorPosition{
+		const initOffset = editor.posToOffset( editor.getCursor("from") );
+
+		for (let offset = initOffset; offset >= 0; offset--) {
+			const offsetPos = editor.offsetToPos(offset);
+			const textEndOffset = offset + text.length;
+			const prefixEndPos = editor.offsetToPos(textEndOffset);
+			
+			const testText = editor.getRange( offsetPos, prefixEndPos );
+			if (testText == text){
+				return offsetPos;
+			}
+		}
+
+		return defaultValue;
+	}
+
+	private getClosestNextTextCursorPos(editor: Editor, text: string, defaultValue:EditorPosition ): EditorPosition{
+		const initOffset = editor.posToOffset( editor.getCursor("from") );
+		
+		let maxOffset = editor.posToOffset( {line:editor.lastLine(), ch:Number.MAX_VALUE} );
+
+		for (let offset = initOffset; offset <= maxOffset - text.length; offset++) {
+			const offsetPos = editor.offsetToPos(offset);
+			const textEndOffset = offset + text.length;
+			const prefixEndPos = editor.offsetToPos(textEndOffset);
+			
+			const testText = editor.getRange( offsetPos, prefixEndPos );
+			
+			if (testText == text){
+				return prefixEndPos;
+			}
+		}
+		
+		return defaultValue;
 	}
 
 	private analyseSelection( selectionText: string ):SelectionAnalysis{
@@ -141,8 +184,6 @@ export default class MeldEncrypt extends Plugin {
 		result.canDecrypt = result.hasEncryptedPrefix && result.hasDecryptSuffix;
 		result.canEncrypt = !result.hasEncryptedPrefix && !result.containsEncryptedMarkers;
 		
-		//console.debug(result);
-
 		return result;
 	}
 
@@ -268,7 +309,6 @@ export default class MeldEncrypt extends Plugin {
 		selectionEnd: CodeMirror.Position,
 		decryptInPlace: boolean
 	) {
-		//console.log('decryptSelection_a');
 		// decrypt
 		const base64CipherText = this.removeMarkers(selectionText);
 
@@ -303,7 +343,6 @@ export default class MeldEncrypt extends Plugin {
 		selectionEnd: CodeMirror.Position,
 		decryptInPlace: boolean
 	) {
-		//console.log('decryptSelectionObsolete');
 		// decrypt
 		const base64CipherText = this.removeMarkers(selectionText);
 		const crypto = new CryptoHelperObsolete();
