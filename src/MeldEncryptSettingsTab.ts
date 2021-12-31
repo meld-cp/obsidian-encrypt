@@ -48,6 +48,20 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		;
 
 		new Setting(containerEl)
+			.setName('Copy button?')
+			.setDesc('Show a button to copy decrypted text.')
+			.addToggle( toggle =>{
+				toggle
+					.setValue(this.plugin.settings.showButton)
+					.onChange( async value =>{
+						this.plugin.settings.showButton = value;
+						await this.plugin.saveSettings();
+						this.updateSettingsUi();
+					})
+			})
+		;
+
+		new Setting(containerEl)
 			.setName('Remember password?')
 			.setDesc('Remember the last used password for this session.')
 			.addToggle( toggle =>{

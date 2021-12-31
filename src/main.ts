@@ -14,6 +14,7 @@ const _HINT: string = '💡';
 interface MeldEncryptPluginSettings {
 	expandToWholeLines: boolean,
 	confirmPassword: boolean;
+	showButton: boolean;
 	rememberPassword: boolean;
 	rememberPasswordTimeout: number;
 }
@@ -21,6 +22,7 @@ interface MeldEncryptPluginSettings {
 const DEFAULT_SETTINGS: MeldEncryptPluginSettings = {
 	expandToWholeLines: true,
 	confirmPassword: true,
+	showButton: false,
 	rememberPassword: true,
 	rememberPasswordTimeout: 30
 }
@@ -344,7 +346,7 @@ export default class MeldEncrypt extends Plugin {
 				editor.setSelection(selectionStart, selectionEnd);
 				editor.replaceSelection(decryptedText);
 			} else {
-				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText);
+				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText, this.settings.showButton);
 				decryptModal.onClose = () => {
 					editor.focus();
 					if (decryptModal.decryptInPlace) {
@@ -377,7 +379,7 @@ export default class MeldEncrypt extends Plugin {
 				editor.setSelection(selectionStart, selectionEnd);
 				editor.replaceSelection(decryptedText);
 			} else {
-				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText);
+				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText, this.settings.showButton);
 				decryptModal.onClose = () => {
 					editor.focus();
 					if (decryptModal.decryptInPlace) {

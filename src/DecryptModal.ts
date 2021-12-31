@@ -3,11 +3,13 @@ import { App, Modal } from 'obsidian';
 export default class DecryptModal extends Modal {
 	text: string;
 	decryptInPlace: boolean = false;
+	showButton: boolean
 
-	constructor(app: App, title: string, text: string = '') {
+	constructor(app: App, title: string, text: string = '', showButton:boolean) {
 		super(app);
 		this.text = text;
 		this.titleEl.innerText = title;
+		this.showButton = showButton;
 	}
 
 	onOpen() {
@@ -23,6 +25,12 @@ export default class DecryptModal extends Modal {
 
 
 		const btnContainerEl = contentEl.createDiv('');
+
+		if (this.showButton){
+		const copyBtnEl = btnContainerEl.createEl('button', { text: 'Copy' });
+		copyBtnEl.addEventListener('click', () => {
+			navigator.clipboard.writeText(textEl.value);
+		}); }
 
 		const decryptInPlaceBtnEl = btnContainerEl.createEl('button', { text: 'Decrypt in-place' });
 		decryptInPlaceBtnEl.addEventListener('click', () => {
