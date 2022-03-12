@@ -148,8 +148,9 @@ export default class MeldEncrypt extends Plugin {
 
 	private getClosestNextTextCursorPos(editor: Editor, text: string, defaultValue:EditorPosition ): EditorPosition{
 		const initOffset = editor.posToOffset( editor.getCursor("from") );
-		
-		let maxOffset = editor.posToOffset( {line:editor.lastLine(), ch:Number.MAX_VALUE} );
+		const lastLineNum = editor.lastLine();
+
+		let maxOffset = editor.posToOffset( {line:lastLineNum, ch:editor.getLine(lastLineNum).length} );
 
 		for (let offset = initOffset; offset <= maxOffset - text.length; offset++) {
 			const offsetPos = editor.offsetToPos(offset);
