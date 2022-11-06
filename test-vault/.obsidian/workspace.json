@@ -4,17 +4,15 @@
     "type": "split",
     "children": [
       {
-        "id": "0fbb47812751a7cc",
+        "id": "18f3a188842c52f4",
         "type": "tabs",
         "children": [
           {
-            "id": "608603622783d155",
+            "id": "a7ff0d81d432a465",
             "type": "leaf",
             "state": {
-              "type": "meld-encrypted-file-content-view",
-              "state": {
-                "file": "Test.encrypted"
-              }
+              "type": "empty",
+              "state": {}
             }
           }
         ]
@@ -83,7 +81,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Test.encrypted",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -100,7 +97,6 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Test.encrypted",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -122,9 +118,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "Test.encrypted"
-              }
+              "state": {}
             }
           }
         ]
@@ -134,17 +128,17 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "608603622783d155",
+  "active": "a7ff0d81d432a465",
   "lastOpenFiles": [
-    "Untitled 20221106 030457.encrypted",
     "Test.encrypted",
+    "Untitled.md",
+    "Untitled 20221106 043648.encrypted",
+    "Untitled 20221106 043608.encrypted",
+    "Untitled 20221106 030457.encrypted",
     "Untitled 20221106 042128.encrypted",
     "Untitled 20221106 040640.encrypted",
     "Untitled 20221106 040340.encrypted",
     "Untitled 20221106 035541.encrypted",
-    "Untitled 20221106 033526.encrypted",
-    "Untitled 20221106 033438.encrypted",
-    "Untitled.md",
-    "Untitled 20221106 020054.encrypted"
+    "Untitled 20221106 033526.encrypted"
   ]
 }

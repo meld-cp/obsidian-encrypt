@@ -26,13 +26,13 @@ export class EncryptedFileContentView extends TextFileView {
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
 		console.debug('EncryptedFileContentView.constructor', {leaf});
+
 		this.actionIconLockNote = this.addAction( 'lock', 'Lock', (ev) =>{
-			//this.currentView = EncryptedFileContentViewStateEnum.decryptNote;
+			this.encryptionPassword = '';
 			this.refreshView(EncryptedFileContentViewStateEnum.decryptNote);
 		});
 
 		this.actionChangePassword = this.addAction( 'key', 'Change Password', (ev) =>{
-			//this.currentView = EncryptedFileContentViewStateEnum.changePassword;
 			this.refreshView(EncryptedFileContentViewStateEnum.changePassword);
 		});
 		
@@ -68,7 +68,7 @@ export class EncryptedFileContentView extends TextFileView {
 		const container = this.createInputContainer();
 
 		new Setting(container)
-			.setDesc('Please provide a password and password hint to start editing this note.')
+			.setDesc('Please provide a password and hint to start editing this note.')
 		;
 
 		const submit = async (password: string, confirm: string, hint:string) => {
@@ -227,17 +227,20 @@ export class EncryptedFileContentView extends TextFileView {
 	}
 
 	private createEditorView() : HTMLElement {
-		const container = this.contentEl.createEl('textarea');
-		//const container = this.contentEl.createDiv();
-		//container.contentEditable = 'true';
+		//const container = this.contentEl.createEl('textarea');
+		const container = this.contentEl.createDiv();
+		container.contentEditable = 'true';
 		container.style.flexGrow = '1';
 		container.style.alignSelf = 'stretch';
 
-		container.value = this.currentEditorText
+		//container.value = this.currentEditorText
+		container.innerText = this.currentEditorText;
+		container.focus();
 
 		container.on('input', '*', async (ev, target) =>{
 			console.debug('editor input',{ev, target});
-			this.currentEditorText = container.value;
+			//this.currentEditorText = container.value;
+			this.currentEditorText = container.innerText;
 			await this.encodeAndSave();
 		});
 		return container;
@@ -266,21 +269,10 @@ export class EncryptedFileContentView extends TextFileView {
 
 			if ( validPw.length === 0 && validCpw.length === 0 ){
 				//set password and hint and open note
-				// var fileData = JsonFileEncoding.decode(this.data);
-
-				// const decryptedText = await FileDataHelper.decrypt(
-				// 	fileData,
-				// 	this.encryptionPassword
-				// );
-	
-				// if (decryptedText === null){
-				// 	new Notice('Decryption failed');
-				// }else{
 				console.debug('createChangePasswordView submit');
 				this.encryptionPassword = newPassword;
 				this.hint = newHint;
-				//this.currentView = EncryptedFileContentViewStateEnum.editNote;
-				//}
+
 				this.encodeAndSave();
 				this.refreshView( EncryptedFileContentViewStateEnum.editNote );
 			}
@@ -491,6 +483,7 @@ export class EncryptedFileContentView extends TextFileView {
 		return VIEW_TYPE_ENCRYPTED_FILE_CONTENT;
 	}
 
+	// the data to show on the view
 	override setViewData(data: string, clear: boolean): void {
 		console.debug('EncryptedFileContentView.setViewData', {
 			data,
