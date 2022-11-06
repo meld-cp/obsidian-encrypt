@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "18f3a188842c52f4",
+        "id": "131da80605daebb5",
         "type": "tabs",
         "children": [
           {
-            "id": "a7ff0d81d432a465",
+            "id": "da58d5df219f4d52",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -128,17 +128,17 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "a7ff0d81d432a465",
+  "active": "da58d5df219f4d52",
   "lastOpenFiles": [
     "Test.encrypted",
     "Untitled.md",
+    "Untitled 20221106 052431.encrypted",
     "Untitled 20221106 043648.encrypted",
+    "Untitled 20221106 051518.encrypted",
+    "Untitled 20221106 051549.encrypted",
     "Untitled 20221106 043608.encrypted",
     "Untitled 20221106 030457.encrypted",
     "Untitled 20221106 042128.encrypted",
-    "Untitled 20221106 040640.encrypted",
-    "Untitled 20221106 040340.encrypted",
-    "Untitled 20221106 035541.encrypted",
-    "Untitled 20221106 033526.encrypted"
+    "Untitled 20221106 040640.encrypted"
   ]
 }

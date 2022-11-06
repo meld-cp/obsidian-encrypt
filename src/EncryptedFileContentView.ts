@@ -82,7 +82,6 @@ export class EncryptedFileContentView extends TextFileView {
 				this.encryptionPassword = password;
 				this.hint = hint;
 				this.currentEditorText = this.file.basename;
-				//this.currentView = EncryptedFileContentViewStateEnum.editNote;
 
 				await this.encodeAndSave()
 					
@@ -99,6 +98,7 @@ export class EncryptedFileContentView extends TextFileView {
 			.setName("Password:")
 			.setDesc('')
 			.addText( tc => {
+				tc.inputEl.focus();
 				tc.inputEl.type = 'password';
 				tc.onChange( v => {
 					password = v;
@@ -172,7 +172,6 @@ export class EncryptedFileContentView extends TextFileView {
 
 
 	private createDecryptNoteView() : HTMLElement {
-		//console.debug('createDecryptNoteView', { "hint": this.hint} );
 		const container = this.createInputContainer();
 
 		new Setting(container)
@@ -183,6 +182,7 @@ export class EncryptedFileContentView extends TextFileView {
 			.setName("Password:")
 			.addText((tc) =>{
 				tc.inputEl.type = 'password';
+				tc.inputEl.focus();
 				tc.setValue(this.encryptionPassword)
 				tc.setPlaceholder(this.formatHint(this.hint));
 				tc.onChange((value) => {
@@ -194,7 +194,6 @@ export class EncryptedFileContentView extends TextFileView {
 						await this.handleDecryptButtonClick();
 					}
 				}
-				setImmediate(() => tc.inputEl.focus())
 			})
 		;
 
@@ -202,8 +201,8 @@ export class EncryptedFileContentView extends TextFileView {
 			.addButton( bc => {
 				bc
 					.setCta()
-					.setIcon('go-to-file')
-					.setTooltip('Unlock')
+					.setIcon('checkmark')
+					.setTooltip('Unlock & Edit')
 					.onClick( (evt) => this.handleDecryptButtonClick() )
 				;
 			})
@@ -275,6 +274,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 				this.encodeAndSave();
 				this.refreshView( EncryptedFileContentViewStateEnum.editNote );
+				new Notice('Password and Hint were changed');
 			}
 		}
 
@@ -284,6 +284,7 @@ export class EncryptedFileContentView extends TextFileView {
 			.setDesc('')
 			.addText( tc => {
 				tc.inputEl.type = 'password';
+				tc.inputEl.focus();
 				tc.onChange( v => {
 					newPassword = v;
 					sNewPassword.setDesc( this.validatePassword(newPassword) );
@@ -341,24 +342,22 @@ export class EncryptedFileContentView extends TextFileView {
 		});
 
 		new Setting(container)
-			.addExtraButton( bc => {
+				.addButton( bc => {
 				bc
-					.setIcon('undo')
+					.removeCta()
+					.setIcon('cross')
+					//.setButtonText('Cancel')
 					.setTooltip('Cancel')
 					.onClick( () => {
-						//this.currentView = cancelState;
-						this.refreshView(
-							EncryptedFileContentViewStateEnum.editNote
-						);
+						this.refreshView( EncryptedFileContentViewStateEnum.editNote );
 					} )
 				;
-			})
-			.addButton( bc => {
+			}).addButton( bc => {
 				bc
 					.setCta()
-					//.setIcon('lock')
-					//.setTooltip('Change Password')
-					.setButtonText('Change Password')
+					.setIcon('checkmark')
+					.setTooltip('Change Password')
+					//.setButtonText('Change Password')
 					.setWarning()
 					.onClick( (ev) => {
 						submit(newPassword, confirm, newHint);
@@ -383,30 +382,23 @@ export class EncryptedFileContentView extends TextFileView {
 	){
 		console.debug('refreshView',{'currentView':this.currentView, newView});
 
-		// if (newView == this.currentView ){
-		// 	return;
-		// }
-
 		this.actionIconLockNote.hide();
 		this.actionChangePassword.hide();
 
 		// clear view
 		this.contentEl.replaceChildren();
 
-		//const prevView = this.currentView;
 		this.currentView = newView;
 
 		switch (this.currentView) {
 			case EncryptedFileContentViewStateEnum.newNote:
 				this.createTitle('This note will be encrypted');
 				this.createNewNoteView();
-				this.contentEl.querySelector('input')?.focus();
 			break;
 
 			case EncryptedFileContentViewStateEnum.decryptNote:
 				this.createTitle('This note is encrypted');
 				this.createDecryptNoteView();
-				this.contentEl.querySelector('input')?.focus();
 			break;
 			
 			case EncryptedFileContentViewStateEnum.editNote:
@@ -414,13 +406,11 @@ export class EncryptedFileContentView extends TextFileView {
 				this.actionChangePassword.show();
 				this.createTitle('This note is encrypted');
 				this.createEditorView();
-				this.contentEl.querySelector('textarea')?.focus();
 			break;
 
 			case EncryptedFileContentViewStateEnum.changePassword:
 				this.createTitle('Change encrypted note password');
 				this.createChangePasswordView();
-				this.contentEl.querySelector('input')?.focus();
 			break;
 		}
 
@@ -446,32 +436,6 @@ export class EncryptedFileContentView extends TextFileView {
 
 	}
 
-	// protected override async onOpen(): Promise<void> {
-	// 	super.onOpen();
-	// 	console.debug('onOpen',{ 'state': this.getState(), 'estate': this.getEphemeralState()});
-	// }
-
-	// override async setState(state: any, result: ViewStateResult): Promise<void> {
-	// 	console.debug('setState',{ state, result});
-	// 	super.setState(state, result);
-	// 	if ( state['viewState'] === EncryptedFileContentViewStateEnum.newNote ){
-	// 		console.debug('setState - new note');
-	// 		this.currentView = EncryptedFileContentViewStateEnum.newNote;
-	// 	}
-	// }
-
-	// override async onLoadFile(file: TFile): Promise<void> {
-	// 	console.debug('onLoadFile',{file});
-	// 	super.onLoadFile(file);
-	// }
-
-	
-
-	// override async onUnloadFile(file: TFile): Promise<void> {
-	// 	console.debug('onUnloadFile',{file});
-	// 	super.onUnloadFile(file);
-	// }
-
 	// important
 	canAcceptExtension(extension: string): boolean {
 		console.debug('EncryptedFileContentView.canAcceptExtension', {extension});
@@ -494,21 +458,31 @@ export class EncryptedFileContentView extends TextFileView {
 			//'preview-mode-data':this.previewMode.get()
 		});
 
-		var newView = this.currentView;
 		if (clear){
-			this.encryptionPassword = '';
-			if (data == ''){
+
+			var newView : EncryptedFileContentViewStateEnum;
+			if (data === ''){
+				// blank new file
 				newView = EncryptedFileContentViewStateEnum.newNote;
 			}else{
 				newView = EncryptedFileContentViewStateEnum.decryptNote;
 			}
-		}
+			
+			// new file, we don't know what the password is yet
+			this.encryptionPassword = '';
 
-		// decode file data
-		var fileData = JsonFileEncoding.decode(this.data);
+			// json decode file data to get the Hint
+			var fileData = JsonFileEncoding.decode(this.data);
+			
+			this.hint = fileData.hint;
+			
+			this.refreshView( newView );
+
+		}else{
+			this.leaf.detach();
+			new Notice('Multiple views of the same file isn\'t supported');
+		}
 		
-		this.hint = fileData.hint;
-		this.refreshView( newView );
 	}
 
 	// the data to save to disk
