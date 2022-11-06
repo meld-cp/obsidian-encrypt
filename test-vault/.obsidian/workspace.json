@@ -4,18 +4,16 @@
     "type": "split",
     "children": [
       {
-        "id": "36e0c8674ad2d60d",
+        "id": "0fbb47812751a7cc",
         "type": "tabs",
         "children": [
           {
-            "id": "90c281b7393b5e8e",
+            "id": "608603622783d155",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "meld-encrypted-file-content-view",
               "state": {
-                "file": "Untitled.md",
-                "mode": "source",
-                "source": false
+                "file": "Test.encrypted"
               }
             }
           }
@@ -69,7 +67,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 230.5
+    "width": 200
   },
   "right": {
     "id": "f9aa95883cca2372",
@@ -85,7 +83,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Untitled.md",
+                "file": "Test.encrypted",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +100,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Untitled.md",
+                "file": "Test.encrypted",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +123,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Untitled.md"
+                "file": "Test.encrypted"
               }
             }
           }
@@ -136,12 +134,17 @@
     "width": 300,
     "collapsed": true
   },
-  "ribbon": {
-    "mostRecentAction": ""
-  },
-  "active": "90c281b7393b5e8e",
+  "active": "608603622783d155",
   "lastOpenFiles": [
-    "Example.md",
-    "Untitled.md"
+    "Untitled 20221106 030457.encrypted",
+    "Test.encrypted",
+    "Untitled 20221106 042128.encrypted",
+    "Untitled 20221106 040640.encrypted",
+    "Untitled 20221106 040340.encrypted",
+    "Untitled 20221106 035541.encrypted",
+    "Untitled 20221106 033526.encrypted",
+    "Untitled 20221106 033438.encrypted",
+    "Untitled.md",
+    "Untitled 20221106 020054.encrypted"
   ]
 }

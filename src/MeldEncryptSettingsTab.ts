@@ -52,9 +52,9 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 			.setDesc('Show a button to copy decrypted text.')
 			.addToggle( toggle =>{
 				toggle
-					.setValue(this.plugin.settings.showButton)
+					.setValue(this.plugin.settings.showCopyButton)
 					.onChange( async value =>{
-						this.plugin.settings.showButton = value;
+						this.plugin.settings.showCopyButton = value;
 						await this.plugin.saveSettings();
 						this.updateSettingsUi();
 					})

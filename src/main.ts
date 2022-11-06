@@ -1,8 +1,12 @@
-import { Notice, Plugin, MarkdownView, Editor, EditorPosition } from 'obsidian';
+import { Notice, Plugin, MarkdownView, Editor, EditorPosition, TFile, TFolder, moment, View } from 'obsidian';
 import DecryptModal from './DecryptModal';
 import PasswordModal from './PasswordModal';
 import { CryptoHelperV2, CryptoHelperObsolete} from './CryptoHelper';
 import MeldEncryptSettingsTab from './MeldEncryptSettingsTab';
+import { EncryptedFileView, VIEW_TYPE_ENCRYPTED_FILE } from './EncryptedFileView';
+import { VIEW_TYPE_ENCRYPTED_MARKDOWN } from './EncryptedMarkdownView';
+import { EncryptedFileContentView, EncryptedFileContentViewStateEnum, VIEW_TYPE_ENCRYPTED_FILE_CONTENT } from './EncryptedFileContentView';
+import * as path from 'path';
 
 const _PREFIX: string = '%%🔐';
 const _PREFIX_OBSOLETE: string = _PREFIX + ' ';
@@ -14,7 +18,7 @@ const _HINT: string = '💡';
 interface MeldEncryptPluginSettings {
 	expandToWholeLines: boolean,
 	confirmPassword: boolean;
-	showButton: boolean;
+	showCopyButton: boolean;
 	rememberPassword: boolean;
 	rememberPasswordTimeout: number;
 }
@@ -22,7 +26,7 @@ interface MeldEncryptPluginSettings {
 const DEFAULT_SETTINGS: MeldEncryptPluginSettings = {
 	expandToWholeLines: true,
 	confirmPassword: true,
-	showButton: false,
+	showCopyButton: true,
 	rememberPassword: true,
 	rememberPasswordTimeout: 30
 }
@@ -37,7 +41,95 @@ export default class MeldEncrypt extends Plugin {
 
 		await this.loadSettings();
 
+		this.registerView(
+			VIEW_TYPE_ENCRYPTED_FILE_CONTENT,
+			(leaf) => new EncryptedFileContentView(leaf)
+		);
+
+		this.registerEvent(
+			// this.app.workspace.on("file-open", (file) =>{
+			// 	console.debug('file-open', {file});
+			// })
+			// this.app.workspace.on( "editor-change", (editor, markdownView) =>{
+			// 	console.debug('editor-change', {editor, markdownView});
+			// 	if ( markdownView instanceof EncryptedFileView ){
+					
+			// 	}
+			// })
+			this.app.workspace.on("window-open", (file, data) =>{
+				console.debug('window-open', {file, data});
+			})
+		)
+
+		this.registerExtensions(['encrypted'], VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
+
+		this.registerEvent(
+			this.app.workspace.on("file-menu", (menu, file, source, leaf) => {
+				console.debug('file-menu', {menu, file,source,leaf});
+				if ( source == 'file-explorer-context-menu' ){
+					menu.addSeparator();
+					if ( file instanceof TFile ){
+						if (file.extension != 'encrypted'){
+							menu.addItem((item) => {
+								item
+									.setTitle("Encrypt")
+									//.setIcon("document")
+									.onClick(async () => {
+										new Notice('Encrypt - To do');
+										//
+									});
+								}
+							);
+						}else{
+							menu.addItem((item) => {
+							item
+								.setTitle("Set new password")
+								//.setIcon("document")
+								.onClick(async () => {
+									new Notice('Set new password - To do');
+								});
+							});
+						}
+					} else if( file instanceof TFolder){
+						menu.addItem((item) => {
+							item
+								.setTitle("New encrypted note")
+								//.setIcon("document")
+								.onClick(async () => {
+									new Notice('New encrypted note - To do');
+								});
+							}
+						);
+					}
+					menu.addSeparator();
+				}
+			})
+		);
+
+		this.registerEvent(
+			this.app.workspace.on("editor-menu", (menu, editor, view) => {
+				console.debug('editor-menu',{menu, editor,view});
+				if (view.file.extension == 'encrypted'){
+					menu.addItem((item) => {
+						item
+							.setTitle("Change password")
+							.setIcon("document")
+							.onClick(async () => {
+								new Notice('To do');
+							});
+					});
+				};
+			})
+		);
+
+
 		this.addSettingTab(new MeldEncryptSettingsTab(this.app, this));
+
+		this.addCommand({
+			id: 'meld-encrypt-create-new-note',
+			name: 'Create new encrypted note',
+			checkCallback: (checking) => this.processCreateNewEncryptedNoteCommand(checking)
+		});
 
 		this.addCommand({
 			id: 'meld-encrypt',
@@ -58,6 +150,12 @@ export default class MeldEncrypt extends Plugin {
 		});
 
 	}
+	
+	onunload() {
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE_ENCRYPTED_MARKDOWN);
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
+		this.app.workspace.detachLeavesOfType(VIEW_TYPE_ENCRYPTED_FILE);
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -71,7 +169,31 @@ export default class MeldEncrypt extends Plugin {
 		return document.querySelector('.mod-settings') !== null;
 	} 
 
-	processEncryptDecryptWholeNoteCommand(checking: boolean, editor: Editor, view: MarkdownView): boolean {
+	private processCreateNewEncryptedNoteCommand(checking: boolean): boolean{
+		console.debug('processCreateNewEncryptedNoteCommand', {checking});
+		if (checking){
+			return true;
+		}
+		
+		var newFilename = moment().format('[Untitled] YYYYMMDD hhmmss[.encrypted]'); 
+		var newFilepath = path.join( this.app.vault.getRoot().path, newFilename);
+		
+		console.debug('processCreateNewEncryptedNoteCommand', {newFilename, newFilepath});
+		
+		this.app.vault.create(newFilepath,'').then( f=>{
+			const leaf = this.app.workspace.getLeaf( false );
+			// leaf.openFile( f, {
+			// 	state: {
+			// 		'viewState': EncryptedFileContentViewStateEnum.newNote
+			// 	}
+			// } );
+			leaf.openFile( f );
+		});
+
+		return true;
+	}
+
+	private processEncryptDecryptWholeNoteCommand(checking: boolean, editor: Editor, view: MarkdownView): boolean {
 
 		if ( checking && this.isSettingsModalOpen() ){
 			// Settings is open, ensures this command can show up in other
@@ -94,7 +216,7 @@ export default class MeldEncrypt extends Plugin {
 		);
 	}
 
-	processEncryptDecryptCommand(checking: boolean, editor: Editor, view: MarkdownView, decryptInPlace: boolean): boolean {
+	private processEncryptDecryptCommand(checking: boolean, editor: Editor, view: MarkdownView, decryptInPlace: boolean): boolean {
 		if ( checking && this.isSettingsModalOpen() ){
 			// Settings is open, ensures this command can show up in other
 			// plugins which list commands e.g. customizable-sidebar
@@ -347,7 +469,7 @@ export default class MeldEncrypt extends Plugin {
 				editor.setSelection(selectionStart, selectionEnd);
 				editor.replaceSelection(decryptedText);
 			} else {
-				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText, this.settings.showButton);
+				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText, this.settings.showCopyButton);
 				decryptModal.onClose = () => {
 					editor.focus();
 					if (decryptModal.decryptInPlace) {
@@ -380,7 +502,7 @@ export default class MeldEncrypt extends Plugin {
 				editor.setSelection(selectionStart, selectionEnd);
 				editor.replaceSelection(decryptedText);
 			} else {
-				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText, this.settings.showButton);
+				const decryptModal = new DecryptModal(this.app, '🔓', decryptedText, this.settings.showCopyButton);
 				decryptModal.onClose = () => {
 					editor.focus();
 					if (decryptModal.decryptInPlace) {

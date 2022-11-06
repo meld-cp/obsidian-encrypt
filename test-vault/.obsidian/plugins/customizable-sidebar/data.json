@@ -1,18 +1,8 @@
 {
   "sidebarCommands": [
     {
-      "id": "meld-encrypt:meld-encrypt-note",
-      "name": "Meld Encrypt: Encrypt/Decrypt Whole Note",
-      "icon": "feather-lock"
-    },
-    {
-      "id": "meld-encrypt:meld-encrypt",
-      "name": "Meld Encrypt: Encrypt/Decrypt",
-      "icon": "feather-lock"
-    },
-    {
-      "id": "meld-encrypt:meld-encrypt-note",
-      "name": "Meld Encrypt: Encrypt/Decrypt Whole Note",
+      "id": "meld-encrypt:meld-encrypt-create-new-note",
+      "name": "Meld Encrypt: Create new encrypted note",
       "icon": "feather-lock"
     }
   ],
