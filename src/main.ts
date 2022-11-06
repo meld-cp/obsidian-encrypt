@@ -46,81 +46,81 @@ export default class MeldEncrypt extends Plugin {
 			(leaf) => new EncryptedFileContentView(leaf)
 		);
 
-		this.registerEvent(
-			// this.app.workspace.on("file-open", (file) =>{
-			// 	console.debug('file-open', {file});
-			// })
-			// this.app.workspace.on( "editor-change", (editor, markdownView) =>{
-			// 	console.debug('editor-change', {editor, markdownView});
-			// 	if ( markdownView instanceof EncryptedFileView ){
+		// this.registerEvent(
+		// 	// this.app.workspace.on("file-open", (file) =>{
+		// 	// 	console.debug('file-open', {file});
+		// 	// })
+		// 	// this.app.workspace.on( "editor-change", (editor, markdownView) =>{
+		// 	// 	console.debug('editor-change', {editor, markdownView});
+		// 	// 	if ( markdownView instanceof EncryptedFileView ){
 					
-			// 	}
-			// })
-			this.app.workspace.on("window-open", (file, data) =>{
-				console.debug('window-open', {file, data});
-			})
-		)
+		// 	// 	}
+		// 	// })
+		// 	this.app.workspace.on("window-open", (file, data) =>{
+		// 		console.debug('window-open', {file, data});
+		// 	})
+		// )
 
 		this.registerExtensions(['encrypted'], VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
 
-		this.registerEvent(
-			this.app.workspace.on("file-menu", (menu, file, source, leaf) => {
-				console.debug('file-menu', {menu, file,source,leaf});
-				if ( source == 'file-explorer-context-menu' ){
-					menu.addSeparator();
-					if ( file instanceof TFile ){
-						if (file.extension != 'encrypted'){
-							menu.addItem((item) => {
-								item
-									.setTitle("Encrypt")
-									//.setIcon("document")
-									.onClick(async () => {
-										new Notice('Encrypt - To do');
-										//
-									});
-								}
-							);
-						}else{
-							menu.addItem((item) => {
-							item
-								.setTitle("Set new password")
-								//.setIcon("document")
-								.onClick(async () => {
-									new Notice('Set new password - To do');
-								});
-							});
-						}
-					} else if( file instanceof TFolder){
-						menu.addItem((item) => {
-							item
-								.setTitle("New encrypted note")
-								//.setIcon("document")
-								.onClick(async () => {
-									new Notice('New encrypted note - To do');
-								});
-							}
-						);
-					}
-					menu.addSeparator();
-				}
-			})
-		);
+		// this.registerEvent(
+		// 	this.app.workspace.on("file-menu", (menu, file, source, leaf) => {
+		// 		console.debug('file-menu', {menu, file,source,leaf});
+		// 		if ( source == 'file-explorer-context-menu' ){
+		// 			menu.addSeparator();
+		// 			if ( file instanceof TFile ){
+		// 				if (file.extension != 'encrypted'){
+		// 					menu.addItem((item) => {
+		// 						item
+		// 							.setTitle("Encrypt")
+		// 							//.setIcon("document")
+		// 							.onClick(async () => {
+		// 								new Notice('Encrypt - To do');
+		// 								//
+		// 							});
+		// 						}
+		// 					);
+		// 				}else{
+		// 					menu.addItem((item) => {
+		// 					item
+		// 						.setTitle("Set new password")
+		// 						//.setIcon("document")
+		// 						.onClick(async () => {
+		// 							new Notice('Set new password - To do');
+		// 						});
+		// 					});
+		// 				}
+		// 			} else if( file instanceof TFolder){
+		// 				menu.addItem((item) => {
+		// 					item
+		// 						.setTitle("New encrypted note")
+		// 						//.setIcon("document")
+		// 						.onClick(async () => {
+		// 							new Notice('New encrypted note - To do');
+		// 						});
+		// 					}
+		// 				);
+		// 			}
+		// 			menu.addSeparator();
+		// 		}
+		// 	})
+		// );
 
-		this.registerEvent(
-			this.app.workspace.on("editor-menu", (menu, editor, view) => {
-				console.debug('editor-menu',{menu, editor,view});
-				if (view.file.extension == 'encrypted'){
-					menu.addItem((item) => {
-						item
-							.setTitle("Change password")
-							.setIcon("document")
-							.onClick(async () => {
-								new Notice('To do');
-							});
-					});
-				};
-			})
-		);
+		// this.registerEvent(
+		// 	this.app.workspace.on("editor-menu", (menu, editor, view) => {
+		// 		console.debug('editor-menu',{menu, editor,view});
+		// 		if (view.file.extension == 'encrypted'){
+		// 			menu.addItem((item) => {
+		// 				item
+		// 					.setTitle("Change password")
+		// 					.setIcon("document")
+		// 					.onClick(async () => {
+		// 						new Notice('To do');
+		// 					});
+		// 			});
+		// 		};
+		// 	})
+		// );
 
 
 		this.addSettingTab(new MeldEncryptSettingsTab(this.app, this));

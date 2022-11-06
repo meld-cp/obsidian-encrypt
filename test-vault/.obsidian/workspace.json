@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "131da80605daebb5",
+        "id": "5775cada61ae5a10",
         "type": "tabs",
         "children": [
           {
-            "id": "da58d5df219f4d52",
+            "id": "bb4abbe98d3a535e",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -128,7 +128,7 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "da58d5df219f4d52",
+  "active": "bb4abbe98d3a535e",
   "lastOpenFiles": [
     "Test.encrypted",
     "Untitled.md",
