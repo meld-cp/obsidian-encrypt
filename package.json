@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
-    "build": "rollup --config rollup.config.js"
+    "build": "rollup --config rollup.config.js",
+    "build-tool-decrypt": "rollup --config rollup-tool-decrypt.config.js"
   },
   "keywords": [],
   "author": "",

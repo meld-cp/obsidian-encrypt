@@ -1,2 +1,3 @@
 222
-[[Test.encrypted]]
+
+[[An encrypted note.encrypted]]

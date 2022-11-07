@@ -53,24 +53,6 @@ export class CryptoHelperV2 {
 
 	public async encryptToBase64(text: string, password: string): Promise<string> {
 
-		// const key = await this.deriveKey(password);
-		
-		// const textBytesToEncrypt = utf8Encoder.encode(text);
-		// const vector = crypto.getRandomValues(new Uint8Array(vectorSize));
-		
-		// // encrypt into bytes
-		// const encryptedBytes = new Uint8Array(
-		// 	await crypto.subtle.encrypt(
-		// 		{name: 'AES-GCM', iv: vector},
-		// 		key,
-		// 		textBytesToEncrypt
-		// 	)
-		// );
-		
-		// const finalBytes = new Uint8Array( vector.byteLength + encryptedBytes.byteLength );
-		// finalBytes.set( vector, 0 );
-		// finalBytes.set( encryptedBytes, vector.byteLength );
-
 		const finalBytes = await this.encryptToBytes(text, password);
 
 		//convert array to base64

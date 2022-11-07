@@ -78,12 +78,13 @@ export class EncryptedFileContentView extends TextFileView {
 			sConfirm.setDesc( validCpw );
 
 			if ( validPw.length === 0 && validCpw.length === 0 ){
+				
 				//set password and hint and open note
 				this.encryptionPassword = password;
 				this.hint = hint;
 				this.currentEditorText = this.file.basename;
 
-				await this.encodeAndSave()
+				await this.encodeAndSave();
 					
 				this.refreshView(EncryptedFileContentViewStateEnum.editNote);
 
@@ -212,17 +213,23 @@ export class EncryptedFileContentView extends TextFileView {
 	}
 
 	private async encodeAndSave( ){
-		console.debug('encodeAndSave');
-			
-		var fileData = await FileDataHelper.encode(
-			this.encryptionPassword,
-			this.hint,
-			this.currentEditorText
-		);
-		
-		this.data = JsonFileEncoding.encode(fileData);
+		try{
 
-		this.requestSave();
+			console.debug('encodeAndSave');
+			
+			var fileData = await FileDataHelper.encode(
+				this.encryptionPassword,
+				this.hint,
+				this.currentEditorText
+			);
+			
+			this.data = JsonFileEncoding.encode(fileData);
+			
+			this.requestSave();
+		} catch(e){
+			console.error(e);
+			new Notice(e, 10000);
+		}
 	}
 
 	private createEditorView() : HTMLElement {
@@ -380,13 +387,14 @@ export class EncryptedFileContentView extends TextFileView {
 	private refreshView(
 		newView: EncryptedFileContentViewStateEnum
 	){
+		
 		console.debug('refreshView',{'currentView':this.currentView, newView});
 
 		this.actionIconLockNote.hide();
 		this.actionChangePassword.hide();
 
 		// clear view
-		this.contentEl.replaceChildren();
+		this.contentEl.empty();
 
 		this.currentView = newView;
 
@@ -480,7 +488,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 		}else{
 			this.leaf.detach();
-			new Notice('Multiple views of the same file isn\'t supported');
+			new Notice('Multiple views of the same encrypted note isn\'t supported');
 		}
 		
 	}
@@ -518,18 +526,16 @@ class FileDataHelper{
 
 	public static async encode( pass: string, hint:string, text:string ) : Promise<FileData>{
 		const crypto = new CryptoHelperV2();
-		const encryptedBytes = await crypto.encryptToBytes(text, pass);
-		var encryptedData = Buffer.from(encryptedBytes).toString('base64');
+		const encryptedData = await crypto.encryptToBase64(text, pass);
 		return new FileData(hint, encryptedData);
 	}
 
 	public static async decrypt( data: FileData, pass:string ) : Promise<string>{
-		if (data.encodedData == "" ){
-			return "";
+		if ( data.encodedData == '' ){
+			return '';
 		}
-		const encryptedBytes = Buffer.from(data.encodedData, 'base64');
 		const crypto = new CryptoHelperV2();
-		return await crypto.decryptFromBytes(encryptedBytes, pass);
+		return await crypto.decryptFromBase64(data.encodedData, pass);
 	}
 }
 

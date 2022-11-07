@@ -16,9 +16,25 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 		
-		containerEl.createEl('h2', {text: 'Settings for Meld Encrypt'});
+		containerEl.createEl('h1', {text: 'Settings for Meld Encrypt'});
 
 
+		new Setting(containerEl)
+			.setName('Add ribbon icon to create note')
+			.setDesc('Adds a ribbon icon to the left bar to create an encrypted note.')
+			.addToggle( toggle =>{
+				toggle.setValue(this.plugin.settings.addRibbonIconToCreateNote)
+				.onChange( async value =>{
+					this.plugin.settings.addRibbonIconToCreateNote = value;
+					await this.plugin.saveSettings();
+				})
+			})
+		;
+		
+		containerEl.createEl('hr');
+		containerEl.createEl('h2', {text: 'Deprecated Settings'});
+
+		// DEPRECATED below
 		new Setting(containerEl)
 			.setName('Expand selection to whole line?')
 			.setDesc('Partial selections will get expanded to the whole line.')

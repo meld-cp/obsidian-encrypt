@@ -1,5 +1,6 @@
 import { App, Modal } from 'obsidian';
 
+// DEPRECATED
 export default class DecryptModal extends Modal {
 	text: string;
 	decryptInPlace: boolean = false;

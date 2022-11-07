@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "5775cada61ae5a10",
+        "id": "44bf2b304ddf6389",
         "type": "tabs",
         "children": [
           {
-            "id": "bb4abbe98d3a535e",
+            "id": "b021225a9d4ea6b5",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -44,7 +44,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "%%🔐",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -128,17 +128,17 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "bb4abbe98d3a535e",
+  "active": "b021225a9d4ea6b5",
   "lastOpenFiles": [
-    "Test.encrypted",
-    "Untitled.md",
-    "Untitled 20221106 052431.encrypted",
-    "Untitled 20221106 043648.encrypted",
-    "Untitled 20221106 051518.encrypted",
-    "Untitled 20221106 051549.encrypted",
-    "Untitled 20221106 043608.encrypted",
-    "Untitled 20221106 030457.encrypted",
-    "Untitled 20221106 042128.encrypted",
-    "Untitled 20221106 040640.encrypted"
+    "Untitled 20221107 083546.encrypted",
+    "An encrypted note.encrypted",
+    "Folder/Untitled 20221107 075927.encrypted",
+    "Untitled 20221107 082517.encrypted",
+    "Untitled 20221107 082432.encrypted",
+    "Folder/Untitled 20221107 082505.encrypted",
+    "Folder/Example.md",
+    "Untitled 20221107 082421.encrypted",
+    "Untitled 20221107 082418.encrypted",
+    "Untitled 20221107 082414.encrypted"
   ]
 }

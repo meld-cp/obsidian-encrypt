@@ -6,7 +6,13 @@
 	"configurations": [
 		{
 			"command": "npm run dev",
-			"name": "Run npm dev",
+			"name": "Debug Plugin (watch)",
+			"request": "launch",
+			"type": "node-terminal"
+		},
+		{
+			"command": "npm run build-tool-decrypt",
+			"name": "Build Tool Decrypt",
 			"request": "launch",
 			"type": "node-terminal"
 		},
