@@ -1,4 +1,4 @@
-import { Notice, Setting, TextFileView } from 'obsidian';
+import { Menu, MenuItem, Notice, Setting, TextFileView } from 'obsidian';
 import { WorkspaceLeaf } from "obsidian";
 import { CryptoHelperV2 } from './CryptoHelper';
 
@@ -20,26 +20,54 @@ export class EncryptedFileContentView extends TextFileView {
 	currentEditorText:string = '';
 	// end state
 	
-	actionIconLockNote : HTMLElement;
-	actionChangePassword : HTMLElement;
+	elActionIconLockNote : HTMLElement;
+	elActionChangePassword : HTMLElement;
 
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
+
 		console.debug('EncryptedFileContentView.constructor', {leaf});
 
-		this.actionIconLockNote = this.addAction( 'lock', 'Lock', (ev) =>{
-			this.encryptionPassword = '';
-			this.refreshView(EncryptedFileContentViewStateEnum.decryptNote);
-		});
+		this.elActionIconLockNote = this.addAction( 'lock', 'Lock', () => this.actionLockFile() );
 
-		this.actionChangePassword = this.addAction( 'key', 'Change Password', (ev) =>{
-			this.refreshView(EncryptedFileContentViewStateEnum.changePassword);
-		});
+		this.elActionChangePassword = this.addAction( 'key', 'Change Password', () => this.actionChangePassword() );
 		
 		this.contentEl.style.display = 'flex';
 		this.contentEl.style.flexDirection = 'column';
 		this.contentEl.style.alignItems = 'center';
 
+	}
+
+	private actionLockFile(){
+		this.encryptionPassword = '';
+		this.refreshView(EncryptedFileContentViewStateEnum.decryptNote);
+	}
+
+	private actionChangePassword(){
+		this.refreshView(EncryptedFileContentViewStateEnum.changePassword);
+	}
+
+	override onPaneMenu(menu: Menu, source: string): void {
+		console.debug( {menu, source, 'view': this.currentView});
+		if ( source == 'tab-header' && this.currentView == EncryptedFileContentViewStateEnum.editNote ){
+			menu.addItem( m =>{
+				m
+					.setSection('action')
+					.setIcon('lock')
+					.setTitle('Lock')
+					.onClick( () => this.actionLockFile() )
+				;
+			});
+			menu.addItem( m =>{
+				m
+					.setSection('action')
+					.setIcon('key')
+					.setTitle('Change Password')
+					.onClick( () => this.actionChangePassword() )
+				;
+			});
+		}
+		super.onPaneMenu(menu,source);
 	}
 
 	private createTitle( title:string ) : HTMLElement{
@@ -390,8 +418,8 @@ export class EncryptedFileContentView extends TextFileView {
 		
 		console.debug('refreshView',{'currentView':this.currentView, newView});
 
-		this.actionIconLockNote.hide();
-		this.actionChangePassword.hide();
+		this.elActionIconLockNote.hide();
+		this.elActionChangePassword.hide();
 
 		// clear view
 		this.contentEl.empty();
@@ -410,8 +438,8 @@ export class EncryptedFileContentView extends TextFileView {
 			break;
 			
 			case EncryptedFileContentViewStateEnum.editNote:
-				this.actionIconLockNote.show();
-				this.actionChangePassword.show();
+				this.elActionIconLockNote.show();
+				this.elActionChangePassword.show();
 				this.createTitle('This note is encrypted');
 				this.createEditorView();
 			break;
