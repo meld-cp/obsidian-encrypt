@@ -75,7 +75,7 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 
 ## Do you find this plugin useful?
 
-Support further development of the plugin by...
+Support further development of the plugin by...  
 <a href="https://www.buymeacoffee.com/cleon"><img src="https://img.buymeacoffee.com/button-api/?text=Buying me a coffee&emoji=&slug=cleon&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
 
 Thank you for your support 👍
