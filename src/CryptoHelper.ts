@@ -51,12 +51,21 @@ export class CryptoHelperV2 {
 		return finalBytes;
 	}
 
+	private convertToString( bytes : Uint8Array ): string {
+		let result = '';
+		for (let idx = 0; idx < bytes.length; idx++) {
+			// append to result
+			result += String.fromCharCode(bytes[idx]);
+		}
+		return result;
+	}
+
 	public async encryptToBase64(text: string, password: string): Promise<string> {
 
 		const finalBytes = await this.encryptToBytes(text, password);
 
 		//convert array to base64
-		const base64Text = btoa( String.fromCharCode(...finalBytes) );
+		const base64Text = btoa( this.convertToString(finalBytes) );
 
 		return base64Text;
 	}
@@ -166,7 +175,7 @@ export class CryptoHelperObsolete {
 		));
 
 		//convert array to base64
-		let base64Text = btoa(String.fromCharCode(...encryptedBytes));
+		let base64Text = btoa( String.fromCharCode(...encryptedBytes) );
 
 		return base64Text;
 	}
