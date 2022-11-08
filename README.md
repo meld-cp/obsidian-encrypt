@@ -24,6 +24,11 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### v2.0.1
+Bug fixes
+- fix large files can't be encrypted (#41)
+- add 'Change Password' and 'Lock' actions to note tab context menu (#49)
+
 ### v2.0.0
 
 To make encrypted notes more resilient, starting from v2.0.0, the plugin has taken a new direction in how it works.  It no longer encrypts selections of text within your notes, instead, it opts in to creating an always encrypted note file.
@@ -60,7 +65,7 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 ### Changing an encrypted notes password and hint
 1. Open the note as usual from the navigation tree
 2. Enter the password for the note
-3. Click the 'Change Password' tool icon
+3. Click 'Change Password' from the tab title bar or tab context menu
 4. Enter the new password and hint
 
 ---
