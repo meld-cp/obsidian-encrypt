@@ -2,7 +2,8 @@
 
 **Create encrypted notes within your [Obsidian.md](https://obsidian.md/) vault.**
 
-Encrypted notes are never decrypted to disk giving you peice-of-mind that the decrypted contents havn't been sync'd or backed up to external systems.
+Encrypted notes are never decrypted to disk (unless you use the decrypt in-place feature) giving you peice-of-mind that the decrypted contents havn't been sync'd or backed up to external systems.
+
 
 
 > ⚠️ WARNING - Use at your own risk ⚠️
@@ -26,8 +27,9 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 ### v2.0.2
 
-Due to popular demand, the encrypt in-place functionality which was scheduled for removal is going to stay 🙄🥳.
+Due to popular demand, the encrypt in-place functionality is no longer scheduled for removal 🙄🥳.
 
+**Changes**
 - Code refactors
 - UI clean up
 - Update usage docs
@@ -42,17 +44,17 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 <img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
 -->
 
-### Standalone, always encrypted, notes
-#### Create a new encrypted note
+### Standalone, always encrypted, notes (.encrypted files)
+#### To create a new encrypted note
 1. Select 'Create encrypted note' from the command palette.
 2. Enter and confirm a password and optional hint to use.
 3. Edit your encrypted note (it's contents will be encrypted and saved to disk).
 
-#### Edit/View an encrypted note
+#### To edit/view an encrypted note
 1. Open the note as usual from the navigation tree.
 2. Enter the password for the note.
 
-#### Changing an encrypted notes password and hint
+#### To changing an encrypted notes password and hint
 1. Open the note as usual from the navigation tree.
 2. Enter the password for the note.
 3. Click 'Change Password' from the tab title bar or tab context menu.
@@ -60,7 +62,7 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 
 ### In-place Encryption
 
-#### Encrypt selected text
+#### To encrypt selected text
 1. Select some text to encrypt  
 
 > Note: A partial selection will be expanded to include the whole line if the 'Expand selection to whole line' setting is enabled.
@@ -68,7 +70,7 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 2. Run the Encrypt/Decrypt command from the palette (or bind a keyboard shortcut to it).  
 <img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
 
-3. Enter and confirm a password and optional hint  .
+3. Enter and confirm a password and optional hint.
 
 4. Your selected text should now be encrypted.  
 <img alt="Your selected lines are now encrypted" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_e_r.png" /> 
@@ -80,7 +82,7 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 2. Run the Encrypt/Decrypt command from the palette.  
 <img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
 
-> Note: If you choose 'Encrypt/Decrypt In-place' your text will be decrypted directly into the editor without showing the dialog in step 4 below.
+> Note: If you choose 'Encrypt/Decrypt In-place' your text will be decrypted directly into the editor without showing the dialog in step 4 below (any syncing or backup software could then pick this up).
 3. Enter the correct password.  
 	
 > Note: Your previously used password is filled in by default (You can change this in the plugin settings).
@@ -93,11 +95,11 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 ---
 ## ⚜️ Settings
 
-|Whole note encryption| Description|
+|Whole note encryption| |
 |--|--|
 | ⚙️ Add ribbon icon to create note | Adds a ribbon icon to the left bar to create an encrypted note. |
 
-|In-place encryption| Description|
+|In-place encryption| |
 |--|--|
 | ⚙️ Expand selection to whole line | Partial selections will get expanded to the whole line |
 | ⚙️ Confirm password | Confirm password when encrypting selections |
@@ -116,7 +118,7 @@ Thank you for your support 😊
 
 ---
 
-## ⚜️ Change Log
+## ⚜️ Previous changes
 
 ### v2.0.1
 Bug fixes
