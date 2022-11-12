@@ -1,12 +1,11 @@
 import MeldEncrypt from "../main";
-import { MeldEncryptPluginSettings } from "../settings/MeldEncryptPluginSettings";
+import { IMeldEncryptPluginSettings } from "../settings/MeldEncryptPluginSettings";
 
 export interface IMeldEncryptPluginFeature {
-	onload(plugin: MeldEncrypt, settings: MeldEncryptPluginSettings): Promise<void>;
+	onload(plugin: MeldEncrypt, settings: IMeldEncryptPluginSettings): Promise<void>;
 	onunload(): void;
 	buildSettingsUi(
 		containerEl: HTMLElement,
-		settings:MeldEncryptPluginSettings,
 		saveSettingCallback : () => Promise<void>
 	) : void;
 }

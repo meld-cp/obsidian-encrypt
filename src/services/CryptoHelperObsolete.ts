@@ -1,5 +1,3 @@
-import { deprecate } from "util";
-
 export const algorithmObsolete = {
 	name: 'AES-GCM',
 	iv: new Uint8Array([196, 190, 240, 190, 188, 78, 41, 132, 15, 220, 84, 211]),

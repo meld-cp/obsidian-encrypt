@@ -1,13 +1,8 @@
-export interface MeldEncryptPluginSettings {
-	// Common settings
-	confirmPassword: boolean;
-	rememberPassword: boolean;
-	rememberPasswordTimeout: number;
-	
-	// Whole note encryption settings
-	addRibbonIconToCreateNote: boolean;
+import { IFeatureInplaceEncryptSettings } from "../features/feature-inplace-encrypt/IFeatureInplaceEncryptSettings";
+import { IFeatureWholeNoteEncryptSettings } from "../features/feature-whole-note-encrypt/IFeatureWholeNoteEncryptSettings";
 
-	// Selection Encrypt feature settings
-	expandToWholeLines: boolean;
-	showCopyButton: boolean;
+export interface IMeldEncryptPluginSettings {
+	featureWholeNoteEncrypt : IFeatureWholeNoteEncryptSettings;
+	featureInplaceEncrypt : IFeatureInplaceEncryptSettings;
 }
+

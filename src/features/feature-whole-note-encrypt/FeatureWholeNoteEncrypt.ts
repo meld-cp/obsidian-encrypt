@@ -2,18 +2,19 @@ import { normalizePath, moment, Notice, TFolder, Setting } from "obsidian";
 import { EncryptedFileContentView, VIEW_TYPE_ENCRYPTED_FILE_CONTENT } from "./EncryptedFileContentView";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
-import { MeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
+import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
+import { IFeatureWholeNoteEncryptSettings } from "./IFeatureWholeNoteEncryptSettings";
 
 export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeature {
 
 	plugin:MeldEncrypt;
-	settings: MeldEncryptPluginSettings;
+	settings: IFeatureWholeNoteEncryptSettings;
 
 	private ribbonIconCreateNewNote?: HTMLElement;
 
-	async onload( plugin: MeldEncrypt, settings:MeldEncryptPluginSettings ) {
+	async onload( plugin: MeldEncrypt, settings:IMeldEncryptPluginSettings ) {
 		this.plugin = plugin;
-		this.settings = settings;
+		this.settings = settings.featureWholeNoteEncrypt;
 		this.updateUiForSettings();
 		
 		this.plugin.registerView(
@@ -72,7 +73,6 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 
 	buildSettingsUi(
 		containerEl: HTMLElement,
-		settings: MeldEncryptPluginSettings,
 		saveSettingCallback : () => Promise<void>
 	): void {
 
@@ -87,10 +87,10 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			.addToggle( toggle =>{
 
 				toggle
-					.setValue(settings.addRibbonIconToCreateNote)
+					.setValue(this.settings.addRibbonIconToCreateNote)
 				
 					.onChange( async value => {
-						settings.addRibbonIconToCreateNote = value;
+						this.settings.addRibbonIconToCreateNote = value;
 						await saveSettingCallback();
 						this.updateUiForSettings();
 					})

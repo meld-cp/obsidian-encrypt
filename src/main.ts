@@ -1,13 +1,13 @@
 import { Plugin } from 'obsidian';
 import MeldEncryptSettingsTab from './settings/MeldEncryptSettingsTab';
-import { MeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings';
-import FeatureSelectionEncrypt from './features/feature-selection-encrypt/FeatureSelectionEncrypt';
+import { IMeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings';
+import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInplaceEncrypt';
 import FeatureWholeNoteEncrypt from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature';
 
 export default class MeldEncrypt extends Plugin {
 
-	private settings: MeldEncryptPluginSettings;
+	private settings: IMeldEncryptPluginSettings;
 
 	private enabledFeatures : IMeldEncryptPluginFeature[] = [];
 
@@ -18,7 +18,7 @@ export default class MeldEncrypt extends Plugin {
 
 		this.enabledFeatures.push(
 			new FeatureWholeNoteEncrypt(),
-			new FeatureSelectionEncrypt()
+			new FeatureInplaceEncrypt()
 		);
 
 		this.addSettingTab(
@@ -45,16 +45,18 @@ export default class MeldEncrypt extends Plugin {
 	}
 
 	async loadSettings() {
-		const DEFAULT_SETTINGS: MeldEncryptPluginSettings = {
-			addRibbonIconToCreateNote: true,
+		const DEFAULT_SETTINGS: IMeldEncryptPluginSettings = {
+			featureWholeNoteEncrypt: {
+				addRibbonIconToCreateNote: true,
+			},
 			
-			// FeatureSelectionEncrypt below
-			expandToWholeLines: false,
-			confirmPassword: true,
-			showCopyButton: true,
-			rememberPassword: true,
-			rememberPasswordTimeout: 30
-			// FeatureSelectionEncrypt above
+			featureInplaceEncrypt:{
+				expandToWholeLines: false,
+				confirmPassword: true,
+				showCopyButton: true,
+				rememberPassword: true,
+				rememberPasswordTimeout: 30
+			}
 		}
 
 		this.settings = Object.assign(

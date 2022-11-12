@@ -1,19 +1,19 @@
 import { App, PluginSettingTab } from "obsidian";
 import { IMeldEncryptPluginFeature } from "src/features/IMeldEncryptPluginFeature";
 import MeldEncrypt from "../main";
-import { MeldEncryptPluginSettings } from "./MeldEncryptPluginSettings";
+import { IMeldEncryptPluginSettings } from "./MeldEncryptPluginSettings";
 
 
 export default class MeldEncryptSettingsTab extends PluginSettingTab {
 	plugin: MeldEncrypt;
-	settings: MeldEncryptPluginSettings;
+	settings: IMeldEncryptPluginSettings;
 
 	features:IMeldEncryptPluginFeature[];
 
 	constructor(
 		app: App,
 		plugin: MeldEncrypt,
-		settings:MeldEncryptPluginSettings,
+		settings:IMeldEncryptPluginSettings,
 		features: IMeldEncryptPluginFeature[]
 	) {
 		super(app, plugin);
@@ -30,7 +30,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		containerEl.createEl('h1', {text: 'Settings for Meld Encrypt'});
 
 		this.features.forEach(f => {
-			f.buildSettingsUi( containerEl, this.settings, async () => await this.plugin.saveSettings() );
+			f.buildSettingsUi( containerEl, async () => await this.plugin.saveSettings() );
 		});
 
 	}
