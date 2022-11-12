@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "fc6633d9dd2f0874",
+        "id": "4476818aeb36e172",
         "type": "tabs",
         "children": [
           {
-            "id": "5a9f44dcb98086e2",
+            "id": "eb8e7ea9bd1eb029",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -136,7 +136,7 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "5a9f44dcb98086e2",
+  "active": "eb8e7ea9bd1eb029",
   "lastOpenFiles": [
     "An encrypted note.encrypted",
     "Untitled.md",
