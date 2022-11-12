@@ -1,19 +1,20 @@
-import { normalizePath, moment, Notice, TFolder } from "obsidian";
+import { normalizePath, moment, Notice, TFolder, Setting } from "obsidian";
 import { EncryptedFileContentView, VIEW_TYPE_ENCRYPTED_FILE_CONTENT } from "./EncryptedFileContentView";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
 import { MeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
 
 export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeature {
+
 	plugin:MeldEncrypt;
 	settings: MeldEncryptPluginSettings;
 
 	private ribbonIconCreateNewNote?: HTMLElement;
 
-	async onload(plugin: MeldEncrypt, settings:MeldEncryptPluginSettings) {
+	async onload( plugin: MeldEncrypt, settings:MeldEncryptPluginSettings ) {
 		this.plugin = plugin;
-	
-		this.applySettings(settings);
+		this.settings = settings;
+		this.updateUiForSettings();
 		
 		this.plugin.registerView(
 			VIEW_TYPE_ENCRYPTED_FILE_CONTENT,
@@ -69,8 +70,36 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 		}
 	}
 
-	public applySettings( settings: MeldEncryptPluginSettings ){
-		this.settings = settings;
+	buildSettingsUi(
+		containerEl: HTMLElement,
+		settings: MeldEncryptPluginSettings,
+		saveSettingCallback : () => Promise<void>
+	): void {
+
+		new Setting(containerEl)
+			.setHeading()
+			.setName('Whole Note Encryption Feature')
+		;
+
+		new Setting(containerEl)
+			.setName('Add ribbon icon to create note')
+			.setDesc('Adds a ribbon icon to the left bar to create an encrypted note.')
+			.addToggle( toggle =>{
+
+				toggle
+					.setValue(settings.addRibbonIconToCreateNote)
+				
+					.onChange( async value => {
+						settings.addRibbonIconToCreateNote = value;
+						await saveSettingCallback();
+						this.updateUiForSettings();
+					})
+				;
+			})
+		;
+	}
+
+	public updateUiForSettings(){
 		if (this.settings.addRibbonIconToCreateNote){
 			// turn on ribbon icon
 			if (this.ribbonIconCreateNewNote == null){

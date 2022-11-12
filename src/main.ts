@@ -3,32 +3,45 @@ import MeldEncryptSettingsTab from './settings/MeldEncryptSettingsTab';
 import { MeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings';
 import FeatureSelectionEncrypt from './features/feature-selection-encrypt/FeatureSelectionEncrypt';
 import FeatureWholeNoteEncrypt from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
+import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature';
 
 export default class MeldEncrypt extends Plugin {
 
 	private settings: MeldEncryptPluginSettings;
 
-	private featureEncryptBySelection = new FeatureSelectionEncrypt();
-	private featureWholeNoteEncrypt = new FeatureWholeNoteEncrypt();
+	private enabledFeatures : IMeldEncryptPluginFeature[] = [];
 
 	async onload() {
 
 		// Settings
 		await this.loadSettings();
-		this.addSettingTab(new MeldEncryptSettingsTab(this.app, this, this.settings));
+
+		this.enabledFeatures.push(
+			new FeatureWholeNoteEncrypt(),
+			new FeatureSelectionEncrypt()
+		);
+
+		this.addSettingTab(
+			new MeldEncryptSettingsTab(
+				this.app,
+				this,
+				this.settings,
+				this.enabledFeatures
+			)
+		);
 		// End Settings
 
-		// Encrypt whole note feature
-		await this.featureWholeNoteEncrypt.onload( this, this.settings );
-
-		// Encrypt by selection feature
-		await this.featureEncryptBySelection.onload( this, this.settings );
+		// load features
+		this.enabledFeatures.forEach(async f => {
+			await f.onload( this, this.settings );
+		});
 
 	}
 	
 	onunload() {
-		this.featureWholeNoteEncrypt.onunload();
-		this.featureEncryptBySelection.onunload();
+		this.enabledFeatures.forEach(async f => {
+			f.onunload();
+		});
 	}
 
 	async loadSettings() {
@@ -36,7 +49,7 @@ export default class MeldEncrypt extends Plugin {
 			addRibbonIconToCreateNote: true,
 			
 			// FeatureSelectionEncrypt below
-			expandToWholeLines: true,
+			expandToWholeLines: false,
 			confirmPassword: true,
 			showCopyButton: true,
 			rememberPassword: true,
@@ -52,8 +65,6 @@ export default class MeldEncrypt extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.featureWholeNoteEncrypt.applySettings( this.settings );
-		this.featureEncryptBySelection.applySettings( this.settings );
 	}
 
 }

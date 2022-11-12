@@ -1,6 +1,5 @@
 import { App, Modal, Platform } from 'obsidian';
 
-// DEPRECATED
 export default class PasswordModal extends Modal {
 	password: string = null;
 	hint: string = null;
