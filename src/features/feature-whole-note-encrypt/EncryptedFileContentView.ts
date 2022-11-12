@@ -1,6 +1,6 @@
 import { Menu, MenuItem, Notice, Setting, TextFileView } from 'obsidian';
 import { WorkspaceLeaf } from "obsidian";
-import { CryptoHelperV2 } from './CryptoHelper';
+import { CryptoHelper } from '../../services/CryptoHelper';
 
 export enum EncryptedFileContentViewStateEnum{
 	init,
@@ -553,7 +553,7 @@ class FileData{
 class FileDataHelper{
 
 	public static async encode( pass: string, hint:string, text:string ) : Promise<FileData>{
-		const crypto = new CryptoHelperV2();
+		const crypto = new CryptoHelper();
 		const encryptedData = await crypto.encryptToBase64(text, pass);
 		return new FileData(hint, encryptedData);
 	}
@@ -562,7 +562,7 @@ class FileDataHelper{
 		if ( data.encodedData == '' ){
 			return '';
 		}
-		const crypto = new CryptoHelperV2();
+		const crypto = new CryptoHelper();
 		return await crypto.decryptFromBase64(data.encodedData, pass);
 	}
 }

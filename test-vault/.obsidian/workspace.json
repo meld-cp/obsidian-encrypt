@@ -4,15 +4,19 @@
     "type": "split",
     "children": [
       {
-        "id": "44bf2b304ddf6389",
+        "id": "ddd0720344bd4bba",
         "type": "tabs",
         "children": [
           {
-            "id": "b021225a9d4ea6b5",
+            "id": "a9d01298df6bd12d",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {}
+              "type": "markdown",
+              "state": {
+                "file": "Untitled.md",
+                "mode": "source",
+                "source": false
+              }
             }
           }
         ]
@@ -81,6 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "Untitled.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -97,6 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "Untitled.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -118,7 +124,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {}
+              "state": {
+                "file": "Untitled.md"
+              }
             }
           }
         ]
@@ -128,8 +136,10 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "b021225a9d4ea6b5",
+  "active": "a9d01298df6bd12d",
   "lastOpenFiles": [
+    "Untitled 20221112 010152.encrypted",
+    "Untitled.md",
     "Untitled 20221107 083546.encrypted",
     "An encrypted note.encrypted",
     "Folder/Untitled 20221107 075927.encrypted",
@@ -137,8 +147,6 @@
     "Untitled 20221107 082432.encrypted",
     "Folder/Untitled 20221107 082505.encrypted",
     "Folder/Example.md",
-    "Untitled 20221107 082421.encrypted",
-    "Untitled 20221107 082418.encrypted",
-    "Untitled 20221107 082414.encrypted"
+    "Untitled 20221107 082421.encrypted"
   ]
 }

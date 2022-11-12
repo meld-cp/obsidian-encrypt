@@ -4,7 +4,7 @@ import typescript from '@rollup/plugin-typescript';
 import copy from "rollup-plugin-copy";
 
 export default {
-  input: 'src/CryptoHelper.ts',
+  input: 'src/services/CryptoHelper.ts',
   output: {
     file: 'dist/tools/crypto-helper.js',
     name: 'modules',
