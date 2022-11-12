@@ -7,6 +7,7 @@ import MeldEncrypt from "../../main";
 import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
 import { IFeatureInplaceEncryptSettings } from "./IFeatureInplaceEncryptSettings";
 import PasswordModal from "./PasswordModal";
+import { UiHelper } from "../../services/UiHelper";
 
 const _PREFIX: string = '%%🔐';
 const _PREFIX_OBSOLETE: string = _PREFIX + ' ';
@@ -39,16 +40,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			name: 'Encrypt/Decrypt In-place',
 			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, view, true )
 		});
-
-		plugin.addCommand({
-			id: 'meld-encrypt-note',
-			name: 'Decrypt Whole Note',
-			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptWholeNoteCommand(
-				checking,
-				editor,
-				view
-			)
-		});
 		
 	}
 
@@ -60,11 +51,9 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		containerEl: HTMLElement,
 		saveSettingCallback : () => Promise<void>
 	): void {
-		//containerEl.createEl('hr');
-		//containerEl.createEl('h3', {text: 'Inplace Encryption Settings'});
 		new Setting(containerEl)
 			.setHeading()
-			.setName('Inplace Encryption Feature Settings')
+			.setName('In-place Encryption Feature Settings')
 		;
 
 		// Selection encrypt feature settings below
@@ -153,7 +142,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		}
 	}
 
-	buildPasswordTimeoutSettingName(rememberPasswordTimeout:number):string{
+	private buildPasswordTimeoutSettingName(rememberPasswordTimeout:number):string{
 		const value = rememberPasswordTimeout;
 		let timeoutString = `${value} minutes`;
 		if(value == 0){
@@ -162,46 +151,13 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		return `Remember Password Timeout (${timeoutString})`;
 	}
 
-	// TODO: move to utils
-	isSettingsModalOpen() : boolean{
-		return document.querySelector('.mod-settings') !== null;
-	}
-
-	private processEncryptDecryptWholeNoteCommand(
-		checking: boolean,
-		editor: Editor,
-		view: MarkdownView
-	): boolean {
-
-		if ( checking && this.isSettingsModalOpen() ){
-			// Settings is open, ensures this command can show up in other
-			// plugins which list commands e.g. customizable-sidebar
-			return true;
-		}
-
-		const startPos = editor.offsetToPos(0);
-		const endPos = { line: editor.lastLine(), ch: editor.getLine(editor.lastLine()).length };
-
-		const selectionText = editor.getRange(startPos, endPos).trim();
-
-		return this.processSelection(
-			checking,
-			editor,
-			selectionText,
-			startPos,
-			endPos,
-			true,
-			false
-		);
-	}
-
 	private processEncryptDecryptCommand(
 		checking: boolean,
 		editor: Editor,
 		view: MarkdownView,
 		decryptInPlace: boolean
 	): boolean {
-		if ( checking && this.isSettingsModalOpen() ){
+		if ( checking && UiHelper.isSettingsModalOpen() ){
 			// Settings is open, ensures this command can show up in other
 			// plugins which list commands e.g. customizable-sidebar
 			return true;
@@ -519,8 +475,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		}
 
 		// check if there is a hint
-		//console.table(content);
-		if (content.substr(0,_HINT.length) == _HINT){
+		if (content.substring(0,_HINT.length) == _HINT){
 			const endHintMarker = content.indexOf(_HINT,_HINT.length);
 			if (endHintMarker<0){
 				return null; // invalid format
@@ -531,8 +486,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			result.base64CipherText = content;
 		}
 		
-		//console.table(result);
-
 		return result;
 
 	}

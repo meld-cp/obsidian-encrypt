@@ -4,6 +4,7 @@ import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
 import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
 import { IFeatureWholeNoteEncryptSettings } from "./IFeatureWholeNoteEncryptSettings";
+import { UiHelper } from "../../services/UiHelper";
 
 export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeature {
 
@@ -39,7 +40,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 	private processCreateNewEncryptedNoteCommand(checking: boolean): boolean{
 		console.debug('processCreateNewEncryptedNoteCommand', {checking});
 		try{
-			if (checking){
+			if (checking || UiHelper.isSettingsModalOpen()){
 				return true;
 			}
 			
@@ -55,7 +56,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			}
 
 			const newFilepath = normalizePath( newFileFolder.path + "/" + newFilename );
-			console.debug('processCreateNewEncryptedNoteCommand', {newFilepath});
+			//console.debug('processCreateNewEncryptedNoteCommand', {newFilepath});
 			
 			this.plugin.app.vault.create(newFilepath,'').then( f=>{
 				const leaf = this.plugin.app.workspace.getLeaf( false );

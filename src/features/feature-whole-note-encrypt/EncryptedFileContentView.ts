@@ -1,4 +1,4 @@
-import { Menu, MenuItem, Notice, Setting, TextFileView } from 'obsidian';
+import { Menu, Notice, Setting, TextFileView } from 'obsidian';
 import { WorkspaceLeaf } from "obsidian";
 import { CryptoHelper } from '../../services/CryptoHelper';
 
@@ -26,7 +26,7 @@ export class EncryptedFileContentView extends TextFileView {
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
 
-		console.debug('EncryptedFileContentView.constructor', {leaf});
+		//console.debug('EncryptedFileContentView.constructor', {leaf});
 
 		this.elActionIconLockNote = this.addAction( 'lock', 'Lock', () => this.actionLockFile() );
 
@@ -48,7 +48,7 @@ export class EncryptedFileContentView extends TextFileView {
 	}
 
 	override onPaneMenu(menu: Menu, source: string): void {
-		console.debug( {menu, source, 'view': this.currentView});
+		//console.debug( {menu, source, 'view': this.currentView});
 		if ( source == 'tab-header' && this.currentView == EncryptedFileContentViewStateEnum.editNote ){
 			menu.addItem( m =>{
 				m
@@ -243,7 +243,7 @@ export class EncryptedFileContentView extends TextFileView {
 	private async encodeAndSave( ){
 		try{
 
-			console.debug('encodeAndSave');
+			//console.debug('encodeAndSave');
 			
 			var fileData = await FileDataHelper.encode(
 				this.encryptionPassword,
@@ -272,7 +272,7 @@ export class EncryptedFileContentView extends TextFileView {
 		container.focus();
 
 		container.on('input', '*', async (ev, target) =>{
-			console.debug('editor input',{ev, target});
+			//console.debug('editor input',{ev, target});
 			//this.currentEditorText = container.value;
 			this.currentEditorText = container.innerText;
 			await this.encodeAndSave();
@@ -303,7 +303,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 			if ( validPw.length === 0 && validCpw.length === 0 ){
 				//set password and hint and open note
-				console.debug('createChangePasswordView submit');
+				//console.debug('createChangePasswordView submit');
 				this.encryptionPassword = newPassword;
 				this.hint = newHint;
 
@@ -416,7 +416,7 @@ export class EncryptedFileContentView extends TextFileView {
 		newView: EncryptedFileContentViewStateEnum
 	){
 		
-		console.debug('refreshView',{'currentView':this.currentView, newView});
+		//console.debug('refreshView',{'currentView':this.currentView, newView});
 
 		this.elActionIconLockNote.hide();
 		this.elActionChangePassword.hide();
@@ -455,7 +455,7 @@ export class EncryptedFileContentView extends TextFileView {
 	async handleDecryptButtonClick() {
 		var fileData = JsonFileEncoding.decode(this.data)
 						
-		console.debug('Decrypt button', fileData);
+		//console.debug('Decrypt button', fileData);
 
 		const decryptedText = await FileDataHelper.decrypt(
 			fileData,
@@ -474,7 +474,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 	// important
 	canAcceptExtension(extension: string): boolean {
-		console.debug('EncryptedFileContentView.canAcceptExtension', {extension});
+		//console.debug('EncryptedFileContentView.canAcceptExtension', {extension});
 		return extension == 'encrypted';
 	}
 
@@ -485,14 +485,14 @@ export class EncryptedFileContentView extends TextFileView {
 
 	// the data to show on the view
 	override setViewData(data: string, clear: boolean): void {
-		console.debug('EncryptedFileContentView.setViewData', {
-			data,
-			clear,
-			'pass':this.encryptionPassword,
-			//'mode':this.getMode(),
-			//'mode-data':this.currentMode.get(),
-			//'preview-mode-data':this.previewMode.get()
-		});
+		// console.debug('EncryptedFileContentView.setViewData', {
+		// 	data,
+		// 	clear,
+		// 	'pass':this.encryptionPassword,
+		// 	//'mode':this.getMode(),
+		// 	//'mode-data':this.currentMode.get(),
+		// 	//'preview-mode-data':this.previewMode.get()
+		// });
 
 		if (clear){
 
@@ -523,16 +523,16 @@ export class EncryptedFileContentView extends TextFileView {
 
 	// the data to save to disk
 	override getViewData(): string {
-		console.debug('EncryptedFileContentView.getViewData', {
-			'this':this,
-			'data':this.data,
-		});
+		// console.debug('EncryptedFileContentView.getViewData', {
+		// 	'this':this,
+		// 	'data':this.data,
+		// });
 		
 		return this.data;
 	}
 
 	override clear(): void {
-		console.debug('EncryptedFileContentView.clear');
+		//console.debug('EncryptedFileContentView.clear');
 	}
 
 
@@ -574,7 +574,7 @@ class JsonFileEncoding {
 	}
 
 	public static decode( encodedText:string ) : FileData{
-		console.debug('JsonFileEncoding.decode',{encodedText});
+		//console.debug('JsonFileEncoding.decode',{encodedText});
 		if (encodedText === ''){
 			return new FileData( "", "" );
 		}

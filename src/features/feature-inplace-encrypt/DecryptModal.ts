@@ -25,9 +25,11 @@ export default class DecryptModal extends Modal {
 			.addTextArea( cb=>{
 				cTextArea = cb;
 				cb.setValue(this.text);
+				cb.inputEl.setSelectionRange(0,0)
 				cb.inputEl.readOnly = true;
 				cb.inputEl.rows = 10;
 				cb.inputEl.style.width = '100%';
+				cb.inputEl.style.minHeight = '3em';
 				cb.inputEl.style.resize = 'vertical';
 			})
 		;
