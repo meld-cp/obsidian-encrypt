@@ -25,6 +25,11 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### Next
+- add common password session cache
+- also remember passwords for whole note encryption
+- add password peek button
+
 ### v2.0.2
 
 Due to popular demand, the encrypt in-place functionality is no longer scheduled for removal 🙄🥳.

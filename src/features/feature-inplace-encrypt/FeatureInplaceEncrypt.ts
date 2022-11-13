@@ -8,6 +8,7 @@ import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSett
 import { IFeatureInplaceEncryptSettings } from "./IFeatureInplaceEncryptSettings";
 import PasswordModal from "./PasswordModal";
 import { UiHelper } from "../../services/UiHelper";
+import { SessionPasswordService } from "src/services/SessionPasswordService";
 
 const _PREFIX: string = '%%🔐';
 const _PREFIX_OBSOLETE: string = _PREFIX + ' ';
@@ -18,26 +19,25 @@ const _HINT: string = '💡';
 
 export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	plugin:MeldEncrypt;
-	settings:IFeatureInplaceEncryptSettings;
-
-	passwordLastUsedExpiry: number
-	passwordLastUsed: string;
-
-	pwTimeoutSetting:Setting;
+	pluginSettings: IMeldEncryptPluginSettings;
+	featureSettings:IFeatureInplaceEncryptSettings;
 
 	async onload(plugin:MeldEncrypt, settings:IMeldEncryptPluginSettings) {
 		this.plugin = plugin;
-		this.settings = settings.featureInplaceEncrypt;
+		this.pluginSettings = settings;
+		this.featureSettings = settings.featureInplaceEncrypt;
 
 		plugin.addCommand({
 			id: 'meld-encrypt',
 			name: 'Encrypt/Decrypt',
+			icon: 'lock',
 			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, view, false )
 		});
 
 		plugin.addCommand({
 			id: 'meld-encrypt-in-place',
 			name: 'Encrypt/Decrypt In-place',
+			icon: 'lock',
 			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, view, true )
 		});
 		
@@ -53,7 +53,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	): void {
 		new Setting(containerEl)
 			.setHeading()
-			.setName('In-place Encryption Feature Settings')
+			.setName('In-place Encryption Settings')
 		;
 
 		// Selection encrypt feature settings below
@@ -62,24 +62,10 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			.setDesc('Partial selections will get expanded to the whole line.')
 			.addToggle( toggle =>{
 				toggle
-					.setValue(this.settings.expandToWholeLines)
+					.setValue(this.featureSettings.expandToWholeLines)
 					.onChange( async value =>{
-						this.settings.expandToWholeLines = value;
+						this.featureSettings.expandToWholeLines = value;
 						await saveSettingCallback();
-					})
-			})
-		;
-
-		new Setting(containerEl)
-			.setName('Confirm password?')
-			.setDesc('Confirm password when encrypting.')
-			.addToggle( toggle =>{
-				toggle
-					.setValue(this.settings.confirmPassword)
-					.onChange( async value =>{
-						this.settings.confirmPassword = value;
-						await saveSettingCallback();
-						this.updateSettingsUi();
 					})
 			})
 		;
@@ -89,67 +75,17 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			.setDesc('Show a button to copy decrypted text.')
 			.addToggle( toggle =>{
 				toggle
-					.setValue(this.settings.showCopyButton)
+					.setValue(this.featureSettings.showCopyButton)
 					.onChange( async value =>{
-						this.settings.showCopyButton = value;
+						this.featureSettings.showCopyButton = value;
 						await saveSettingCallback();
-						this.updateSettingsUi();
 					})
 			})
 		;
 
-		new Setting(containerEl)
-			.setName('Remember password?')
-			.setDesc('Remember the last used password for this session.')
-			.addToggle( toggle =>{
-				toggle
-					.setValue(this.settings.rememberPassword)
-					.onChange( async value =>{
-						this.settings.rememberPassword = value;
-						await saveSettingCallback();
-						this.updateSettingsUi();
-					})
-			})
-		;
-
-		this.pwTimeoutSetting = new Setting(containerEl)
-			.setName( this.buildPasswordTimeoutSettingName( this.settings.rememberPasswordTimeout ) )
-			.setDesc('The number of minutes to remember the last used password.')
-			.addSlider( slider => {
-				slider
-					.setLimits(0, 120, 5)
-					.setValue(this.settings.rememberPasswordTimeout)
-					.onChange( async value => {
-						this.settings.rememberPasswordTimeout = value;
-						await saveSettingCallback();
-						this.updateSettingsUi();
-					})
-				;
-				
-			})
-		;
-
-		this.updateSettingsUi();
 	}
 
-	private updateSettingsUi( ):void{
-		this.pwTimeoutSetting.setName(this.buildPasswordTimeoutSettingName( this.settings.rememberPasswordTimeout ));
-
-		if ( this.settings.rememberPassword ){
-			this.pwTimeoutSetting.settingEl.show();
-		}else{
-			this.pwTimeoutSetting.settingEl.hide();
-		}
-	}
-
-	private buildPasswordTimeoutSettingName(rememberPasswordTimeout:number):string{
-		const value = rememberPasswordTimeout;
-		let timeoutString = `${value} minutes`;
-		if(value == 0){
-			timeoutString = 'Never forget';
-		}
-		return `Remember Password Timeout (${timeoutString})`;
-	}
+	
 
 	private processEncryptDecryptCommand(
 		checking: boolean,
@@ -166,7 +102,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		let startPos = editor.getCursor('from');
 		let endPos = editor.getCursor('to');
 
-		if (this.settings.expandToWholeLines){
+		if (this.featureSettings.expandToWholeLines){
 			const startLine = startPos.line;
 			startPos = { line: startLine, ch: 0 }; // want the start of the first line
 
@@ -295,47 +231,37 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			return true;
 		}
 
+		const activeFile = this.plugin.app.workspace.getActiveFile();
+		
 		// Fetch password from user
 
-		// determine default password
-		const isRememberPasswordExpired =
-			!this.settings.rememberPassword
-			|| (
-				this.passwordLastUsedExpiry != null
-				&& Date.now() > this.passwordLastUsedExpiry
-			)
-		;
+		// determine default password and hint
+		let defaultPassword = '';
+		let defaultHint : string = selectionAnalysis.decryptable?.hint;
+		if ( this.pluginSettings.rememberPassword ){
+			const bestGuessPasswordAndHint = SessionPasswordService.getBestGuess( activeFile );
+			console.debug({bestGuessPasswordAndHint});
 
-		const confirmPassword = selectionAnalysis.canEncrypt && this.settings.confirmPassword;
-
-		if ( isRememberPasswordExpired || confirmPassword ) {
-			// forget password
-			this.passwordLastUsed = '';
+			defaultPassword = bestGuessPasswordAndHint.password;
+			defaultHint = defaultHint ?? bestGuessPasswordAndHint.hint;
 		}
+
+		const confirmPassword = selectionAnalysis.canEncrypt && this.pluginSettings.confirmPassword;
 
 		const pwModal = new PasswordModal(
 			this.plugin.app,
 			selectionAnalysis.canEncrypt,
 			confirmPassword,
-			this.passwordLastUsed,
-			selectionAnalysis.decryptable?.hint
+			defaultPassword,
+			defaultHint
 		);
-		pwModal.onClose = () => {
+
+		pwModal.onClose = async () => {
 			const pw = pwModal.password ?? ''
 			if (pw.length == 0) {
 				return;
 			}
 			const hint = pwModal.hint;
-
-			// remember password?
-			if (this.settings.rememberPassword) {
-				this.passwordLastUsed = pw;
-				this.passwordLastUsedExpiry =
-					this.settings.rememberPasswordTimeout == 0
-						? null
-						: Date.now() + this.settings.rememberPasswordTimeout * 1000 * 60// new expiry
-					;
-			}
 
 			if (selectionAnalysis.canEncrypt) {
 				const encryptable = new Encryptable();
@@ -349,10 +275,15 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 					finalSelectionStart,
 					finalSelectionEnd
 				);
+
+				// remember password
+				SessionPasswordService.put(	{ password:pw, hint: hint }, activeFile );
+
 			} else {
 
+				let decryptSuccess : Boolean;
 				if (selectionAnalysis.decryptable.version == 1){
-					this.decryptSelection_a(
+					decryptSuccess = await this.decryptSelection_a(
 						editor,
 						selectionAnalysis.decryptable,
 						pw,
@@ -361,7 +292,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 						decryptInPlace
 					);
 				}else{
-					this.decryptSelectionObsolete(
+					decryptSuccess = await this.decryptSelectionObsolete(
 						editor,
 						selectionAnalysis.decryptable,
 						pw,
@@ -370,6 +301,12 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 						decryptInPlace
 					);
 				}
+
+				// remember password?
+				if ( decryptSuccess ) {
+					SessionPasswordService.put(	{ password:pw, hint: hint }, activeFile );
+				}
+				
 			}
 		}
 		pwModal.open();
@@ -401,20 +338,21 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		selectionStart: CodeMirror.Position,
 		selectionEnd: CodeMirror.Position,
 		decryptInPlace: boolean
-	) {
+	) : Promise<boolean> {
 		// decrypt
 
 		const crypto = new CryptoHelper();
 		const decryptedText = await crypto.decryptFromBase64(decryptable.base64CipherText, password);
 		if (decryptedText === null) {
 			new Notice('❌ Decryption failed!');
+			return false;
 		} else {
 
 			if (decryptInPlace) {
 				editor.setSelection(selectionStart, selectionEnd);
 				editor.replaceSelection(decryptedText);
 			} else {
-				const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText, this.settings.showCopyButton);
+				const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText, this.featureSettings.showCopyButton);
 				decryptModal.onClose = () => {
 					editor.focus();
 					if (decryptModal.decryptInPlace) {
@@ -425,6 +363,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				decryptModal.open();
 			}
 		}
+		return true;
 	}
 
 	private async decryptSelectionObsolete(
@@ -434,20 +373,21 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		selectionStart: CodeMirror.Position,
 		selectionEnd: CodeMirror.Position,
 		decryptInPlace: boolean
-	) {
+	) :Promise<boolean> {
 		// decrypt
 		const base64CipherText = this.removeMarkers(decryptable.base64CipherText);
 		const crypto = new CryptoHelperObsolete();
 		const decryptedText = await crypto.decryptFromBase64(base64CipherText, password);
 		if (decryptedText === null) {
 			new Notice('❌ Decryption failed!');
+			return false;
 		} else {
 
 			if (decryptInPlace) {
 				editor.setSelection(selectionStart, selectionEnd);
 				editor.replaceSelection(decryptedText);
 			} else {
-				const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText, this.settings.showCopyButton);
+				const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText, this.featureSettings.showCopyButton);
 				decryptModal.onClose = () => {
 					editor.focus();
 					if (decryptModal.decryptInPlace) {
@@ -458,6 +398,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				decryptModal.open();
 			}
 		}
+		return true;
 	}
 
 	private parseDecryptableContent(text: string) : Decryptable{

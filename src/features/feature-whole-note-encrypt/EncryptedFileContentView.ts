@@ -1,8 +1,10 @@
-import { Menu, Notice, Setting, TextFileView } from 'obsidian';
+import { Menu, Notice, Setting, TextComponent, TextFileView } from 'obsidian';
 import { WorkspaceLeaf } from "obsidian";
+import { SessionPasswordService } from 'src/services/SessionPasswordService';
+import { UiHelper } from 'src/services/UiHelper';
 import { CryptoHelper } from '../../services/CryptoHelper';
 
-export enum EncryptedFileContentViewStateEnum{
+enum EncryptedFileContentViewStateEnum{
 	init,
 	decryptNote,
 	editNote,
@@ -113,7 +115,9 @@ export class EncryptedFileContentView extends TextFileView {
 				this.currentEditorText = this.file.basename;
 
 				await this.encodeAndSave();
-					
+				
+				SessionPasswordService.put( { password: password, hint: hint }, this.file );
+
 				this.refreshView(EncryptedFileContentViewStateEnum.editNote);
 
 			}
@@ -123,52 +127,40 @@ export class EncryptedFileContentView extends TextFileView {
 		let confirm = '';
 		let hint = '';
 
-		const sPassword = new Setting(container)
-			.setName("Password:")
-			.setDesc('')
-			.addText( tc => {
-				tc.inputEl.focus();
-				tc.inputEl.type = 'password';
-				tc.onChange( v => {
-					password = v;
-					sPassword.setDesc( this.validatePassword(password) );
-					sConfirm.setDesc( this.validateConfirm(password, confirm) );
-				} );
-			} )
-		;
-		sPassword.controlEl.on('keydown', '*', (ev) =>{
-			if ( ev.key === 'Enter' ) {
-				ev.preventDefault();
-				// validate password
+		const sPassword = UiHelper.buildPasswordSetting({
+			container,
+			name:'Password:',
+			autoFocus : true,
+			onChangeCallback: (value) => {
+				password = value;
+				sPassword.setDesc( this.validatePassword(password) );
+				sConfirm.setDesc( this.validateConfirm(password, confirm) );
+			},
+			onEnterCallback: (value)=>{
+				password = value;
 				if (password.length > 0){
 					sConfirm.controlEl.querySelector('input').focus();
 				}
 			}
 		});
 
-		const sConfirm = new Setting(container)
-			.setName("Confirm:")
-			.setDesc('')
-			.addText( tc => {
-				tc.inputEl.type = 'password';
-				tc.onChange( v => {
-					confirm = v;
-					sPassword.setDesc( this.validatePassword(password) );
-					sConfirm.setDesc( this.validateConfirm(password, confirm) );
-				});
-			} )
-		;
-		sConfirm.controlEl.on('keydown', '*', (ev) =>{
-			if ( ev.key === 'Enter' ) {
-				ev.preventDefault();
-				// validate confirm
+		const sConfirm = UiHelper.buildPasswordSetting({
+			container,
+			name:'Confirm:',
+			autoFocus : false,
+			onChangeCallback: (value) => {
+				confirm = value;
+				sPassword.setDesc( this.validatePassword(password) );
+				sConfirm.setDesc( this.validateConfirm(password, confirm) );
+			},
+			onEnterCallback: (value) =>{
+				confirm = value;
 				const passwordMatch = password === confirm;
 				if (passwordMatch){
 					sHint.controlEl.querySelector('input').focus();
 				}
 			}
 		});
-
 
 		const sHint = new Setting(container)
 			.setName("Hint:")
@@ -207,24 +199,17 @@ export class EncryptedFileContentView extends TextFileView {
 			.setDesc('Please provide a password to unlock this note.')
 		;
 
-		new Setting(container)
-			.setName("Password:")
-			.addText((tc) =>{
-				tc.inputEl.type = 'password';
-				tc.inputEl.focus();
-				tc.setValue(this.encryptionPassword)
-				tc.setPlaceholder(this.formatHint(this.hint));
-				tc.onChange((value) => {
-					this.encryptionPassword = value;
-				});
-				tc.inputEl.onkeydown = async (ev) =>{
-					if ( ev.key === 'Enter' ) {
-						ev.preventDefault();
-						await this.handleDecryptButtonClick();
-					}
-				}
-			})
-		;
+		UiHelper.buildPasswordSetting({
+			container,
+			name:'Password:',
+			initialValue: this.encryptionPassword,
+			autoFocus : true,
+			placeholder: this.formatHint(this.hint),
+			onChangeCallback: (value) => {
+				this.encryptionPassword = value;
+			},
+			onEnterCallback: async () => await this.handleDecryptButtonClick()
+		});
 
 		new Setting(container)
 			.addButton( bc => {
@@ -313,45 +298,33 @@ export class EncryptedFileContentView extends TextFileView {
 			}
 		}
 
-
-		const sNewPassword = new Setting(container)
-			.setName("New Password:")
-			.setDesc('')
-			.addText( tc => {
-				tc.inputEl.type = 'password';
-				tc.inputEl.focus();
-				tc.onChange( v => {
-					newPassword = v;
-					sNewPassword.setDesc( this.validatePassword(newPassword) );
-					sConfirm.setDesc( this.validateConfirm(newPassword, confirm) );
-				} );
-			} )
-		;
-		sNewPassword.controlEl.on('keydown', '*', (ev) =>{
-			if ( ev.key === 'Enter' ) {
-				ev.preventDefault();
-				// validate password
+		const sNewPassword = UiHelper.buildPasswordSetting({
+			container,
+			name: 'New Password:',
+			autoFocus: true,
+			onChangeCallback: (value) =>{
+				newPassword = value;
+				sNewPassword.setDesc( this.validatePassword(newPassword) );
+				sConfirm.setDesc( this.validateConfirm(newPassword, confirm) );
+			},
+			onEnterCallback: (value) =>{
+				newPassword = value;
 				if (newPassword.length > 0){
 					sConfirm.controlEl.querySelector('input').focus();
 				}
 			}
 		});
 
-		const sConfirm = new Setting(container)
-			.setName("Confirm:")
-			.setDesc('')
-			.addText( tc => {
-				tc.inputEl.type = 'password';
-				tc.onChange( v => {
-					confirm = v;
-					sNewPassword.setDesc( this.validatePassword(newPassword) );
-					sConfirm.setDesc( this.validateConfirm(newPassword, confirm) );
-				});
-			} )
-		;
-		sConfirm.controlEl.on('keydown', '*', (ev) =>{
-			if ( ev.key === 'Enter' ) {
-				ev.preventDefault();
+		const sConfirm = UiHelper.buildPasswordSetting({
+			container,
+			name: 'Confirm:',
+			onChangeCallback: (value) =>{
+				confirm = value;
+				sNewPassword.setDesc( this.validatePassword(newPassword) );
+				sConfirm.setDesc( this.validateConfirm(newPassword, confirm) );
+			},
+			onEnterCallback: (value) =>{
+				confirm = value;
 				// validate confirm
 				const passwordMatch = newPassword === confirm;
 				if (passwordMatch){
@@ -359,7 +332,6 @@ export class EncryptedFileContentView extends TextFileView {
 				}
 			}
 		});
-
 
 		const sHint = new Setting(container)
 			.setName("New Hint:")

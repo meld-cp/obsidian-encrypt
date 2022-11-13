@@ -105,7 +105,7 @@ export default class PasswordModal extends Modal {
 			})
 		;
 
-		if ( !this.isEncrypting && !this.confirmPassword ){
+		if ( !this.confirmPassword ){
 			sConfirmPassword.settingEl.hide();
 		}
 		
