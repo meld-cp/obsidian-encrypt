@@ -4,6 +4,7 @@ import { IMeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings
 import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInplaceEncrypt';
 import FeatureWholeNoteEncrypt from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature';
+import { SessionPasswordService } from './services/SessionPasswordService';
 
 export default class MeldEncrypt extends Plugin {
 
@@ -15,6 +16,8 @@ export default class MeldEncrypt extends Plugin {
 
 		// Settings
 		await this.loadSettings();
+
+		
 
 		this.enabledFeatures.push(
 			new FeatureWholeNoteEncrypt(),
@@ -46,22 +49,31 @@ export default class MeldEncrypt extends Plugin {
 
 	async loadSettings() {
 		const DEFAULT_SETTINGS: IMeldEncryptPluginSettings = {
+			confirmPassword: true,
+			rememberPassword: true,
+			rememberPasswordTimeout: 30,
+
 			featureWholeNoteEncrypt: {
 				addRibbonIconToCreateNote: true,
 			},
 			
 			featureInplaceEncrypt:{
 				expandToWholeLines: false,
-				confirmPassword: true,
 				showCopyButton: true,
-				rememberPassword: true,
-				rememberPasswordTimeout: 30
 			}
 		}
 
 		this.settings = Object.assign(
 			DEFAULT_SETTINGS,
 			await this.loadData()
+		);
+
+		// apply settings
+		SessionPasswordService.setActive( this.settings.rememberPassword );
+		SessionPasswordService.setAutoExpire(
+			this.settings.rememberPasswordTimeout == 0
+			? null
+			: this.settings.rememberPasswordTimeout
 		);
 	}
 

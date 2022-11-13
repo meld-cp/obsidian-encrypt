@@ -25,6 +25,11 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### v2.0.3
+- add common password session cache
+- also remember passwords for whole note encryption
+- add password peek button
+
 ### v2.0.2
 
 Due to popular demand, the encrypt in-place functionality is no longer scheduled for removal 🙄🥳.
@@ -95,17 +100,20 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 ---
 ## ⚜️ Settings
 
-|Whole note encryption| |
+| Common Settings | |
+|--|--|
+| ⚙️ Confirm password | Confirm password when encrypting |
+| ⚙️ Remember password | Remember the last used password for this session. |
+| ⚙️ Remember Password Timeout | The number of minutes to remember the last used password. |
+
+|Whole note encryption Settings| |
 |--|--|
 | ⚙️ Add ribbon icon to create note | Adds a ribbon icon to the left bar to create an encrypted note. |
 
-|In-place encryption| |
+|In-place encryption Settings| |
 |--|--|
 | ⚙️ Expand selection to whole line | Partial selections will get expanded to the whole line |
-| ⚙️ Confirm password | Confirm password when encrypting selections |
 | ⚙️ Copy button | Show a button to copy decrypted text. |
-| ⚙️ Remember password | Remember the last used password for this session. |
-| ⚙️ Remember Password Timeout | The number of minutes to remember the last used password. |
 
 ---
 

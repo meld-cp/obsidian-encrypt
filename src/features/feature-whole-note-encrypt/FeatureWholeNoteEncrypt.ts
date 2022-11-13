@@ -28,6 +28,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 		this.plugin.addCommand({
 			id: 'meld-encrypt-create-new-note',
 			name: 'Create new encrypted note',
+			icon: 'lock',
 			checkCallback: (checking) => this.processCreateNewEncryptedNoteCommand(checking)
 		});
 		
@@ -38,7 +39,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 	}
 
 	private processCreateNewEncryptedNoteCommand(checking: boolean): boolean{
-		console.debug('processCreateNewEncryptedNoteCommand', {checking});
+		//console.debug('processCreateNewEncryptedNoteCommand', {checking});
 		try{
 			if (checking || UiHelper.isSettingsModalOpen()){
 				return true;
@@ -79,7 +80,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 
 		new Setting(containerEl)
 			.setHeading()
-			.setName('Whole Note Encryption Feature')
+			.setName('Whole Note Encryption Settings')
 		;
 
 		new Setting(containerEl)
@@ -104,7 +105,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 		if (this.settings.addRibbonIconToCreateNote){
 			// turn on ribbon icon
 			if (this.ribbonIconCreateNewNote == null){
-				this.ribbonIconCreateNewNote = this.plugin.addRibbonIcon('lock', 'Create new encrypted note', (ev)=>{
+				this.ribbonIconCreateNewNote = this.plugin.addRibbonIcon( 'lock', 'Create new encrypted note', (ev)=>{
 					this.processCreateNewEncryptedNoteCommand(false);
 				});
 			}

@@ -1,4 +1,4 @@
-222
+%%🔐α 💡1💡RdIcLG2gFvljDgyF15flhiaYJEoO5gzBq7nFu/zTruhpQMY= 🔐%%
 
 [[An encrypted note.encrypted]]
 

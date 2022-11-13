@@ -4,19 +4,15 @@
     "type": "split",
     "children": [
       {
-        "id": "e0ce0d0a982df991",
+        "id": "db08960d658ff7fa",
         "type": "tabs",
         "children": [
           {
-            "id": "1594a9f8b98773e1",
+            "id": "d220820914d9152a",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Untitled.md",
-                "mode": "source",
-                "source": false
-              }
+              "type": "empty",
+              "state": {}
             }
           }
         ]
@@ -85,7 +81,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Untitled.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +97,6 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Untitled.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -124,9 +118,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "Untitled.md"
-              }
+              "state": {}
             }
           }
         ]
@@ -136,17 +128,17 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "1594a9f8b98773e1",
+  "active": "4ee5056e593d5b29",
   "lastOpenFiles": [
-    "Folder/Example.md",
+    "Untitled 20221113 042647.encrypted",
+    "Untitled 1.md",
     "Untitled.md",
-    "Untitled 20221112 060902.encrypted",
-    "Untitled 20221112 060151.encrypted",
-    "Untitled 20221112 060659.encrypted",
-    "Untitled 20221112 060416.encrypted",
-    "Untitled 20221112 060212.encrypted",
-    "Untitled 20221112 060126.encrypted",
-    "Untitled 20221112 060034.encrypted",
-    "Untitled 20221112 060020.encrypted"
+    "Folder/Untitled 20221113 044854.encrypted",
+    "Folder/Example.md",
+    "Example.md",
+    "Untitled 20221113 042635.encrypted",
+    "An encrypted note.encrypted",
+    "Untitled 20221113 033357.encrypted",
+    "Untitled 20221113 041935.encrypted"
   ]
 }
