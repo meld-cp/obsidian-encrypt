@@ -44,13 +44,11 @@ export class UiHelper{
 							inputCtrl.inputEl.type = inputCtrl.inputEl.type == 'password' ? 'text' : 'password';
 						}
 					})
+				;
 			})
 			.addText( tc => {
 				tc.setPlaceholder(placeholder);
 				tc.setValue(initialValue);
-				if (autoFocus){
-					tc.inputEl.focus();
-				}
 				tc.inputEl.type = 'password';
 				if (onChangeCallback!=null){
 					tc.onChange( onChangeCallback );
@@ -62,6 +60,9 @@ export class UiHelper{
 							onEnterCallback( tc.getValue() );
 						}
 					}
+				}
+				if (autoFocus){
+					setImmediate(() => tc.inputEl.focus());
 				}
 			} )
 		;

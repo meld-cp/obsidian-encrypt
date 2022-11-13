@@ -257,11 +257,11 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		);
 
 		pwModal.onClose = async () => {
-			const pw = pwModal.password ?? ''
-			if (pw.length == 0) {
+			if ( !pwModal.resultConfirmed ){
 				return;
 			}
-			const hint = pwModal.hint;
+			const pw = pwModal.resultPassword ?? ''
+			const hint = pwModal.resultHint ?? '';
 
 			if (selectionAnalysis.canEncrypt) {
 				const encryptable = new Encryptable();

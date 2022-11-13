@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "0bfa830f4b97d698",
+        "id": "db08960d658ff7fa",
         "type": "tabs",
         "children": [
           {
-            "id": "d326f4a9871d4078",
+            "id": "d220820914d9152a",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -130,15 +130,15 @@
   },
   "active": "4ee5056e593d5b29",
   "lastOpenFiles": [
-    "Untitled 20221113 041935.encrypted",
-    "Untitled 20221113 033357.encrypted",
-    "Untitled 20221113 041102.encrypted",
-    "An encrypted note.encrypted",
-    "Folder/Example.md",
-    "Untitled.md",
+    "Untitled 20221113 042647.encrypted",
     "Untitled 1.md",
+    "Untitled.md",
+    "Folder/Untitled 20221113 044854.encrypted",
+    "Folder/Example.md",
     "Example.md",
-    "Untitled 20221112 060902.encrypted",
-    "Untitled 20221112 060151.encrypted"
+    "Untitled 20221113 042635.encrypted",
+    "An encrypted note.encrypted",
+    "Untitled 20221113 033357.encrypted",
+    "Untitled 20221113 041935.encrypted"
   ]
 }

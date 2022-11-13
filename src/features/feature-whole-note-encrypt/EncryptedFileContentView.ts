@@ -123,14 +123,16 @@ export class EncryptedFileContentView extends TextFileView {
 			}
 		}
 
-		let password = '';
+		const bestGuessPassAndHint = SessionPasswordService.getBestGuess( this.file );
+		let password = bestGuessPassAndHint.password;
 		let confirm = '';
-		let hint = '';
+		let hint = bestGuessPassAndHint.hint;
 
 		const sPassword = UiHelper.buildPasswordSetting({
 			container,
 			name:'Password:',
 			autoFocus : true,
+			initialValue: password,
 			onChangeCallback: (value) => {
 				password = value;
 				sPassword.setDesc( this.validatePassword(password) );
@@ -165,6 +167,7 @@ export class EncryptedFileContentView extends TextFileView {
 		const sHint = new Setting(container)
 			.setName("Hint:")
 			.addText((tc) =>{
+				tc.setValue(hint);
 				tc.onChange( v => {
 					hint = v;
 				});
@@ -198,6 +201,9 @@ export class EncryptedFileContentView extends TextFileView {
 		new Setting(container)
 			.setDesc('Please provide a password to unlock this note.')
 		;
+
+		const bestGuessPassAndHint = SessionPasswordService.getBestGuess( this.file );
+		this.encryptionPassword = bestGuessPassAndHint.password;
 
 		UiHelper.buildPasswordSetting({
 			container,
@@ -437,7 +443,7 @@ export class EncryptedFileContentView extends TextFileView {
 		if (decryptedText === null){
 			new Notice('Decryption failed');
 		}else{
-			//this.currentView = EncryptedFileContentViewStateEnum.editNote;
+			SessionPasswordService.put( {password: this.encryptionPassword, hint: this.hint }, this.file );
 			this.currentEditorText = decryptedText;
 			this.refreshView( EncryptedFileContentViewStateEnum.editNote);
 		}
