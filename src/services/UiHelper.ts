@@ -62,7 +62,7 @@ export class UiHelper{
 					}
 				}
 				if (autoFocus){
-					setImmediate(() => tc.inputEl.focus());
+					setTimeout(() => tc.inputEl.focus(), 0);
 				}
 			} )
 		;
