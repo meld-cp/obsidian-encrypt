@@ -7,14 +7,6 @@ node_modules
 package-lock.json
 
 # build
-dist/*
-*.js.map
-test-vault/.obsidian/plugins/meld-encrypt/data.json
-test-vault/.obsidian/plugins/meld-encrypt/main.js
-test-vault/.obsidian/plugins/meld-encrypt/manifest.json
-test-vault/.obsidian/plugins/meld-encrypt/style.css
-test-vault/.obsidian/app.json
-test-vault/.obsidian/appearance.json
-test-vault/.obsidian/command-palette.json
-test-vault/.obsidian/core-plugins.json
-test-vault/.obsidian/workspace
+dist
+*.map
+test-vault
