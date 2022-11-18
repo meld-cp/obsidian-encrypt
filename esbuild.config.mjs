@@ -38,5 +38,6 @@ esbuild.build({
 	logLevel: "info",
 	sourcemap: prod ? false : 'inline',
 	treeShaking: true,
+	minify: prod,
 	outfile: prod ? 'dist/main.js' : 'test-vault/.obsidian/plugins/meld-encrypt/main.js',
 }).catch(() => process.exit(1));
