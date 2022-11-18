@@ -47,7 +47,7 @@ esbuild.build({
 			dest: prod ? './dist/styles.css' : './test-vault/.obsidian/plugins/meld-encrypt/styles.css',
 		}),
 		copyStaticFiles({
-			src: './src/manifest.json',
+			src: './manifest.json',
 			dest: prod ? './dist/manifest.json' : './test-vault/.obsidian/plugins/meld-encrypt/manifest.json',
 		}),
 	]
