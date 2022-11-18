@@ -7,12 +7,12 @@ export const algorithmObsolete = {
 export class CryptoHelperObsolete {
 
 	private async buildKey(password: string) {
-		let utf8Encode = new TextEncoder();
-		let passwordBytes = utf8Encode.encode(password);
+		const utf8Encode = new TextEncoder();
+		const passwordBytes = utf8Encode.encode(password);
 
-		let passwordDigest = await crypto.subtle.digest({ name: 'SHA-256' }, passwordBytes);
+		const passwordDigest = await crypto.subtle.digest({ name: 'SHA-256' }, passwordBytes);
 
-		let key = await crypto.subtle.importKey(
+		const key = await crypto.subtle.importKey(
 			'raw',
 			passwordDigest,
 			algorithmObsolete,
@@ -27,43 +27,43 @@ export class CryptoHelperObsolete {
   	* @deprecated
  	*/
 	public async encryptToBase64(text: string, password: string): Promise<string> {
-		let key = await this.buildKey(password);
+		const key = await this.buildKey(password);
 
-		let utf8Encode = new TextEncoder();
-		let bytesToEncrypt = utf8Encode.encode(text);
+		const utf8Encode = new TextEncoder();
+		const bytesToEncrypt = utf8Encode.encode(text);
 
 		// encrypt into bytes
-		let encryptedBytes = new Uint8Array(await crypto.subtle.encrypt(
+		const encryptedBytes = new Uint8Array(await crypto.subtle.encrypt(
 			algorithmObsolete, key, bytesToEncrypt
 		));
 
 		//convert array to base64
-		let base64Text = btoa(String.fromCharCode(...encryptedBytes));
+		const base64Text = btoa(String.fromCharCode(...encryptedBytes));
 
 		return base64Text;
 	}
 
 	private stringToArray(str: string): Uint8Array {
-		var result = [];
-		for (var i = 0; i < str.length; i++) {
+		const result = [];
+		for (let i = 0; i < str.length; i++) {
 			result.push(str.charCodeAt(i));
 		}
 		return new Uint8Array(result);
 	}
 
-	public async decryptFromBase64(base64Encoded: string, password: string): Promise<string> {
+	public async decryptFromBase64(base64Encoded: string, password: string): Promise<string|null> {
 		try {
 			// convert base 64 to array
-			let bytesToDecrypt = this.stringToArray(atob(base64Encoded));
+			const bytesToDecrypt = this.stringToArray(atob(base64Encoded));
 
-			let key = await this.buildKey(password);
+			const key = await this.buildKey(password);
 
 			// decrypt into bytes
-			let decryptedBytes = await crypto.subtle.decrypt(algorithmObsolete, key, bytesToDecrypt);
+			const decryptedBytes = await crypto.subtle.decrypt(algorithmObsolete, key, bytesToDecrypt);
 
 			// convert bytes to text
-			let utf8Decode = new TextDecoder();
-			let decryptedText = utf8Decode.decode(decryptedBytes);
+			const utf8Decode = new TextDecoder();
+			const decryptedText = utf8Decode.decode(decryptedBytes);
 			return decryptedText;
 		} catch (e) {
 			return null;

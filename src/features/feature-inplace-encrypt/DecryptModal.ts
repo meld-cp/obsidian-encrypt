@@ -2,13 +2,13 @@ import { App, Modal, Notice, Setting, TextAreaComponent } from 'obsidian';
 
 export default class DecryptModal extends Modal {
 	text: string;
-	decryptInPlace: boolean = false;
+	decryptInPlace = false;
 	showCopyButton: boolean
 
 	constructor(
 		app: App,
 		title: string,
-		text: string = '',
+		text = '',
 		showCopyButton:boolean
 	) {
 		super(app);
@@ -18,7 +18,7 @@ export default class DecryptModal extends Modal {
 	}
 
 	onOpen() {
-		let { contentEl } = this;
+		const { contentEl } = this;
 
 		let cTextArea : TextAreaComponent;
 		const sText = new Setting(contentEl)
@@ -33,7 +33,7 @@ export default class DecryptModal extends Modal {
 				cb.inputEl.style.resize = 'vertical';
 			})
 		;
-		sText.settingEl.querySelector('.setting-item-info').remove();
+		sText.settingEl.querySelector('.setting-item-info')?.remove();
 
 		const sActions =	new Setting(contentEl);
 
@@ -48,9 +48,6 @@ export default class DecryptModal extends Modal {
 							new Notice('Copied!');
 						})
 					;
-					if (!this.showCopyButton){
-
-					}
 				})
 			;
 		}

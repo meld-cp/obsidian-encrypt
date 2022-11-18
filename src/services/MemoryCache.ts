@@ -9,7 +9,7 @@ export class MemoryCache<T> {
 
 	public get(key: string, defaultValue: T): T {
 		//console.debug('MemoryCache.get', {key, defaultValue});
-		return this.values.has(key) ? this.values.get(key) : defaultValue;
+		return this.values.get(key) ?? defaultValue;
 	}
 
 	public getFirst(keys: string[], defaultValue: T): T {

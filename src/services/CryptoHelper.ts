@@ -71,14 +71,14 @@ export class CryptoHelper {
 	}
 
 	private stringToArray(str: string): Uint8Array {
-		var result = [];
-		for (var i = 0; i < str.length; i++) {
+		const result = [];
+		for (let i = 0; i < str.length; i++) {
 			result.push(str.charCodeAt(i));
 		}
 		return new Uint8Array(result);
 	}
 
-	public async decryptFromBytes(encryptedBytes: Uint8Array, password: string): Promise<string> {
+	public async decryptFromBytes(encryptedBytes: Uint8Array, password: string): Promise<string|null> {
 		try {
 
 			// extract iv
@@ -90,14 +90,14 @@ export class CryptoHelper {
 			const key = await this.deriveKey(password);
 
 			// decrypt into bytes
-			let decryptedBytes = await crypto.subtle.decrypt(
+			const decryptedBytes = await crypto.subtle.decrypt(
 				{name: 'AES-GCM', iv: vector},
 				key,
 				encryptedTextBytes
 			);
 
 			// convert bytes to text
-			let decryptedText = utf8Decoder.decode(decryptedBytes);
+			const decryptedText = utf8Decoder.decode(decryptedBytes);
 			return decryptedText;
 		} catch (e) {
 			//console.error(e);
@@ -105,10 +105,10 @@ export class CryptoHelper {
 		}
 	}
 
-	public async decryptFromBase64(base64Encoded: string, password: string): Promise<string> {
+	public async decryptFromBase64(base64Encoded: string, password: string): Promise<string|null> {
 		try {
 
-			let bytesToDecode = this.stringToArray(atob(base64Encoded));
+			const bytesToDecode = this.stringToArray(atob(base64Encoded));
 			
 			return await this.decryptFromBytes(bytesToDecode, password);
 

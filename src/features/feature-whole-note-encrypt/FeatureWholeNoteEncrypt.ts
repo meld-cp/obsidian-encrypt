@@ -11,7 +11,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 	plugin:MeldEncrypt;
 	settings: IFeatureWholeNoteEncryptSettings;
 
-	private ribbonIconCreateNewNote?: HTMLElement;
+	private ribbonIconCreateNewNote?: HTMLElement | null;
 
 	async onload( plugin: MeldEncrypt, settings:IMeldEncryptPluginSettings ) {
 		this.plugin = plugin;
@@ -45,7 +45,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 				return true;
 			}
 			
-			let newFilename = moment().format('[Untitled] YYYYMMDD hhmmss[.encrypted]'); 
+			const newFilename = moment().format('[Untitled] YYYYMMDD hhmmss[.encrypted]'); 
 			
 			let newFileFolder : TFolder;
 			const activeFile = this.plugin.app.workspace.getActiveFile();
@@ -67,10 +67,13 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			});
 
 			return true;
+			
 		}catch(e){
 			console.error(e);
 			new Notice(e, 10000);
+			return false;
 		}
+
 	}
 
 	buildSettingsUi(

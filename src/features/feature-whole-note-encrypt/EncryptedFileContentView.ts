@@ -1,4 +1,4 @@
-import { Menu, Notice, Setting, TextComponent, TextFileView } from 'obsidian';
+import { Menu, Notice, Setting, TextFileView } from 'obsidian';
 import { WorkspaceLeaf } from "obsidian";
 import { SessionPasswordService } from 'src/services/SessionPasswordService';
 import { UiHelper } from 'src/services/UiHelper';
@@ -17,9 +17,9 @@ export class EncryptedFileContentView extends TextFileView {
 	
 	// State
 	currentView : EncryptedFileContentViewStateEnum = EncryptedFileContentViewStateEnum.init;
-	encryptionPassword:string = '';
-	hint:string = '';
-	currentEditorText:string = '';
+	encryptionPassword = '';
+	hint = '';
+	currentEditorText = '';
 	// end state
 	
 	elActionIconLockNote : HTMLElement;
@@ -76,7 +76,7 @@ export class EncryptedFileContentView extends TextFileView {
 		return this.contentEl.createDiv({
 			text : `🔐 ${title} 🔐`,
 			attr : {
-			 	style: 'margin-bottom:2em;'
+				style: 'margin-bottom:2em;'
 			}
 		});
 	}
@@ -102,8 +102,8 @@ export class EncryptedFileContentView extends TextFileView {
 		;
 
 		const submit = async (password: string, confirm: string, hint:string) => {
-			var validPw = this.validatePassword(password);
-			var validCpw = this.validateConfirm(password, confirm);
+			const validPw = this.validatePassword(password);
+			const validCpw = this.validateConfirm(password, confirm);
 			sPassword.setDesc( validPw );
 			sConfirm.setDesc( validCpw );
 
@@ -141,7 +141,7 @@ export class EncryptedFileContentView extends TextFileView {
 			onEnterCallback: (value)=>{
 				password = value;
 				if (password.length > 0){
-					sConfirm.controlEl.querySelector('input').focus();
+					sConfirm.controlEl.querySelector('input')?.focus();
 				}
 			}
 		});
@@ -159,7 +159,7 @@ export class EncryptedFileContentView extends TextFileView {
 				confirm = value;
 				const passwordMatch = password === confirm;
 				if (passwordMatch){
-					sHint.controlEl.querySelector('input').focus();
+					sHint.controlEl.querySelector('input')?.focus();
 				}
 			}
 		});
@@ -236,7 +236,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 			//console.debug('encodeAndSave');
 			
-			var fileData = await FileDataHelper.encode(
+			const fileData = await FileDataHelper.encode(
 				this.encryptionPassword,
 				this.hint,
 				this.currentEditorText
@@ -287,8 +287,8 @@ export class EncryptedFileContentView extends TextFileView {
 		let newHint = '';
 
 		const submit = async (newPassword: string, confirm: string, newHint:string) => {
-			var validPw = this.validatePassword(newPassword);
-			var validCpw = this.validateConfirm(newPassword, confirm);
+			const validPw = this.validatePassword(newPassword);
+			const validCpw = this.validateConfirm(newPassword, confirm);
 			sNewPassword.setDesc( validPw );
 			sConfirm.setDesc( validCpw );
 
@@ -316,7 +316,7 @@ export class EncryptedFileContentView extends TextFileView {
 			onEnterCallback: (value) =>{
 				newPassword = value;
 				if (newPassword.length > 0){
-					sConfirm.controlEl.querySelector('input').focus();
+					sConfirm.controlEl.querySelector('input')?.focus();
 				}
 			}
 		});
@@ -334,7 +334,7 @@ export class EncryptedFileContentView extends TextFileView {
 				// validate confirm
 				const passwordMatch = newPassword === confirm;
 				if (passwordMatch){
-					sHint.controlEl.querySelector('input').focus();
+					sHint.controlEl.querySelector('input')?.focus();
 				}
 			}
 		});
@@ -431,7 +431,7 @@ export class EncryptedFileContentView extends TextFileView {
 	}
 
 	async handleDecryptButtonClick() {
-		var fileData = JsonFileEncoding.decode(this.data)
+		const fileData = JsonFileEncoding.decode(this.data)
 						
 		//console.debug('Decrypt button', fileData);
 
@@ -474,7 +474,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 		if (clear){
 
-			var newView : EncryptedFileContentViewStateEnum;
+			let newView : EncryptedFileContentViewStateEnum;
 			if (data === ''){
 				// blank new file
 				newView = EncryptedFileContentViewStateEnum.newNote;
@@ -486,7 +486,7 @@ export class EncryptedFileContentView extends TextFileView {
 			this.encryptionPassword = '';
 
 			// json decode file data to get the Hint
-			var fileData = JsonFileEncoding.decode(this.data);
+			const fileData = JsonFileEncoding.decode(this.data);
 			
 			this.hint = fileData.hint;
 			
@@ -518,7 +518,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 class FileData{
 	
-	public version : string = "1.0";
+	public version = "1.0";
 	public hint: string;
 	public encodedData:string;
 
@@ -536,7 +536,7 @@ class FileDataHelper{
 		return new FileData(hint, encryptedData);
 	}
 
-	public static async decrypt( data: FileData, pass:string ) : Promise<string>{
+	public static async decrypt( data: FileData, pass:string ) : Promise<string|null>{
 		if ( data.encodedData == '' ){
 			return '';
 		}

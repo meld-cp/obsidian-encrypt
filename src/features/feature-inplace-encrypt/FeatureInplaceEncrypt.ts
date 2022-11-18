@@ -10,12 +10,12 @@ import PasswordModal from "./PasswordModal";
 import { UiHelper } from "../../services/UiHelper";
 import { SessionPasswordService } from "src/services/SessionPasswordService";
 
-const _PREFIX: string = '%%🔐';
-const _PREFIX_OBSOLETE: string = _PREFIX + ' ';
+const _PREFIX = '%%🔐';
+const _PREFIX_OBSOLETE = _PREFIX + ' ';
 const _PREFIX_A: string = _PREFIX + 'α ';
-const _SUFFIX: string = ' 🔐%%';
+const _SUFFIX = ' 🔐%%';
 
-const _HINT: string = '💡';
+const _HINT = '💡';
 
 export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	plugin:MeldEncrypt;
@@ -150,7 +150,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		const initOffset = editor.posToOffset( editor.getCursor("from") );
 		const lastLineNum = editor.lastLine();
 
-		let maxOffset = editor.posToOffset( {line:lastLineNum, ch:editor.getLine(lastLineNum).length} );
+		const maxOffset = editor.posToOffset( {line:lastLineNum, ch:editor.getLine(lastLineNum).length} );
 
 		for (let offset = initOffset; offset <= maxOffset - text.length; offset++) {
 			const offsetPos = editor.offsetToPos(offset);
@@ -188,8 +188,10 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		result.canEncrypt = !result.hasEncryptedPrefix && !result.containsEncryptedMarkers;
 		
 		if (result.canDecrypt){
-			result.decryptable = this.parseDecryptableContent(selectionText);
-			if (result.decryptable == null){
+			const decryptable = this.parseDecryptableContent(selectionText);
+			if ( decryptable != null ){
+				result.decryptable = decryptable;
+			}else{
 				result.canDecrypt = false;
 			}
 		}
@@ -204,8 +206,8 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		finalSelectionStart: CodeMirror.Position,
 		finalSelectionEnd: CodeMirror.Position,
 		decryptInPlace: boolean,
-		allowEncryption:boolean = true
-	){
+		allowEncryption = true
+	) : boolean {
 
 		const selectionAnalysis = this.analyseSelection(selectionText);
 
@@ -227,17 +229,21 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			return false;
 		}
 
+		const activeFile = this.plugin.app.workspace.getActiveFile();
+		if (activeFile == null){
+			return false;
+		}
+
 		if (checking) {
 			return true;
 		}
 
-		const activeFile = this.plugin.app.workspace.getActiveFile();
 		
 		// Fetch password from user
 
 		// determine default password and hint
 		let defaultPassword = '';
-		let defaultHint : string = selectionAnalysis.decryptable?.hint;
+		let defaultHint = selectionAnalysis.decryptable?.hint;
 		if ( this.pluginSettings.rememberPassword ){
 			const bestGuessPasswordAndHint = SessionPasswordService.getBestGuess( activeFile );
 			console.debug({bestGuessPasswordAndHint});
@@ -281,8 +287,8 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 			} else {
 
-				let decryptSuccess : Boolean;
-				if (selectionAnalysis.decryptable.version == 1){
+				let decryptSuccess : boolean;
+				if (selectionAnalysis.decryptable?.version == 1){
 					decryptSuccess = await this.decryptSelection_a(
 						editor,
 						selectionAnalysis.decryptable,
@@ -401,7 +407,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		return true;
 	}
 
-	private parseDecryptableContent(text: string) : Decryptable{
+	private parseDecryptableContent(text: string) : Decryptable | null {
 		const result = new Decryptable();
 
 		let content = text;

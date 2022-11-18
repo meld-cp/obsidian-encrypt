@@ -4,22 +4,22 @@ import { UiHelper } from 'src/services/UiHelper';
 export default class PasswordModal extends Modal {
 	
 	// input
-	private defaultPassword?: string = null;
-	private defaultHint?: string = null;
+	private defaultPassword?: string | null = null;
+	private defaultHint?: string | null = null;
 	private confirmPassword: boolean;
 	private isEncrypting: boolean;
 	
 	// output
-	public resultConfirmed: boolean = false;
-	public resultPassword?: string = null;
-	public resultHint?: string = null;
+	public resultConfirmed = false;
+	public resultPassword?: string | null = null;
+	public resultHint?: string | null = null;
 
 	constructor(
 		app: App,
 		isEncrypting:boolean,
 		confirmPassword: boolean,
-		defaultPassword: string = null,
-		hint:string = null
+		defaultPassword: string | null = null,
+		hint:string | null = null
 	) {
 		super(app);
 		this.defaultPassword = defaultPassword;
@@ -29,7 +29,7 @@ export default class PasswordModal extends Modal {
 	}
 
 	onOpen() {
-		let { contentEl } = this;
+		const { contentEl } = this;
 
 		contentEl.empty();
 
@@ -46,7 +46,7 @@ export default class PasswordModal extends Modal {
 
 		/* Main password input*/
 
-		const sPassword = UiHelper.buildPasswordSetting({
+		UiHelper.buildPasswordSetting({
 			container: contentEl,
 			name: 'Password:',
 			placeholder: this.isEncrypting ? '' : `Hint: ${this.defaultHint}`,
@@ -76,7 +76,7 @@ export default class PasswordModal extends Modal {
 						}
 					}else if( validate() ){
 						this.close();
-					};
+					}
 				}
 			}
 		});
@@ -132,7 +132,7 @@ export default class PasswordModal extends Modal {
 						if ( validate() ){
 							this.close();
 						}
-					};
+					}
 				});
 			})
 		;

@@ -8,14 +8,14 @@ interface IPasswordAndHint{
 
 export class SessionPasswordService{
 
-	private static isActive : boolean = true;
+	private static isActive = true;
 
 	private static blankPasswordAndHint : IPasswordAndHint = {password:'', hint:'' };
 
 	private static cache = new MemoryCache<IPasswordAndHint>();
 	
-	private static baseMinutesToExpire:number = 0;
-	private static expiryTime : number = null;
+	private static baseMinutesToExpire = 0;
+	private static expiryTime : number | null = null;
 
 	public static setActive( isActive: boolean) {
 		SessionPasswordService.isActive = isActive;
@@ -28,8 +28,8 @@ export class SessionPasswordService{
 	 * 
 	 * @param minutesToExpire set to 0 to never expire
 	 */
-	public static setAutoExpire( minutesToExpire:number ) : void{
-		SessionPasswordService.baseMinutesToExpire = minutesToExpire;
+	public static setAutoExpire( minutesToExpire:number | null ) : void{
+		SessionPasswordService.baseMinutesToExpire = minutesToExpire ?? 0;
 		SessionPasswordService.updateExpiryTime();
 	}
 
