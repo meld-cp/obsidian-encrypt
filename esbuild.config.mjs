@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from 'builtin-modules'
+import builtins from 'builtin-modules';
+import copyStaticFiles from 'esbuild-copy-static-files';
 
 const banner =
 `/*
@@ -39,5 +40,15 @@ esbuild.build({
 	sourcemap: prod ? false : 'inline',
 	treeShaking: true,
 	minify: prod,
-	outfile: prod ? 'dist/main.js' : 'test-vault/.obsidian/plugins/meld-encrypt/main.js',
+	outfile: prod ? './dist/main.js' : './test-vault/.obsidian/plugins/meld-encrypt/main.js',
+	plugins:[
+		copyStaticFiles({
+			src: './src/styles.css',
+			dest: prod ? './dist/styles.css' : './test-vault/.obsidian/plugins/meld-encrypt/styles.css',
+		}),
+		copyStaticFiles({
+			src: './src/manifest.json',
+			dest: prod ? './dist/manifest.json' : './test-vault/.obsidian/plugins/meld-encrypt/manifest.json',
+		}),
+	]
 }).catch(() => process.exit(1));
