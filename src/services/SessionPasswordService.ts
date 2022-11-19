@@ -42,12 +42,12 @@ export class SessionPasswordService{
 		} else {
 			SessionPasswordService.expiryTime = Date.now() + SessionPasswordService.baseMinutesToExpire * 1000 * 60;
 		}
-		console.debug('SessionPasswordService.updateExpiryTime', {expiryTime:SessionPasswordService.expiryTime});
+		//console.debug('SessionPasswordService.updateExpiryTime', {expiryTime:SessionPasswordService.expiryTime});
 	}
 	
 	public static put( pw: IPasswordAndHint, file : TFile ): void {
-		console.debug('SessionPasswordService.put', {pw, file})
-		console.debug( file.parent.path );
+		//console.debug('SessionPasswordService.put', {pw, file})
+		//console.debug( file.parent.path );
 
 		this.cache.put(file.path, pw);
 		this.cache.put(file.parent.path, pw)
@@ -75,7 +75,7 @@ export class SessionPasswordService{
 			],
 			SessionPasswordService.blankPasswordAndHint
 		);
-		console.debug('SessionPasswordService.getBestGuess', {file, buestGuess})
+		//console.debug('SessionPasswordService.getBestGuess', {file, buestGuess})
 
 		return buestGuess;
 		
