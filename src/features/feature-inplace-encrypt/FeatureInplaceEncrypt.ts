@@ -1,4 +1,4 @@
-import { Editor, EditorPosition, MarkdownView, Notice, Setting } from "obsidian";
+import { Editor, EditorPosition, Notice, Setting } from "obsidian";
 import { CryptoHelper } from "../../services/CryptoHelper";
 import { CryptoHelperObsolete } from "../../services/CryptoHelperObsolete";
 import DecryptModal from "./DecryptModal";
@@ -10,10 +10,25 @@ import PasswordModal from "./PasswordModal";
 import { UiHelper } from "../../services/UiHelper";
 import { SessionPasswordService } from "src/services/SessionPasswordService";
 
-const _PREFIX = '%%🔐';
-const _PREFIX_OBSOLETE = _PREFIX + ' ';
-const _PREFIX_A: string = _PREFIX + 'α ';
-const _SUFFIX = ' 🔐%%';
+const _PREFIX_A = '%%🔐α ';
+const _PREFIX_A_VISIBLE = '🔐α ';
+const _PREFIX_OBSOLETE = '%%🔐 ';
+
+// Should be listed by evaluation priority
+const _PREFIXES = [
+	_PREFIX_A,
+	_PREFIX_A_VISIBLE,
+	_PREFIX_OBSOLETE,
+];
+
+const _SUFFIX_WITH_COMMENT = ' 🔐%%';
+const _SUFFIX_NO_COMMENT = ' 🔐';
+
+// Should be listed by evaluation priority
+const _SUFFIXES = [
+	_SUFFIX_WITH_COMMENT,
+	_SUFFIX_NO_COMMENT
+]
 
 const _HINT = '💡';
 
@@ -31,14 +46,14 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			id: 'meld-encrypt',
 			name: 'Encrypt/Decrypt',
 			icon: 'lock',
-			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, view, false )
+			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, false )
 		});
 
 		plugin.addCommand({
 			id: 'meld-encrypt-in-place',
 			name: 'Encrypt/Decrypt In-place',
 			icon: 'lock',
-			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, view, true )
+			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, true )
 		});
 		
 	}
@@ -69,20 +84,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 					})
 			})
 		;
-
-		new Setting(containerEl)
-			.setName('Copy button?')
-			.setDesc('Show a button to copy decrypted text.')
-			.addToggle( toggle =>{
-				toggle
-					.setValue(this.featureSettings.showCopyButton)
-					.onChange( async value =>{
-						this.featureSettings.showCopyButton = value;
-						await saveSettingCallback();
-					})
-			})
-		;
-
 	}
 
 	
@@ -90,7 +91,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	private processEncryptDecryptCommand(
 		checking: boolean,
 		editor: Editor,
-		view: MarkdownView,
 		decryptInPlace: boolean
 	): boolean {
 		if ( checking && UiHelper.isSettingsModalOpen() ){
@@ -111,9 +111,19 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			endPos = { line: endLine, ch: endLineText.length }; // want the end of last line
 		}else{
 			if ( !editor.somethingSelected() ){
+				//console.debug('nothing selected, assume user wants to decrypt, expand to start and end markers');
 				// nothing selected, assume user wants to decrypt, expand to start and end markers
-				startPos = this.getClosestPrevTextCursorPos(editor, _PREFIX, startPos );
-				endPos = this.getClosestNextTextCursorPos(editor, _SUFFIX, endPos );
+				const foundStartPos = this.getClosestPrefixCursorPos( editor );
+				if ( foundStartPos == null ){
+					return false;
+				}
+				startPos = foundStartPos;
+
+				const foundEndPos = this.getClosestSuffixCursorPos(editor);
+				if ( foundEndPos == null ){
+					return false;
+				}
+				endPos = foundEndPos;
 			}
 		}
 
@@ -129,74 +139,60 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		);
 	}
 
-	private getClosestPrevTextCursorPos(editor: Editor, text: string, defaultValue:EditorPosition ): EditorPosition{
-		const initOffset = editor.posToOffset( editor.getCursor("from") );
+	private getClosestPrefixCursorPos(editor: Editor): EditorPosition | null{
+		
+		const maxLengthPrefix = _PREFIXES.reduce((prev,cur, i) => {
+			if (i== 0) return cur;
+			if ( cur.length > prev.length ) return cur;
+			return prev;
+		} );
+		const initOffset = editor.posToOffset( editor.getCursor("from") ) + maxLengthPrefix.length;
 
 		for (let offset = initOffset; offset >= 0; offset--) {
 			const offsetPos = editor.offsetToPos(offset);
-			const textEndOffset = offset + text.length;
-			const prefixEndPos = editor.offsetToPos(textEndOffset);
+			for (const prefix of _PREFIXES) {
+				const prefixStartOffset = offset - prefix.length;
+				const prefixStartPos = editor.offsetToPos(prefixStartOffset);
 			
-			const testText = editor.getRange( offsetPos, prefixEndPos );
-			if (testText == text){
-				return offsetPos;
+				const testText = editor.getRange( prefixStartPos, offsetPos );
+				//console.debug({testText});
+				if (testText == prefix){
+					return editor.offsetToPos(prefixStartOffset);
+				}
 			}
 		}
 
-		return defaultValue;
+		return null;
+
 	}
 
-	private getClosestNextTextCursorPos(editor: Editor, text: string, defaultValue:EditorPosition ): EditorPosition{
-		const initOffset = editor.posToOffset( editor.getCursor("from") );
+	private getClosestSuffixCursorPos(editor: Editor): EditorPosition | null{
+		const maxLengthPrefix = _PREFIXES.reduce((prev,cur, i) => {
+			if (i== 0) return cur;
+			if ( cur.length > prev.length ) return cur;
+			return prev;
+		} );
+		
+		const initOffset = editor.posToOffset( editor.getCursor("from") ) - maxLengthPrefix.length + 1;
 		const lastLineNum = editor.lastLine();
 
 		const maxOffset = editor.posToOffset( {line:lastLineNum, ch:editor.getLine(lastLineNum).length} );
 
-		for (let offset = initOffset; offset <= maxOffset - text.length; offset++) {
+		for (let offset = initOffset; offset <= maxOffset; offset++) {
 			const offsetPos = editor.offsetToPos(offset);
-			const textEndOffset = offset + text.length;
-			const prefixEndPos = editor.offsetToPos(textEndOffset);
-			
-			const testText = editor.getRange( offsetPos, prefixEndPos );
-			
-			if (testText == text){
-				return prefixEndPos;
+			for (const suffix of _SUFFIXES) {	
+				const textEndOffset = offset + suffix.length;
+				const textEndPos = editor.offsetToPos(textEndOffset);
+				
+				const testText = editor.getRange( offsetPos, textEndPos );
+				
+				if (testText == suffix){
+					return textEndPos;
+				}
 			}
 		}
 		
-		return defaultValue;
-	}
-
-	private analyseSelection( selectionText: string ):SelectionAnalysis{
-		
-		const result = new SelectionAnalysis();
-
-		result.isEmpty = selectionText.length === 0;
-
-		result.hasObsoleteEncryptedPrefix = selectionText.startsWith(_PREFIX_OBSOLETE);
-		result.hasEncryptedPrefix = result.hasObsoleteEncryptedPrefix || selectionText.startsWith(_PREFIX_A);
-
-		result.hasDecryptSuffix = selectionText.endsWith(_SUFFIX);
-
-		result.containsEncryptedMarkers =
-			selectionText.contains(_PREFIX_OBSOLETE)
-			|| selectionText.contains(_PREFIX_A)
-			|| selectionText.contains(_SUFFIX)
-		;
-
-		result.canDecrypt = result.hasEncryptedPrefix && result.hasDecryptSuffix;
-		result.canEncrypt = !result.hasEncryptedPrefix && !result.containsEncryptedMarkers;
-		
-		if (result.canDecrypt){
-			const decryptable = this.parseDecryptableContent(selectionText);
-			if ( decryptable != null ){
-				result.decryptable = decryptable;
-			}else{
-				result.canDecrypt = false;
-			}
-		}
-
-		return result;
+		return null;
 	}
 
 	private processSelection(
@@ -208,8 +204,8 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		decryptInPlace: boolean,
 		allowEncryption = true
 	) : boolean {
-
-		const selectionAnalysis = this.analyseSelection(selectionText);
+		const selectionAnalysis = new SelectionAnalysis( selectionText );
+		//console.debug(selectionAnalysis);
 
 		if (selectionAnalysis.isEmpty) {
 			if (!checking){
@@ -300,7 +296,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				}else{
 					decryptSuccess = await this.decryptSelectionObsolete(
 						editor,
-						selectionAnalysis.decryptable,
+						selectionAnalysis,
 						pw,
 						finalSelectionStart,
 						finalSelectionEnd,
@@ -358,7 +354,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				editor.setSelection(selectionStart, selectionEnd);
 				editor.replaceSelection(decryptedText);
 			} else {
-				const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText, this.featureSettings.showCopyButton);
+				const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText );
 				decryptModal.onClose = () => {
 					editor.focus();
 					if (decryptModal.decryptInPlace) {
@@ -374,14 +370,15 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	private async decryptSelectionObsolete(
 		editor: Editor,
-		decryptable: Decryptable,
+		selectionAnalysis: SelectionAnalysis,
 		password: string,
 		selectionStart: CodeMirror.Position,
 		selectionEnd: CodeMirror.Position,
 		decryptInPlace: boolean
 	) :Promise<boolean> {
 		// decrypt
-		const base64CipherText = this.removeMarkers(decryptable.base64CipherText);
+		//console.debug(selectionAnalysis);
+		const base64CipherText = selectionAnalysis.decryptable.base64CipherText;
 		const crypto = new CryptoHelperObsolete();
 		const decryptedText = await crypto.decryptFromBase64(base64CipherText, password);
 		if (decryptedText === null) {
@@ -393,7 +390,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				editor.setSelection(selectionStart, selectionEnd);
 				editor.replaceSelection(decryptedText);
 			} else {
-				const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText, this.featureSettings.showCopyButton);
+				const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText );
 				decryptModal.onClose = () => {
 					editor.focus();
 					if (decryptModal.decryptInPlace) {
@@ -407,18 +404,91 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		return true;
 	}
 
+
+	private encodeEncryption( encryptedText: string, hint: string ): string {
+		if (
+			!_PREFIXES.some( (prefix) => encryptedText.contains(prefix) )
+			&& !_SUFFIXES.some( (suffix) => encryptedText.contains(suffix) )
+		) {
+			if (hint.length > 0){
+				return _PREFIX_A.concat(_HINT, hint, _HINT, encryptedText, _SUFFIX_WITH_COMMENT);
+			}
+			return _PREFIX_A.concat(encryptedText, _SUFFIX_WITH_COMMENT);
+		}
+		return encryptedText;
+	}
+}
+
+class SelectionAnalysis{
+	processedText:string;
+	isEmpty: boolean;
+	
+	prefix: string;
+	suffix: string;
+
+	hasObsoleteEncryptedPrefix: boolean;
+	hasEncryptedPrefix: boolean;
+	hasEncryptedSuffix: boolean;
+	canDecrypt: boolean;
+	canEncrypt: boolean;
+	containsEncryptedMarkers: boolean;
+	decryptable : Decryptable;
+
+	constructor(text: string){
+		this.process(text);
+	}
+
+	private process( text: string ) : void{
+		//console.debug('SelectionAnalysis.process', {text});
+		
+		this.processedText = text;
+
+		this.isEmpty = text.length === 0;
+
+		this.prefix = _PREFIXES.find( (prefix) => text.startsWith(prefix) ) ?? '';
+		this.suffix = _SUFFIXES.find( (suffix) => text.endsWith(suffix) ) ?? '';
+		
+		//console.debug( {prefix:this.prefix, suffix:this.suffix} );
+		
+		this.hasEncryptedPrefix = this.prefix.length > 0;
+		this.hasEncryptedSuffix = this.suffix.length > 0;
+
+		this.hasObsoleteEncryptedPrefix = this.prefix === _PREFIX_OBSOLETE;
+
+		this.containsEncryptedMarkers = [..._PREFIXES, ..._SUFFIXES].some( (marker) => text.contains(marker ));
+
+		this.canDecrypt = this.hasEncryptedPrefix && this.hasEncryptedSuffix;
+		this.canEncrypt = !this.hasEncryptedPrefix && !this.containsEncryptedMarkers;
+		
+		if (this.canDecrypt){
+			const decryptable = this.parseDecryptableContent(text);
+			if ( decryptable != null ){
+				this.decryptable = decryptable;
+			}else{
+				this.canDecrypt = false;
+			}
+		}
+	}
+
 	private parseDecryptableContent(text: string) : Decryptable | null {
 		const result = new Decryptable();
 
-		let content = text;
-		if (content.startsWith(_PREFIX_A) && content.endsWith(_SUFFIX)) {
-			result.version=1;
-			content = content.replace(_PREFIX_A, '').replace(_SUFFIX, '');
-		}else if (content.startsWith(_PREFIX_OBSOLETE) && content.endsWith(_SUFFIX)) {
-			result.version=0;
-			content = content.replace(_PREFIX_OBSOLETE, '').replace(_SUFFIX, '');
-		}else {
+		if (
+			!this.hasEncryptedPrefix
+			|| !this.hasEncryptedSuffix
+		){
 			return null; // invalid format
+		}
+		
+		result.version = this.hasObsoleteEncryptedPrefix ? 0 : 1;
+		
+		// remove markers from start and end	
+		const content = text.substring(this.prefix.length, text.length - this.suffix.length);
+		//console.debug({content});
+
+		if ( [..._PREFIXES, ..._SUFFIXES].some( (marker) => content.contains( marker )) ){
+			// content, itself has markers
+			return null;
 		}
 
 		// check if there is a hint
@@ -436,37 +506,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		return result;
 
 	}
-
-	private removeMarkers(text: string): string {
-		if (text.startsWith(_PREFIX_A) && text.endsWith(_SUFFIX)) {
-			return text.replace(_PREFIX_A, '').replace(_SUFFIX, '');
-		}
-		if (text.startsWith(_PREFIX_OBSOLETE) && text.endsWith(_SUFFIX)) {
-			return text.replace(_PREFIX_OBSOLETE, '').replace(_SUFFIX, '');
-		}
-		return text;
-	}
-
-	private encodeEncryption( encryptedText: string, hint: string ): string {
-		if (!encryptedText.contains(_PREFIX_OBSOLETE) && !encryptedText.contains(_PREFIX_A) && !encryptedText.contains(_SUFFIX)) {
-			if (hint){
-				return _PREFIX_A.concat(_HINT, hint, _HINT, encryptedText, _SUFFIX);	
-			}
-			return _PREFIX_A.concat(encryptedText, _SUFFIX);
-		}
-		return encryptedText;
-	}
-}
-
-class SelectionAnalysis{
-	isEmpty: boolean;
-	hasObsoleteEncryptedPrefix: boolean;
-	hasEncryptedPrefix: boolean;
-	hasDecryptSuffix: boolean;
-	canDecrypt: boolean;
-	canEncrypt: boolean;
-	containsEncryptedMarkers: boolean;
-	decryptable : Decryptable;
 }
 
 class Encryptable{

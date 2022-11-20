@@ -3,18 +3,15 @@ import { App, Modal, Notice, Setting, TextAreaComponent } from 'obsidian';
 export default class DecryptModal extends Modal {
 	text: string;
 	decryptInPlace = false;
-	showCopyButton: boolean
 
 	constructor(
 		app: App,
 		title: string,
-		text = '',
-		showCopyButton:boolean
+		text = ''
 	) {
 		super(app);
 		this.titleEl.setText(title);
 		this.text = text;
-		this.showCopyButton = showCopyButton;
 	}
 
 	onOpen() {
@@ -35,24 +32,18 @@ export default class DecryptModal extends Modal {
 		;
 		sText.settingEl.querySelector('.setting-item-info')?.remove();
 
-		const sActions =	new Setting(contentEl);
-
-		if (this.showCopyButton){
-
-			sActions
-				.addButton( cb =>{
-					cb
-						.setButtonText('Copy')
-						.onClick( evt =>{
-							navigator.clipboard.writeText( cTextArea.getValue() );
-							new Notice('Copied!');
-						})
-					;
-				})
-			;
-		}
+		const sActions = new Setting(contentEl);
 
 		sActions
+			.addButton( cb =>{
+				cb
+					.setButtonText('Copy')
+					.onClick( evt =>{
+						navigator.clipboard.writeText( cTextArea.getValue() );
+						new Notice('Copied!');
+					})
+				;
+			})
 			.addButton( cb =>{
 				cb
 					.setWarning()

@@ -59,7 +59,6 @@ export default class MeldEncrypt extends Plugin {
 			
 			featureInplaceEncrypt:{
 				expandToWholeLines: false,
-				showCopyButton: true,
 			}
 		}
 
