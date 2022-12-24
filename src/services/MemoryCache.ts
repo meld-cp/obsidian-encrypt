@@ -36,7 +36,6 @@ export class MemoryCache<T> {
 	}
 
 	public clear() {
-		//console.debug('MemoryCache.clear');
 		this.values.clear();
 	}
 }

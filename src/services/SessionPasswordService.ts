@@ -42,12 +42,12 @@ export class SessionPasswordService{
 		} else {
 			SessionPasswordService.expiryTime = Date.now() + SessionPasswordService.baseMinutesToExpire * 1000 * 60;
 		}
-		//console.debug('SessionPasswordService.updateExpiryTime', {expiryTime:SessionPasswordService.expiryTime});
 	}
 	
 	public static put( pw: IPasswordAndHint, file : TFile ): void {
-		//console.debug('SessionPasswordService.put', {pw, file})
-		//console.debug( file.parent.path );
+		if (!SessionPasswordService.isActive){
+			return;
+		}
 
 		this.cache.put(file.path, pw);
 		this.cache.put(file.parent.path, pw)
@@ -57,14 +57,20 @@ export class SessionPasswordService{
 	}
 
 	public static getExact( file : TFile ): IPasswordAndHint {
+		if (!SessionPasswordService.isActive){
+			return SessionPasswordService.blankPasswordAndHint;
+		}
 		this.clearIfExpired();
 		SessionPasswordService.updateExpiryTime();
 		return this.cache.get(file.path, SessionPasswordService.blankPasswordAndHint);
 	}
 
 	public static getBestGuess( file : TFile ): IPasswordAndHint {
+		if (!SessionPasswordService.isActive){
+			return SessionPasswordService.blankPasswordAndHint;
+		}
+
 		this.clearIfExpired();
-		//console.debug('SessionPasswordService.getBestGuess', {file})
 		SessionPasswordService.updateExpiryTime();
 		
 		const buestGuess = this.cache.getFirst(
@@ -75,11 +81,8 @@ export class SessionPasswordService{
 			],
 			SessionPasswordService.blankPasswordAndHint
 		);
-		//console.debug('SessionPasswordService.getBestGuess', {file, buestGuess})
 
 		return buestGuess;
-		
-		
 	}
 
 	private static clearIfExpired() : void{
