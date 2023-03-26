@@ -13,11 +13,9 @@ export default class MeldEncrypt extends Plugin {
 	private enabledFeatures : IMeldEncryptPluginFeature[] = [];
 
 	async onload() {
-
+		
 		// Settings
 		await this.loadSettings();
-
-		
 
 		this.enabledFeatures.push(
 			new FeatureWholeNoteEncrypt(),
