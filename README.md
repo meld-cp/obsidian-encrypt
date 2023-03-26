@@ -2,7 +2,7 @@
 
 **Create encrypted notes within your [Obsidian.md](https://obsidian.md/) vault.**
 
-Encrypted notes are never decrypted to disk (unless you use the decrypt in-place feature) giving you peice-of-mind that the decrypted contents havn't been sync'd or backed up to external systems.
+Encrypted notes are never decrypted to disk (unless you use the decrypt in-place feature) giving you piece-of-mind that the decrypted contents haven't been sync'd or backed up to external systems.
 
 
 
