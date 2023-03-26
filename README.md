@@ -25,6 +25,9 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### v2.0.5
+- fix creating encrypted note on mobile
+
 ### v2.0.4
 - fix password remembered even when 'remember password' setting is unchecked
 
@@ -32,15 +35,6 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 - add common password session cache
 - also remember passwords for whole note encryption
 - add password peek button
-
-### v2.0.2
-
-Due to popular demand, the encrypt in-place functionality is no longer scheduled for removal 🙄🥳.
-
-**Changes**
-- Code refactors
-- UI clean up
-- Update usage docs
 
 ---
 
@@ -130,6 +124,15 @@ Thank you for your support 😊
 ---
 
 ## ⚜️ Previous changes
+
+### v2.0.2
+
+Due to popular demand, the encrypt in-place functionality is no longer scheduled for removal 🙄🥳.
+
+**Changes**
+- Code refactors
+- UI clean up
+- Update usage docs
 
 ### v2.0.1
 Bug fixes
