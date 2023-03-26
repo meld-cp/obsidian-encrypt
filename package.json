@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-sample-plugin",
-	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"version": "2.0.5",
+	"description": "Hide secrets in your vault",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

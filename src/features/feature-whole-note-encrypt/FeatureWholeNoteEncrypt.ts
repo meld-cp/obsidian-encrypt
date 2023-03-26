@@ -1,10 +1,9 @@
-import { normalizePath, moment, Notice, TFolder, Setting } from "obsidian";
+import { normalizePath, Notice, TFolder, Setting, moment } from "obsidian";
 import { EncryptedFileContentView, VIEW_TYPE_ENCRYPTED_FILE_CONTENT } from "./EncryptedFileContentView";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
 import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
 import { IFeatureWholeNoteEncryptSettings } from "./IFeatureWholeNoteEncryptSettings";
-import { UiHelper } from "../../services/UiHelper";
 
 export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeature {
 
@@ -29,7 +28,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			id: 'meld-encrypt-create-new-note',
 			name: 'Create new encrypted note',
 			icon: 'lock',
-			checkCallback: (checking) => this.processCreateNewEncryptedNoteCommand(checking)
+			callback: () => this.processCreateNewEncryptedNoteCommand(),
 		});
 		
 	}
@@ -38,14 +37,9 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 		this.plugin.app.workspace.detachLeavesOfType(VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
 	}
 
-	private processCreateNewEncryptedNoteCommand(checking: boolean): boolean{
-		//console.debug('processCreateNewEncryptedNoteCommand', {checking});
+	private processCreateNewEncryptedNoteCommand(): boolean{
 		try{
-			if (checking || UiHelper.isSettingsModalOpen()){
-				return true;
-			}
-			
-			const newFilename = moment().format('[Untitled] YYYYMMDD hhmmss[.encrypted]'); 
+			const newFilename = moment().format('[Untitled] YYYYMMDD hhmmss[.encrypted]');
 			
 			let newFileFolder : TFolder;
 			const activeFile = this.plugin.app.workspace.getActiveFile();
@@ -59,9 +53,9 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			const newFilepath = normalizePath( newFileFolder.path + "/" + newFilename );
 			//console.debug('processCreateNewEncryptedNoteCommand', {newFilepath});
 			
-			this.plugin.app.vault.create(newFilepath,'').then( f=>{
+			this.plugin.app.vault.create(newFilepath,'').then( async f=>{
 				const leaf = this.plugin.app.workspace.getLeaf( false );
-				leaf.openFile( f );
+				await leaf.openFile( f );
 			}).catch( reason =>{
 				new Notice(reason, 10000);
 			});
@@ -109,7 +103,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			// turn on ribbon icon
 			if (this.ribbonIconCreateNewNote == null){
 				this.ribbonIconCreateNewNote = this.plugin.addRibbonIcon( 'lock', 'Create new encrypted note', (ev)=>{
-					this.processCreateNewEncryptedNoteCommand(false);
+					this.processCreateNewEncryptedNoteCommand();
 				});
 			}
 		}else{
