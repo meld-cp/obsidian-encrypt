@@ -25,6 +25,14 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### v2.1.0
+- Auto decrypt note if password remembered
+- Clear remembered password when re-locking file
+- When changing password, remember it if 'remember passwords' is active
+- Change wording for 'Remember Password Timeout' in settings
+- Add new setting to remember password by parent folder path
+- Code refactors
+
 ### v2.0.5
 - fix creating encrypted note on mobile
 
