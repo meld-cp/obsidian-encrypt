@@ -241,7 +241,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		let defaultPassword = '';
 		let defaultHint = selectionAnalysis.decryptable?.hint;
 		if ( this.pluginSettings.rememberPassword ){
-			const bestGuessPasswordAndHint = SessionPasswordService.getBestGuess( activeFile );
+			const bestGuessPasswordAndHint = SessionPasswordService.get( activeFile );
 			//console.debug({bestGuessPasswordAndHint});
 
 			defaultPassword = bestGuessPasswordAndHint.password;

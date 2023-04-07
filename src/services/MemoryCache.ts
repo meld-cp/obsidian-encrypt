@@ -35,6 +35,10 @@ export class MemoryCache<T> {
 		return Array.from( this.values.keys() );
 	}
 
+	public removeKey( key: string ) : boolean{
+		return this.values.delete( key );
+	}
+
 	public clear() {
 		this.values.clear();
 	}

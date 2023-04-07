@@ -46,10 +46,12 @@ export default class MeldEncrypt extends Plugin {
 	}
 
 	async loadSettings() {
+		
 		const DEFAULT_SETTINGS: IMeldEncryptPluginSettings = {
 			confirmPassword: true,
 			rememberPassword: true,
 			rememberPasswordTimeout: 30,
+			rememberPasswordLevel: SessionPasswordService.LevelFullPath,
 
 			featureWholeNoteEncrypt: {
 				addRibbonIconToCreateNote: true,
@@ -72,6 +74,7 @@ export default class MeldEncrypt extends Plugin {
 			? null
 			: this.settings.rememberPasswordTimeout
 		);
+		SessionPasswordService.setLevel( this.settings.rememberPasswordLevel );
 	}
 
 	async saveSettings() {
