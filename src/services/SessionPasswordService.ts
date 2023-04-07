@@ -10,12 +10,16 @@ export class SessionPasswordService{
 
 	private static isActive = true;
 
-	private static blankPasswordAndHint : IPasswordAndHint = {password:'', hint:'' };
+	private static blankPasswordAndHint : IPasswordAndHint = { password:'', hint:'' };
 
 	private static cache = new MemoryCache<IPasswordAndHint>();
 	
 	private static baseMinutesToExpire = 0;
 	private static expiryTime : number | null = null;
+
+	public static LevelFullPath = 'fullPath';
+	public static LevelParentPath = 'parentPath';
+	private static level = SessionPasswordService.LevelFullPath;
 
 	public static setActive( isActive: boolean) {
 		SessionPasswordService.isActive = isActive;
@@ -31,6 +35,14 @@ export class SessionPasswordService{
 	public static setAutoExpire( minutesToExpire:number | null ) : void{
 		SessionPasswordService.baseMinutesToExpire = minutesToExpire ?? 0;
 		SessionPasswordService.updateExpiryTime();
+	}
+
+	public static setLevel( level: string ) {
+		if ( SessionPasswordService.level == level ){
+			return;
+		}
+		SessionPasswordService.level = level;
+		this.clear();
 	}
 
 	public static updateExpiryTime() : void {
@@ -49,40 +61,33 @@ export class SessionPasswordService{
 			return;
 		}
 
-		this.cache.put(file.path, pw);
-		this.cache.put(file.parent.path, pw)
-		this.cache.put(file.basename, pw);
+		const key = SessionPasswordService.getFileCacheKey( file );
+
+		this.cache.put( key, pw );
 
 		SessionPasswordService.updateExpiryTime();
 	}
 
-	public static getExact( file : TFile ): IPasswordAndHint {
+	public static get( file : TFile ): IPasswordAndHint {
 		if (!SessionPasswordService.isActive){
 			return SessionPasswordService.blankPasswordAndHint;
 		}
-		this.clearIfExpired();
-		SessionPasswordService.updateExpiryTime();
-		return this.cache.get(file.path, SessionPasswordService.blankPasswordAndHint);
-	}
-
-	public static getBestGuess( file : TFile ): IPasswordAndHint {
-		if (!SessionPasswordService.isActive){
-			return SessionPasswordService.blankPasswordAndHint;
-		}
-
-		this.clearIfExpired();
-		SessionPasswordService.updateExpiryTime();
 		
-		const buestGuess = this.cache.getFirst(
-			[
-				file.path,
-				file.parent.path,
-				file.basename
-			],
-			SessionPasswordService.blankPasswordAndHint
-		);
+		this.clearIfExpired();
+		SessionPasswordService.updateExpiryTime();
 
-		return buestGuess;
+		const key = SessionPasswordService.getFileCacheKey( file );
+		return this.cache.get( key, SessionPasswordService.blankPasswordAndHint );
+	}
+
+	private static getFileCacheKey( file : TFile ) : string {
+		switch (SessionPasswordService.level) {
+			case SessionPasswordService.LevelParentPath:
+				return file.parent.path;
+		
+			default:
+				return file.path;
+		}
 	}
 
 	private static clearIfExpired() : void{
@@ -95,6 +100,10 @@ export class SessionPasswordService{
 		this.clear();
 	}
 
+	public static clearForFile( file: TFile ) : void {
+		const key = SessionPasswordService.getFileCacheKey( file );
+		this.cache.removeKey( key );
+	}
 
 	public static clear(): void{
 		this.cache.clear();

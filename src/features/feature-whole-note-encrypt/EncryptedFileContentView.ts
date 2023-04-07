@@ -31,8 +31,9 @@ export class EncryptedFileContentView extends TextFileView {
 		//console.debug('EncryptedFileContentView.constructor', {leaf});
 
 		this.elActionIconLockNote = this.addAction( 'lock', 'Lock', () => this.actionLockFile() );
-
 		this.elActionChangePassword = this.addAction( 'key', 'Change Password', () => this.actionChangePassword() );
+		this.elActionIconLockNote.hide();
+		this.elActionChangePassword.hide();
 		
 		this.contentEl.style.display = 'flex';
 		this.contentEl.style.flexDirection = 'column';
@@ -42,6 +43,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 	private actionLockFile(){
 		this.encryptionPassword = '';
+		SessionPasswordService.clearForFile( this.file );
 		this.refreshView(EncryptedFileContentViewStateEnum.decryptNote);
 	}
 
@@ -72,7 +74,7 @@ export class EncryptedFileContentView extends TextFileView {
 		super.onPaneMenu(menu,source);
 	}
 
-	private createTitle( title:string ) : HTMLElement{
+	private addTitle( title:string ) : HTMLElement{
 		return this.contentEl.createDiv({
 			text : `🔐 ${title} 🔐`,
 			attr : {
@@ -93,9 +95,12 @@ export class EncryptedFileContentView extends TextFileView {
 		return passwordMatch ? '' :'Password doesn\'t match';
 	}
 
-	private createNewNoteView() : HTMLElement {
+	private addNewNoteView() {
+		
+		this.addTitle('This note will be encrypted');
+
 		//console.debug('createDecryptNoteView', { "hint": this.hint} );
-		const container = this.createInputContainer();
+		const container = this.addInputContainer();
 
 		new Setting(container)
 			.setDesc('Please provide a password and hint to start editing this note.')
@@ -123,7 +128,7 @@ export class EncryptedFileContentView extends TextFileView {
 			}
 		}
 
-		const bestGuessPassAndHint = SessionPasswordService.getBestGuess( this.file );
+		const bestGuessPassAndHint = SessionPasswordService.get( this.file );
 		let password = bestGuessPassAndHint.password;
 		let confirm = '';
 		let hint = bestGuessPassAndHint.hint;
@@ -191,24 +196,21 @@ export class EncryptedFileContentView extends TextFileView {
 			})
 		;
 
-		return container;
 	}
 
+	private addDecryptNoteView() {
+		
+		this.addTitle('This note is encrypted');
 
-	private createDecryptNoteView() : HTMLElement {
-		const container = this.createInputContainer();
-
+		const container = this.addInputContainer();
+		
 		new Setting(container)
 			.setDesc('Please provide a password to unlock this note.')
 		;
 
-		const bestGuessPassAndHint = SessionPasswordService.getBestGuess( this.file );
-		this.encryptionPassword = bestGuessPassAndHint.password;
-
 		UiHelper.buildPasswordSetting({
 			container,
 			name:'Password:',
-			initialValue: this.encryptionPassword,
 			autoFocus : true,
 			placeholder: this.formatHint(this.hint),
 			onChangeCallback: (value) => {
@@ -228,7 +230,21 @@ export class EncryptedFileContentView extends TextFileView {
 			})
 		;
 
-		return container;
+		// try to decode and go to edit mode if password is known
+		const bestGuessPassAndHint = SessionPasswordService.get( this.file );
+		this.encryptionPassword = bestGuessPassAndHint.password;
+		
+		this.decryptWithPassword( bestGuessPassAndHint.password )
+			.then( decryptedText => {
+				if ( decryptedText != null ){
+					this.currentEditorText = decryptedText;
+					this.refreshView( EncryptedFileContentViewStateEnum.editNote );
+					new Notice('Decrypted using remembered password', 2000);
+				}
+			})
+		;
+
+
 	}
 
 	private async encodeAndSave( ){
@@ -251,27 +267,28 @@ export class EncryptedFileContentView extends TextFileView {
 		}
 	}
 
-	private createEditorView() : HTMLElement {
-		//const container = this.contentEl.createEl('textarea');
+	private addEditorView() {
+
+		this.elActionIconLockNote.show();
+		this.elActionChangePassword.show();
+
+		this.addTitle('This note is encrypted');
+
 		const container = this.contentEl.createDiv();
 		container.contentEditable = 'true';
 		container.style.flexGrow = '1';
 		container.style.alignSelf = 'stretch';
 
-		//container.value = this.currentEditorText
 		container.innerText = this.currentEditorText;
 		container.focus();
 
 		container.on('input', '*', async (ev, target) =>{
-			//console.debug('editor input',{ev, target});
-			//this.currentEditorText = container.value;
 			this.currentEditorText = container.innerText;
 			await this.encodeAndSave();
 		});
-		return container;
 	}
 
-	private createInputContainer() : HTMLElement{
+	private addInputContainer() : HTMLElement{
 		return this.contentEl.createDiv( {
 			'attr': {
 				'style': 'width:100%; max-width:400px;'
@@ -279,8 +296,11 @@ export class EncryptedFileContentView extends TextFileView {
 		} );
 	}
 
-	private createChangePasswordView() : HTMLElement {
-		const container = this.createInputContainer();
+	private addChangePasswordView() {
+
+		this.addTitle('Change encrypted note password');
+
+		const container = this.addInputContainer();
 
 		let newPassword = '';
 		let confirm = '';
@@ -300,6 +320,9 @@ export class EncryptedFileContentView extends TextFileView {
 
 				this.encodeAndSave();
 				this.refreshView( EncryptedFileContentViewStateEnum.editNote );
+
+				SessionPasswordService.put( {password: newPassword, hint: newHint}, this.file );
+
 				new Notice('Password and Hint were changed');
 			}
 		}
@@ -378,8 +401,6 @@ export class EncryptedFileContentView extends TextFileView {
 				;
 			})
 		;
-
-		return container;
 	}
 
 	private formatHint( hint:string ): string{
@@ -406,39 +427,35 @@ export class EncryptedFileContentView extends TextFileView {
 
 		switch (this.currentView) {
 			case EncryptedFileContentViewStateEnum.newNote:
-				this.createTitle('This note will be encrypted');
-				this.createNewNoteView();
+				this.addNewNoteView();
 			break;
 
 			case EncryptedFileContentViewStateEnum.decryptNote:
-				this.createTitle('This note is encrypted');
-				this.createDecryptNoteView();
+				this.addDecryptNoteView();
 			break;
 			
 			case EncryptedFileContentViewStateEnum.editNote:
-				this.elActionIconLockNote.show();
-				this.elActionChangePassword.show();
-				this.createTitle('This note is encrypted');
-				this.createEditorView();
+				this.addEditorView();
 			break;
 
 			case EncryptedFileContentViewStateEnum.changePassword:
-				this.createTitle('Change encrypted note password');
-				this.createChangePasswordView();
+				this.addChangePasswordView();
 			break;
 		}
 
 	}
 
-	async handleDecryptButtonClick() {
-		const fileData = JsonFileEncoding.decode(this.data)
-						
-		//console.debug('Decrypt button', fileData);
+	async decryptWithPassword( pw: string ) : Promise<string | null>{
+		if ( pw.length == 0 ){
+			return null;
+		}
+		const fileData = JsonFileEncoding.decode( this.data );
+		const decryptedText = await FileDataHelper.decrypt( fileData, pw );
+		return decryptedText;
+	}
 
-		const decryptedText = await FileDataHelper.decrypt(
-			fileData,
-			this.encryptionPassword
-		);
+	async handleDecryptButtonClick() {
+		const decryptedText = await this.decryptWithPassword( this.encryptionPassword );
 
 		if (decryptedText === null){
 			new Notice('Decryption failed');

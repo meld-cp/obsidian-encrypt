@@ -52,19 +52,21 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 			
 			if ( !this.settings.rememberPassword ){
 				pwTimeoutSetting.settingEl.hide();
+				rememberPasswordLevelSetting.settingEl.hide();
 				return;
 			}
 			
 			pwTimeoutSetting.settingEl.show();
+			rememberPasswordLevelSetting.settingEl.show();
 
 			const rememberPasswordTimeout = this.settings.rememberPasswordTimeout;
 
-			let timeoutString = `${rememberPasswordTimeout} minutes`;
+			let timeoutString = `For ${rememberPasswordTimeout} minutes`;
 			if( rememberPasswordTimeout == 0 ){
-				timeoutString = 'Never forget';
+				timeoutString = 'Always';
 			}
 
-			pwTimeoutSetting.setName( `Remember Password Timeout (${timeoutString})` )
+			pwTimeoutSetting.setName( `Remember Password (${timeoutString})` )
 		
 		}
 
@@ -97,6 +99,23 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 					})
 				;
 				
+			})
+		;
+
+		const rememberPasswordLevelSetting = new Setting(containerEl)
+			.setDesc('Remember passwords by using')
+			.addDropdown( cb =>{
+				cb
+					.addOption( SessionPasswordService.LevelFullPath, 'Full Path')
+					.addOption( SessionPasswordService.LevelParentPath, 'Parent Path')
+					.setValue(this.settings.rememberPasswordLevel)
+					.onChange( async value => {
+						this.settings.rememberPasswordLevel = value;
+						await this.plugin.saveSettings();
+						SessionPasswordService.setLevel( this.settings.rememberPasswordLevel );
+						updateRememberPasswordSettingsUi();
+					})
+				;
 			})
 		;
 		

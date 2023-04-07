@@ -5,6 +5,7 @@ export interface IMeldEncryptPluginSettings {
 	confirmPassword: boolean;
 	rememberPassword: boolean;
 	rememberPasswordTimeout: number;
+	rememberPasswordLevel: string;
 
 	featureWholeNoteEncrypt : IFeatureWholeNoteEncryptSettings;
 	featureInplaceEncrypt : IFeatureInplaceEncryptSettings;
