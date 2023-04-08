@@ -1,4 +1,3 @@
-import { TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache";
 
 interface IPasswordAndHint{
@@ -56,37 +55,40 @@ export class SessionPasswordService{
 		}
 	}
 	
-	public static put( pw: IPasswordAndHint, file : TFile ): void {
+	public static putByPath( pw: IPasswordAndHint, path:string ): void {
 		if (!SessionPasswordService.isActive){
 			return;
 		}
 
-		const key = SessionPasswordService.getFileCacheKey( file );
+		const key = SessionPasswordService.getPathCacheKey( path );
 
 		this.cache.put( key, pw );
 
 		SessionPasswordService.updateExpiryTime();
 	}
 
-	public static get( file : TFile ): IPasswordAndHint {
+	public static getByPath( path: string ) : IPasswordAndHint {
 		if (!SessionPasswordService.isActive){
 			return SessionPasswordService.blankPasswordAndHint;
 		}
-		
 		this.clearIfExpired();
 		SessionPasswordService.updateExpiryTime();
 
-		const key = SessionPasswordService.getFileCacheKey( file );
+		const key = SessionPasswordService.getPathCacheKey( path );
 		return this.cache.get( key, SessionPasswordService.blankPasswordAndHint );
 	}
 
-	private static getFileCacheKey( file : TFile ) : string {
+	private static getPathCacheKey( path : string ) : string {
+		const parentPath = path.split('/').slice(0,-1).join('/');
+		//console.debug({path,parentPath, filepath: app.workspace.getActiveFile()});
+
 		switch (SessionPasswordService.level) {
-			case SessionPasswordService.LevelParentPath:
-				return file.parent.path;
+			case SessionPasswordService.LevelParentPath: {
+				return parentPath;
+			}
 		
 			default:
-				return file.path;
+				return path;
 		}
 	}
 
@@ -100,8 +102,8 @@ export class SessionPasswordService{
 		this.clear();
 	}
 
-	public static clearForFile( file: TFile ) : void {
-		const key = SessionPasswordService.getFileCacheKey( file );
+	public static clearForPath( path: string ) : void {
+		const key = SessionPasswordService.getPathCacheKey( path );
 		this.cache.removeKey( key );
 	}
 

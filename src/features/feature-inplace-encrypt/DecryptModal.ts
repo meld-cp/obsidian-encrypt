@@ -3,6 +3,8 @@ import { App, Modal, Notice, Setting, TextAreaComponent } from 'obsidian';
 export default class DecryptModal extends Modal {
 	text: string;
 	decryptInPlace = false;
+	
+	canDecryptInPlace = true;
 
 	constructor(
 		app: App,
@@ -44,17 +46,17 @@ export default class DecryptModal extends Modal {
 					})
 				;
 			})
-			.addButton( cb =>{
-				cb
-					.setWarning()
-					.setButtonText('Decrypt in-place')
-					.onClick( evt =>{
-						this.decryptInPlace = true;
-						this.close();
-					})
-				;
-			})
 		;
+		if (this.canDecryptInPlace){
+			sActions.addButton( cb =>{
+				cb.setWarning()
+				.setButtonText('Decrypt in-place')
+				.onClick( evt =>{
+					this.decryptInPlace = true;
+					this.close();
+				});
+			});
+		}
 
 	}
 

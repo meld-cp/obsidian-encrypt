@@ -61,6 +61,7 @@ export default class MeldEncrypt extends Plugin {
 			
 			featureInplaceEncrypt:{
 				expandToWholeLines: false,
+				showMarkerWhenReadingDefault: true
 			}
 		}
 

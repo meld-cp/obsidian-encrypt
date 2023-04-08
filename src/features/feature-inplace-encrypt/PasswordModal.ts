@@ -8,22 +8,26 @@ export default class PasswordModal extends Modal {
 	private defaultHint?: string | null = null;
 	private confirmPassword: boolean;
 	private isEncrypting: boolean;
-	
+	public showInReadingView: boolean;
+
 	// output
 	public resultConfirmed = false;
 	public resultPassword?: string | null = null;
 	public resultHint?: string | null = null;
+	public resultShowInReadingView?: boolean | null = null;
 
 	constructor(
 		app: App,
 		isEncrypting:boolean,
 		confirmPassword: boolean,
+		defaultShowInReadingView: boolean,
 		defaultPassword: string | null = null,
-		hint:string | null = null
+		hint:string | null = null,
 	) {
 		super(app);
 		this.defaultPassword = defaultPassword;
 		this.confirmPassword = confirmPassword;
+		this.showInReadingView = defaultShowInReadingView
 		this.isEncrypting = isEncrypting;
 		this.defaultHint = hint;
 	}
@@ -39,6 +43,7 @@ export default class PasswordModal extends Modal {
 		let password = this.defaultPassword ?? '';
 		let confirmPass = '';
 		let hint = this.defaultHint ?? '';
+		let showInReadingView = this.showInReadingView;
 
 		new Setting(contentEl).setHeading().setName(
 			this.isEncrypting ? 'Encrypting' : 'Decrypting'
@@ -142,6 +147,23 @@ export default class PasswordModal extends Modal {
 
 		/* END Hint text row */
 
+		/* Show indicator in reading mode */
+		const sShowWhenReading = new Setting(contentEl)
+			.setName('Show encrypted marker in Reading view')
+			.addToggle( cb=>{
+				cb
+					.setValue( showInReadingView )
+					.onChange( value => {
+						showInReadingView = value;
+					}
+				)
+			} )
+		;
+		if (!this.isEncrypting){
+			sShowWhenReading.settingEl.hide();
+		}
+		/* END Show indicator in reading mode */
+
 		new Setting(contentEl).addButton( cb=>{
 			cb
 				.setButtonText('Confirm')
@@ -169,6 +191,7 @@ export default class PasswordModal extends Modal {
 			this.resultConfirmed = true;
 			this.resultPassword = password;
 			this.resultHint = hint;
+			this.resultShowInReadingView = showInReadingView;
 
 			return true;
 		}
