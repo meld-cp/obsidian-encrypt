@@ -25,6 +25,10 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### 2.1.1
+- Limited support for markdown in `.encrypted` notes
+- New setting to select the default view when opening `.encrypted` notes (Source or Reading)
+
 ### v2.1.0
 - Auto decrypt note if password remembered
 - Clear remembered password when re-locking file
@@ -35,14 +39,6 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 ### v2.0.5
 - fix creating encrypted note on mobile
-
-### v2.0.4
-- fix password remembered even when 'remember password' setting is unchecked
-
-### v2.0.3
-- add common password session cache
-- also remember passwords for whole note encryption
-- add password peek button
 
 ---
 
@@ -110,10 +106,12 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 | ⚙️ Confirm password | Confirm password when encrypting |
 | ⚙️ Remember password | Remember the last used password for this session. |
 | ⚙️ Remember Password Timeout | The number of minutes to remember the last used password. |
+| ⚙️ Remember Password Using | Remember passwords by using File or Parent path |
 
 |Whole note encryption Settings| |
 |--|--|
 | ⚙️ Add ribbon icon to create note | Adds a ribbon icon to the left bar to create an encrypted note. |
+| ⚙️ Default view for new tabs | The default view that a new encrypted note tab gets opened in |
 
 |In-place encryption Settings| |
 |--|--|
@@ -132,6 +130,14 @@ Thank you for your support 😊
 ---
 
 ## ⚜️ Previous changes
+
+### v2.0.4
+- fix password remembered even when 'remember password' setting is unchecked
+
+### v2.0.3
+- add common password session cache
+- also remember passwords for whole note encryption
+- add password peek button
 
 ### v2.0.2
 
