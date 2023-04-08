@@ -1,5 +1,5 @@
 import { normalizePath, Notice, TFolder, Setting, moment } from "obsidian";
-import { EncryptedFileContentView, VIEW_TYPE_ENCRYPTED_FILE_CONTENT } from "./EncryptedFileContentView";
+import { EditViewEnum, EncryptedFileContentView, VIEW_TYPE_ENCRYPTED_FILE_CONTENT } from "./EncryptedFileContentView";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
 import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
@@ -19,7 +19,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 		
 		this.plugin.registerView(
 			VIEW_TYPE_ENCRYPTED_FILE_CONTENT,
-			(leaf) => new EncryptedFileContentView(leaf)
+			(leaf) => new EncryptedFileContentView(leaf, this.settings )
 		);
 			
 		this.plugin.registerExtensions(['encrypted'], VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
@@ -84,7 +84,6 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			.setName('Add ribbon icon to create note')
 			.setDesc('Adds a ribbon icon to the left bar to create an encrypted note.')
 			.addToggle( toggle =>{
-
 				toggle
 					.setValue(this.settings.addRibbonIconToCreateNote)
 				
@@ -92,6 +91,24 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 						this.settings.addRibbonIconToCreateNote = value;
 						await saveSettingCallback();
 						this.updateUiForSettings();
+					})
+				;
+			})
+		;
+
+		new Setting(containerEl)
+			.setName('Default view for new tabs')
+			.setDesc('The default view that a new encrypted note tab gets opened in')
+			.addDropdown( cb =>{
+				cb
+					.addOption( `${EditViewEnum.source}`, 'Source view' )
+					.addOption( `${EditViewEnum.reading}`, 'Reading view' )
+					.setValue( `${this.settings.defaultView ?? EditViewEnum.source}` )
+				
+					.onChange( async value => {
+						this.settings.defaultView = value;
+						await saveSettingCallback();
+						//this.updateUiForSettings();
 					})
 				;
 			})

@@ -5,6 +5,7 @@ import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInp
 import FeatureWholeNoteEncrypt from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature';
 import { SessionPasswordService } from './services/SessionPasswordService';
+import { EditViewEnum } from './features/feature-whole-note-encrypt/EncryptedFileContentView';
 
 export default class MeldEncrypt extends Plugin {
 
@@ -55,6 +56,7 @@ export default class MeldEncrypt extends Plugin {
 
 			featureWholeNoteEncrypt: {
 				addRibbonIconToCreateNote: true,
+				defaultView: EditViewEnum.source.toString()
 			},
 			
 			featureInplaceEncrypt:{
