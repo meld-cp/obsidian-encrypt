@@ -1,4 +1,4 @@
-import { Editor, EditorPosition, Notice, Setting } from "obsidian";
+import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext } from "obsidian";
 import { CryptoHelper } from "../../services/CryptoHelper";
 import { CryptoHelperObsolete } from "../../services/CryptoHelperObsolete";
 import DecryptModal from "./DecryptModal";
@@ -42,6 +42,9 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		this.pluginSettings = settings;
 		this.featureSettings = settings.featureInplaceEncrypt;
 
+		
+		this.plugin.registerMarkdownPostProcessor( (el,ctx) => this.processEncryptedCodeBlockProcessor(el, ctx) );
+
 		plugin.addCommand({
 			id: 'meld-encrypt',
 			name: 'Encrypt/Decrypt',
@@ -60,6 +63,137 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	onunload(){
 
+	}
+
+	private processEncryptedCodeBlockProcessor(el: HTMLElement, ctx: MarkdownPostProcessorContext){
+
+		const si = ctx.getSectionInfo(el);
+		if (si == null){
+			return;
+		}
+
+		// isolate code block lines
+		const text = InplaceTextHelper.extractTextLines( si.text, si.lineStart, si.lineEnd );
+
+		
+		const markerStart = InplaceTextHelper.findFirstMarker( _PREFIXES, text );
+		if ( markerStart == null || markerStart.marker != _PREFIX_A_VISIBLE ){
+			//console.debug( 'not visible or null', markerStart );
+			return;
+		}
+		
+		const markerEnd = InplaceTextHelper.findFirstMarker( _SUFFIXES, text, markerStart.position + markerStart.marker.length);
+		if ( markerEnd == null ){
+			return;
+		}
+		
+		const encryptedText = InplaceTextHelper.removeMarkers( text, markerStart, markerEnd );
+		
+		const selectionAnalysis = new SelectionAnalysis( encryptedText );
+		
+		if ( !selectionAnalysis.canDecrypt ){
+			return;
+		}
+		
+		const textBeforeIndicator = InplaceTextHelper.extractTextBeforeMarker(text, markerStart );
+		const textAfterIndicator = InplaceTextHelper.extractTextAfterMarker(text, markerEnd);
+
+
+		// create elements
+		const elPreIndicator = createSpan( { text: textBeforeIndicator } );
+		const elPostIndicator = createSpan( { text: textAfterIndicator } );
+
+		const elIndicator = createSpan( { text: '🔐' } );
+		elIndicator.style.cursor  = 'pointer';
+
+		elIndicator.onClickEvent( async ev => {
+			// indicator click handler
+
+			if ( await this.showDecryptedTextIfPasswordKnown( ctx.sourcePath, selectionAnalysis.decryptable ) ){
+				return;
+			}
+
+			const pw = await this.fetchPasswordFromUser( selectionAnalysis.decryptable.hint );
+
+			if ( pw == null ){
+				return;
+			}
+
+			// decrypt
+			if ( await this.showDecryptedResultForPassword( selectionAnalysis.decryptable, pw ) ){
+				SessionPasswordService.putByPath(
+					{
+						password: pw,
+						hint: selectionAnalysis.decryptable.hint
+					},
+					ctx.sourcePath
+				);
+			}else{
+				new Notice('❌ Decryption failed!');
+			}
+			
+		});
+
+		el.empty();
+		el.append( elPreIndicator, elIndicator, elPostIndicator );
+
+	}
+	
+	private async showDecryptedResultForPassword( decryptable: Decryptable, pw:string ): Promise<boolean> {
+		const crypto = new CryptoHelper();
+			const decryptedText = await crypto.decryptFromBase64(
+			decryptable.base64CipherText,
+			pw
+		);
+		// show result
+		if (decryptedText === null) {
+			return false;
+		}
+		
+		return new Promise<boolean>( (resolve) => {
+			const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText );
+			decryptModal.canDecryptInPlace = false;
+			decryptModal.onClose = () =>{
+				resolve(true);
+			}
+			decryptModal.open();
+		} )
+			
+			
+	}
+
+	private async fetchPasswordFromUser( hint:string ): Promise<string|null|undefined> {
+		// fetch password
+		return new Promise<string|null|undefined>( (resolve) => {
+			const pwModal = new PasswordModal(
+				this.plugin.app,
+				/*isEncrypting*/ false,
+				/*confirmPassword*/ false,
+				/*defaultShowInReadingView*/ true /* TODO: get from settings */,
+				'',
+				hint
+			);
+
+			pwModal.onClose = () =>{
+				resolve( pwModal.resultPassword );
+			}
+
+			pwModal.open();
+
+
+		} );
+	}
+
+	private async showDecryptedTextIfPasswordKnown( filePath: string, decryptable: Decryptable ) : Promise<boolean> {
+		const bestGuessPasswordAndHint = SessionPasswordService.getByPath( filePath );
+		if ( bestGuessPasswordAndHint.password == null ){
+			return false;
+		}
+
+		return await this.showDecryptedResultForPassword(
+			decryptable,
+			bestGuessPasswordAndHint.password
+		);
 	}
 
 	public buildSettingsUi(
@@ -85,8 +219,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			})
 		;
 	}
-
-	
 
 	private processEncryptDecryptCommand(
 		checking: boolean,
@@ -241,7 +373,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		let defaultPassword = '';
 		let defaultHint = selectionAnalysis.decryptable?.hint;
 		if ( this.pluginSettings.rememberPassword ){
-			const bestGuessPasswordAndHint = SessionPasswordService.get( activeFile );
+			const bestGuessPasswordAndHint = SessionPasswordService.getByPath( activeFile.path );
 			//console.debug({bestGuessPasswordAndHint});
 
 			defaultPassword = bestGuessPasswordAndHint.password;
@@ -254,6 +386,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			this.plugin.app,
 			selectionAnalysis.canEncrypt,
 			confirmPassword,
+			/*defaultShowInReadingView*/ true /* TODO: get from settings */,
 			defaultPassword,
 			defaultHint
 		);
@@ -275,11 +408,12 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 					encryptable,
 					pw,
 					finalSelectionStart,
-					finalSelectionEnd
+					finalSelectionEnd,
+					pwModal.resultShowInReadingView ?? true /* TODO: get from settings */
 				);
 
 				// remember password
-				SessionPasswordService.put(	{ password:pw, hint: hint }, activeFile );
+				SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
 
 			} else {
 
@@ -306,7 +440,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 				// remember password?
 				if ( decryptSuccess ) {
-					SessionPasswordService.put(	{ password:pw, hint: hint }, activeFile );
+					SessionPasswordService.putByPath(	{ password:pw, hint: hint }, activeFile.path );
 				}
 				
 			}
@@ -322,12 +456,14 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		password: string,
 		finalSelectionStart: CodeMirror.Position,
 		finalSelectionEnd: CodeMirror.Position,
+		showInReadingView: boolean
 	) {
 		//encrypt
 		const crypto = new CryptoHelper();
 		const encodedText = this.encodeEncryption(
 			await crypto.encryptToBase64(encryptable.text, password),
-			encryptable.hint
+			encryptable.hint,
+			showInReadingView
 		);
 		editor.setSelection(finalSelectionStart, finalSelectionEnd);
 		editor.replaceSelection(encodedText);
@@ -405,15 +541,18 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	}
 
 
-	private encodeEncryption( encryptedText: string, hint: string ): string {
+	private encodeEncryption( encryptedText: string, hint: string, showInReadingView: boolean ): string {
 		if (
 			!_PREFIXES.some( (prefix) => encryptedText.contains(prefix) )
 			&& !_SUFFIXES.some( (suffix) => encryptedText.contains(suffix) )
 		) {
-			if (hint.length > 0){
-				return _PREFIX_A.concat(_HINT, hint, _HINT, encryptedText, _SUFFIX_WITH_COMMENT);
+			const prefix = showInReadingView ? _PREFIX_A_VISIBLE : _PREFIX_A;
+			const suffix = showInReadingView ? _SUFFIX_NO_COMMENT : _SUFFIX_WITH_COMMENT;
+
+			if ( hint.length > 0 ){
+				return prefix.concat(_HINT, hint, _HINT, encryptedText, suffix);
 			}
-			return _PREFIX_A.concat(encryptedText, _SUFFIX_WITH_COMMENT);
+			return prefix.concat(encryptedText, suffix);
 		}
 		return encryptedText;
 	}
@@ -517,4 +656,54 @@ class Decryptable{
 	version: number;
 	base64CipherText:string;
 	hint:string;
+}
+
+
+interface IMarkerPosition{
+	marker:string;
+	position:number;
+}
+
+class InplaceTextHelper{
+	static extractTextBeforeMarker(text: string, marker: IMarkerPosition) {
+		return text.substring( 0, marker.position );
+	}
+	static extractTextAfterMarker(text: string, marker: IMarkerPosition) {
+		return text.substring( marker.position + marker.marker.length );
+	}
+
+	public static removeMarkers(text: string, markerStart: IMarkerPosition, markerEnd: IMarkerPosition) {
+		return text.substring( markerStart.position, markerEnd.position + markerEnd.marker.length );
+	}
+
+	public static extractTextLines(text: string, lineStart: number, lineEnd: number) {
+		return text.split('\n').slice(lineStart, lineEnd+1).join('\n');
+	}
+
+	public static findFirstMarker( markers:string[], text:string, startPos = 0 ) : IMarkerPosition | null {
+
+		let firstMarkerPos : number | null = null;
+		let firstMarker : string | null = null;
+
+		markers.forEach(m => {
+			const pos = text.indexOf( m, startPos );
+			//console.debug({m,pos});
+			if ( pos != -1 && ( firstMarkerPos == null || pos < firstMarkerPos ) ){
+				firstMarkerPos = pos;
+				firstMarker = m;
+			}
+		});
+
+		if ( firstMarker == null || firstMarkerPos == null ){
+			return null;
+		}
+
+		return {
+			marker: firstMarker,
+			position: firstMarkerPos
+		};
+	}
+
+
+
 }

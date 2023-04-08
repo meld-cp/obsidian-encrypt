@@ -79,7 +79,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 	private actionLockFile(){
 		this.encryptionPassword = '';
-		SessionPasswordService.clearForFile( this.file );
+		SessionPasswordService.clearForPath( this.file.path );
 		this.refreshView(EncryptedFileContentViewStateEnum.decryptNote);
 	}
 
@@ -169,7 +169,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 				await this.encodeAndSave();
 				
-				SessionPasswordService.put( { password: password, hint: hint }, this.file );
+				SessionPasswordService.putByPath( { password: password, hint: hint }, this.file.path );
 
 				this.currentEditNoteMode = EditViewEnum.source;
 				this.refreshView(EncryptedFileContentViewStateEnum.editNote);
@@ -177,7 +177,7 @@ export class EncryptedFileContentView extends TextFileView {
 			}
 		}
 
-		const bestGuessPassAndHint = SessionPasswordService.get( this.file );
+		const bestGuessPassAndHint = SessionPasswordService.getByPath( this.file.path );
 		let password = bestGuessPassAndHint.password;
 		let confirm = '';
 		let hint = bestGuessPassAndHint.hint;
@@ -280,7 +280,7 @@ export class EncryptedFileContentView extends TextFileView {
 		;
 
 		// try to decode and go to edit mode if password is known
-		const bestGuessPassAndHint = SessionPasswordService.get( this.file );
+		const bestGuessPassAndHint = SessionPasswordService.getByPath( this.file.path );
 		this.encryptionPassword = bestGuessPassAndHint.password;
 		
 		this.decryptWithPassword( bestGuessPassAndHint.password )
@@ -398,7 +398,7 @@ export class EncryptedFileContentView extends TextFileView {
 				this.encodeAndSave();
 				this.refreshView( EncryptedFileContentViewStateEnum.editNote );
 
-				SessionPasswordService.put( {password: newPassword, hint: newHint}, this.file );
+				SessionPasswordService.putByPath( {password: newPassword, hint: newHint}, this.file.path );
 
 				new Notice('Password and Hint were changed');
 			}
@@ -543,7 +543,7 @@ export class EncryptedFileContentView extends TextFileView {
 		if (decryptedText === null){
 			new Notice('Decryption failed');
 		}else{
-			SessionPasswordService.put( {password: this.encryptionPassword, hint: this.hint }, this.file );
+			SessionPasswordService.putByPath( {password: this.encryptionPassword, hint: this.hint }, this.file.path );
 			this.currentEditorSourceText = decryptedText;
 			this.refreshView( EncryptedFileContentViewStateEnum.editNote);
 		}
