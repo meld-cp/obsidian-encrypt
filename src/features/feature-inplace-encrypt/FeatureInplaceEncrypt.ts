@@ -175,7 +175,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				this.plugin.app,
 				/*isEncrypting*/ false,
 				/*confirmPassword*/ false,
-				/*defaultShowInReadingView*/ true /* TODO: get from settings */,
+				/*defaultShowInReadingView*/ this.featureSettings.showMarkerWhenReadingDefault,
 				'',
 				hint
 			);
@@ -220,6 +220,19 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 					.setValue(this.featureSettings.expandToWholeLines)
 					.onChange( async value =>{
 						this.featureSettings.expandToWholeLines = value;
+						await saveSettingCallback();
+					})
+			})
+		;
+
+		new Setting(containerEl)
+			.setName('By default, show encrypted marker when reading')
+			.setDesc('When encrypting inline text, should the default be to have a visible marker in Reading view?')
+			.addToggle( toggle =>{
+				toggle
+					.setValue(this.featureSettings.showMarkerWhenReadingDefault)
+					.onChange( async value =>{
+						this.featureSettings.showMarkerWhenReadingDefault = value;
 						await saveSettingCallback();
 					})
 			})
@@ -392,7 +405,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			this.plugin.app,
 			selectionAnalysis.canEncrypt,
 			confirmPassword,
-			/*defaultShowInReadingView*/ true /* TODO: get from settings */,
+			/*defaultShowInReadingView*/ this.featureSettings.showMarkerWhenReadingDefault,
 			defaultPassword,
 			defaultHint
 		);
@@ -415,7 +428,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 					pw,
 					finalSelectionStart,
 					finalSelectionEnd,
-					pwModal.resultShowInReadingView ?? true /* TODO: get from settings */
+					pwModal.resultShowInReadingView ?? this.featureSettings.showMarkerWhenReadingDefault
 				);
 
 				// remember password

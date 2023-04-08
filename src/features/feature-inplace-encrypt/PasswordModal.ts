@@ -149,7 +149,7 @@ export default class PasswordModal extends Modal {
 
 		/* Show indicator in reading mode */
 		const sShowWhenReading = new Setting(contentEl)
-			.setName('Show indicator in Reading view')
+			.setName('Show encrypted marker in Reading view')
 			.addToggle( cb=>{
 				cb
 					.setValue( showInReadingView )
