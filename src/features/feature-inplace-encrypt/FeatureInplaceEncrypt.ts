@@ -105,37 +105,43 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 		const elIndicator = createSpan( { text: '🔐' } );
 		elIndicator.style.cursor  = 'pointer';
-
-		elIndicator.onClickEvent( async ev => {
-			// indicator click handler
-
-			if ( await this.showDecryptedTextIfPasswordKnown( ctx.sourcePath, selectionAnalysis.decryptable ) ){
-				return;
-			}
-
-			const pw = await this.fetchPasswordFromUser( selectionAnalysis.decryptable.hint );
-
-			if ( pw == null ){
-				return;
-			}
-
-			// decrypt
-			if ( await this.showDecryptedResultForPassword( selectionAnalysis.decryptable, pw ) ){
-				SessionPasswordService.putByPath(
-					{
-						password: pw,
-						hint: selectionAnalysis.decryptable.hint
-					},
-					ctx.sourcePath
-				);
-			}else{
-				new Notice('❌ Decryption failed!');
-			}
-			
-		});
+		elIndicator.onClickEvent( async () =>
+			await this.handleReadingIndicatorClick(
+				ctx.sourcePath,
+				selectionAnalysis.decryptable
+			)
+		);
 
 		el.empty();
 		el.append( elPreIndicator, elIndicator, elPostIndicator );
+
+	}
+
+	private async handleReadingIndicatorClick( path: string, decryptable:Decryptable ){
+		// indicator click handler
+
+		if ( await this.showDecryptedTextIfPasswordKnown( path, decryptable ) ){
+			return;
+		}
+
+		const pw = await this.fetchPasswordFromUser( decryptable.hint );
+
+		if ( pw == null ){
+			return;
+		}
+
+		// decrypt
+		if ( await this.showDecryptedResultForPassword( decryptable, pw ) ){
+			SessionPasswordService.putByPath(
+				{
+					password: pw,
+					hint: decryptable.hint
+				},
+				path
+			);
+		}else{
+			new Notice('❌ Decryption failed!');
+		}
 
 	}
 	
