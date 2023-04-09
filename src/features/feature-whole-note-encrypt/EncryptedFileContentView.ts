@@ -56,11 +56,6 @@ export class EncryptedFileContentView extends TextFileView {
 		this.elActionReadingView.hide();
 		this.elActionIconLockNote.hide();
 		this.elActionChangePassword.hide();
-		
-		this.contentEl.style.display = 'flex';
-		this.contentEl.style.flexDirection = 'column';
-		this.contentEl.style.alignItems = 'center';
-
 	}
 
 	private actionToggleEditMode(){
@@ -325,11 +320,8 @@ export class EncryptedFileContentView extends TextFileView {
 		this.addTitle('Editing an encrypted note');
 
 		// build source view
-		const container = this.contentEl.createDiv();
+		const container = this.contentEl.createDiv( { cls:'editor-source-view' } );
 		container.contentEditable = 'true';
-		container.style.flexGrow = '1';
-		container.style.alignSelf = 'stretch';
-		
 		container.innerText = this.currentEditorSourceText;
 
 		container.focus();
@@ -350,10 +342,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 		this.addTitle('Reading an encrypted note');
 
-		const container = this.contentEl.createDiv();
-		container.contentEditable = 'false';
-		container.style.flexGrow = '1';
-		container.style.alignSelf = 'stretch';
+		const container = this.contentEl.createDiv({cls:'editor-reading-view'});
 
 		// build reading view
 		MarkdownRenderer.renderMarkdown(
@@ -366,11 +355,7 @@ export class EncryptedFileContentView extends TextFileView {
 	}
 
 	private addInputContainer() : HTMLElement{
-		return this.contentEl.createDiv( {
-			'attr': {
-				'style': 'width:100%; max-width:400px;'
-			}
-		} );
+		return this.contentEl.createDiv();
 	}
 
 	private addChangePasswordView() {
@@ -500,6 +485,8 @@ export class EncryptedFileContentView extends TextFileView {
 
 		// clear view
 		this.contentEl.empty();
+		this.contentEl.classList.add('meld-encrypt-encrypted-note-view');
+		//TODO: add is-readable-line-width class if needed
 
 		this.currentView = newView;
 
