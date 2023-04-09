@@ -25,6 +25,9 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### 2.1.2
+- add inline encrypted text marker (clickable) in reading view
+
 ### 2.1.1
 - Limited support for markdown in `.encrypted` notes
 - New setting to select the default view when opening `.encrypted` notes (Source or Reading)
@@ -116,7 +119,7 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 |In-place encryption Settings| |
 |--|--|
 | ⚙️ Expand selection to whole line | Partial selections will get expanded to the whole line |
-| ⚙️ Copy button | Show a button to copy decrypted text. |
+| ⚙️ By default, show encrypted marker when reading | When encrypting inline text, should the default be to have a visible marker in Reading view |
 
 ---
 
