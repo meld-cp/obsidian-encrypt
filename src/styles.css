@@ -1,0 +1,49 @@
+/* FEATURE WHOLE NOTE */
+
+.meld-encrypt-encrypted-note-view-content{
+    display: flex;
+    flex-direction: column;
+	height: 100%;
+}
+
+.meld-encrypt-encrypted-note-view .encrypted-note-message{
+	text-align: center;
+    padding-bottom: 0.5em;
+}
+
+
+.meld-encrypt-encrypted-note-view .input-container{
+	max-width: 400px;
+}
+
+.meld-encrypt-encrypted-note-view .content-container{
+	width: 100%;
+	height: 90%;
+}
+
+.meld-encrypt-encrypted-note-view .is-readable-line-width .content-container{
+	max-width: var(--file-line-width);
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.meld-encrypt-encrypted-note-view .editor-reading-view,
+.meld-encrypt-encrypted-note-view .editor-source-view{
+	height: 100%;	
+}
+
+/* END FEATURE WHOLE NOTE */
+
+/* FEATURE IN LINE */
+
+.meld-encrypt-inline-reading-marker {
+	cursor: pointer;
+}
+
+.meld-encrypt-decrypt-modal textarea{
+	width: 100%;
+	min-height: 3em;
+	resize: vertical;
+}
+
+/* END FEATURE IN LINE */

@@ -19,6 +19,9 @@ export default class DecryptModal extends Modal {
 	onOpen() {
 		const { contentEl } = this;
 
+		contentEl.empty();
+		contentEl.classList.add('meld-encrypt-decrypt-modal');
+
 		let cTextArea : TextAreaComponent;
 		const sText = new Setting(contentEl)
 			.addTextArea( cb=>{
@@ -27,9 +30,6 @@ export default class DecryptModal extends Modal {
 				cb.inputEl.setSelectionRange(0,0)
 				cb.inputEl.readOnly = true;
 				cb.inputEl.rows = 10;
-				cb.inputEl.style.width = '100%';
-				cb.inputEl.style.minHeight = '3em';
-				cb.inputEl.style.resize = 'vertical';
 			})
 		;
 		sText.settingEl.querySelector('.setting-item-info')?.remove();

@@ -4,6 +4,7 @@ import { SessionPasswordService } from 'src/services/SessionPasswordService';
 import { UiHelper } from 'src/services/UiHelper';
 import { CryptoHelper } from '../../services/CryptoHelper';
 import { IFeatureWholeNoteEncryptSettings } from './IFeatureWholeNoteEncryptSettings';
+import { ObsidianEx } from 'src/services/ObsidianEx';
 
 enum EncryptedFileContentViewStateEnum{
 	init,
@@ -28,6 +29,7 @@ export class EncryptedFileContentView extends TextFileView {
 	private iconChangePassword = 'key';
 
 	// State
+	settings : IFeatureWholeNoteEncryptSettings;
 	currentView : EncryptedFileContentViewStateEnum = EncryptedFileContentViewStateEnum.init;
 	encryptionPassword = '';
 	hint = '';
@@ -44,6 +46,7 @@ export class EncryptedFileContentView extends TextFileView {
 	constructor( leaf: WorkspaceLeaf, settings:IFeatureWholeNoteEncryptSettings ) {
 		super(leaf);
 
+		this.settings = settings;
 		this.defaultEditNoteView = ( settings.defaultView as EditViewEnum ) ?? EditViewEnum.source;
 		this.currentEditNoteMode = this.defaultEditNoteView;
 
@@ -56,10 +59,9 @@ export class EncryptedFileContentView extends TextFileView {
 		this.elActionReadingView.hide();
 		this.elActionIconLockNote.hide();
 		this.elActionChangePassword.hide();
-		
-		this.contentEl.style.display = 'flex';
-		this.contentEl.style.flexDirection = 'column';
-		this.contentEl.style.alignItems = 'center';
+
+		this.containerEl.classList.add('meld-encrypt-encrypted-note-view');
+		this.contentEl.classList.add('meld-encrypt-encrypted-note-view-content');
 
 	}
 
@@ -121,13 +123,18 @@ export class EncryptedFileContentView extends TextFileView {
 		super.onPaneMenu(menu,source);
 	}
 
-	private addTitle( title:string ) : HTMLElement{
-		return this.contentEl.createDiv({
+	private addHeader( container:HTMLElement, title:string ){
+		container.createDiv({
 			text : `🔐 ${title} 🔐`,
-			attr : {
-				style: 'margin-bottom:2em;'
-			}
+			cls : 'encrypted-note-message'
 		});
+
+		if (ObsidianEx.showInlineTitle){
+			container.createDiv({
+				text: this.file?.basename,
+				cls: 'inline-title'
+			} );
+		}
 	}
 
 	private validatePassword ( pw: string ) : string {
@@ -142,14 +149,14 @@ export class EncryptedFileContentView extends TextFileView {
 		return passwordMatch ? '' :'Password doesn\'t match';
 	}
 
-	private addNewNoteView() {
+	private addNewNoteView( container: HTMLElement ) {
 		
-		this.addTitle('This note will be encrypted');
+		this.addHeader(container, 'This note will be encrypted');
 
 		//console.debug('createDecryptNoteView', { "hint": this.hint} );
-		const container = this.addInputContainer();
+		const inputContainer = this.addUserInputContainer( container );
 
-		new Setting(container)
+		new Setting(inputContainer)
 			.setDesc('Please provide a password and hint to start editing this note.')
 		;
 
@@ -164,15 +171,18 @@ export class EncryptedFileContentView extends TextFileView {
 				//set password and hint and open note
 				this.encryptionPassword = password;
 				this.hint = hint;
+				
 				// initial content of new note
-				this.currentEditorSourceText = `# ${this.file.basename}`;
+				if (!ObsidianEx.showInlineTitle){
+					this.currentEditorSourceText = `# ${this.file.basename}\n\n\n`;
+				}
 
 				await this.encodeAndSave();
 				
 				SessionPasswordService.putByPath( { password: password, hint: hint }, this.file.path );
 
 				this.currentEditNoteMode = EditViewEnum.source;
-				this.refreshView(EncryptedFileContentViewStateEnum.editNote);
+				this.refreshView( EncryptedFileContentViewStateEnum.editNote );
 
 			}
 		}
@@ -183,7 +193,7 @@ export class EncryptedFileContentView extends TextFileView {
 		let hint = bestGuessPassAndHint.hint;
 
 		const sPassword = UiHelper.buildPasswordSetting({
-			container,
+			container: inputContainer,
 			name:'Password:',
 			autoFocus : true,
 			initialValue: password,
@@ -201,7 +211,7 @@ export class EncryptedFileContentView extends TextFileView {
 		});
 
 		const sConfirm = UiHelper.buildPasswordSetting({
-			container,
+			container: inputContainer,
 			name:'Confirm:',
 			autoFocus : false,
 			onChangeCallback: (value) => {
@@ -218,7 +228,7 @@ export class EncryptedFileContentView extends TextFileView {
 			}
 		});
 
-		const sHint = new Setting(container)
+		const sHint = new Setting(inputContainer)
 			.setName("Hint:")
 			.addText((tc) =>{
 				tc.setValue(hint);
@@ -234,7 +244,7 @@ export class EncryptedFileContentView extends TextFileView {
 			}
 		});
 
-		new Setting(container)
+		new Setting(inputContainer)
 			.addButton( bc => {
 				bc
 					.setCta()
@@ -247,18 +257,18 @@ export class EncryptedFileContentView extends TextFileView {
 
 	}
 
-	private addDecryptNoteView() {
+	private addDecryptNoteView( container: HTMLElement ) {
 		
-		this.addTitle('This note is encrypted');
+		this.addHeader( container, 'This note is encrypted');
 
-		const container = this.addInputContainer();
+		const inputContainer = this.addUserInputContainer( container );
 		
-		new Setting(container)
+		new Setting(inputContainer)
 			.setDesc('Please provide a password to unlock this note.')
 		;
 
 		UiHelper.buildPasswordSetting({
-			container,
+			container: inputContainer,
 			name:'Password:',
 			autoFocus : true,
 			placeholder: this.formatHint(this.hint),
@@ -268,7 +278,7 @@ export class EncryptedFileContentView extends TextFileView {
 			onEnterCallback: async () => await this.handleDecryptButtonClick()
 		});
 
-		new Setting(container)
+		new Setting(inputContainer)
 			.addButton( bc => {
 				bc
 					.setCta()
@@ -316,68 +326,66 @@ export class EncryptedFileContentView extends TextFileView {
 		}
 	}
 
-	private addEditorSourceView() {
+	private addEditorSourceView( container: HTMLElement ) {
 
 		this.elActionReadingView.show();
 		this.elActionIconLockNote.show();
 		this.elActionChangePassword.show();
 
-		this.addTitle('Editing an encrypted note');
+		this.addHeader( container, 'Editing an encrypted note');
 
 		// build source view
-		const container = this.contentEl.createDiv();
-		container.contentEditable = 'true';
-		container.style.flexGrow = '1';
-		container.style.alignSelf = 'stretch';
-		
-		container.innerText = this.currentEditorSourceText;
+		const editorContainer = container.createDiv( { cls:'editor-source-view' } );
+		editorContainer.spellcheck = true;
+		editorContainer.autocapitalize = 'on';
+		editorContainer.translate = false;
+		editorContainer.contentEditable = 'true';
+		//editorContainer.autocorrect="on"
+		editorContainer.innerText = this.currentEditorSourceText;
 
-		container.focus();
 
-		container.on('input', '*', async (ev, target) =>{
-			console.debug({container});
-			this.currentEditorSourceText = container.innerText;
+		editorContainer.focus();
+
+		editorContainer.on('input', '*', async (ev, target) =>{
+			console.debug({container: editorContainer});
+			this.currentEditorSourceText = editorContainer.innerText;
 			await this.encodeAndSave();
 		});
 	
 	}
 
-	private addEditorReadingView() {
+	private addEditorReadingView( container: HTMLElement ) {
 
 		this.elActionEditView.show();
 		this.elActionIconLockNote.show();
 		this.elActionChangePassword.show();
 
-		this.addTitle('Reading an encrypted note');
+		this.addHeader( container, 'Reading an encrypted note' );
 
-		const container = this.contentEl.createDiv();
-		container.contentEditable = 'false';
-		container.style.flexGrow = '1';
-		container.style.alignSelf = 'stretch';
+		const readingContainer = container.createDiv({cls:'editor-reading-view'});
+
 
 		// build reading view
 		MarkdownRenderer.renderMarkdown(
 			this.currentEditorSourceText,
-			container,
+			readingContainer,
 			this.file.path,
 			this
-		);
+		).catch( reason => {
+			console.error( reason );
+		});
 		
 	}
 
-	private addInputContainer() : HTMLElement{
-		return this.contentEl.createDiv( {
-			'attr': {
-				'style': 'width:100%; max-width:400px;'
-			}
-		} );
+	private addUserInputContainer( container: HTMLElement ) : HTMLElement{
+		return container.createDiv({cls: 'input-container' });
 	}
 
-	private addChangePasswordView() {
+	private addChangePasswordView( container: HTMLElement ) {
 
-		this.addTitle('Change encrypted note password');
+		this.addHeader( container, 'Change encrypted note password' );
 
-		const container = this.addInputContainer();
+		const inputContainer = this.addUserInputContainer( container );
 
 		let newPassword = '';
 		let confirm = '';
@@ -405,7 +413,7 @@ export class EncryptedFileContentView extends TextFileView {
 		}
 
 		const sNewPassword = UiHelper.buildPasswordSetting({
-			container,
+			container: inputContainer,
 			name: 'New Password:',
 			autoFocus: true,
 			onChangeCallback: (value) =>{
@@ -422,7 +430,7 @@ export class EncryptedFileContentView extends TextFileView {
 		});
 
 		const sConfirm = UiHelper.buildPasswordSetting({
-			container,
+			container: inputContainer,
 			name: 'Confirm:',
 			onChangeCallback: (value) =>{
 				confirm = value;
@@ -439,7 +447,7 @@ export class EncryptedFileContentView extends TextFileView {
 			}
 		});
 
-		const sHint = new Setting(container)
+		const sHint = new Setting(inputContainer)
 			.setName("New Hint:")
 			.addText((tc) =>{
 				tc.onChange( v => {
@@ -454,7 +462,7 @@ export class EncryptedFileContentView extends TextFileView {
 			}
 		});
 
-		new Setting(container)
+		new Setting(inputContainer)
 				.addButton( bc => {
 				bc
 					.removeCta()
@@ -491,7 +499,10 @@ export class EncryptedFileContentView extends TextFileView {
 	private refreshView(
 		newView: EncryptedFileContentViewStateEnum
 	){
-		
+
+		this.currentView = newView;
+
+
 		//console.debug('refreshView',{'currentView':this.currentView, newView});
 		this.elActionEditView.hide();
 		this.elActionReadingView.hide();
@@ -500,29 +511,34 @@ export class EncryptedFileContentView extends TextFileView {
 
 		// clear view
 		this.contentEl.empty();
-
-		this.currentView = newView;
+		if ( ObsidianEx.readableLineLength ){
+			this.contentEl.classList.add('is-readable-line-width');
+		}else{
+			this.contentEl.classList.remove('is-readable-line-width');
+		}
+		
+		const contentContainer = this.contentEl.createDiv({cls: 'content-container'});
 
 		switch (this.currentView) {
 			case EncryptedFileContentViewStateEnum.newNote:
-				this.addNewNoteView();
+				this.addNewNoteView( contentContainer );
 			break;
 
 			case EncryptedFileContentViewStateEnum.decryptNote:
-				this.addDecryptNoteView();
+				this.addDecryptNoteView( contentContainer );
 			break;
 			
 			case EncryptedFileContentViewStateEnum.editNote:
 				if ( this.currentEditNoteMode == EditViewEnum.source ){
-					this.addEditorSourceView();
+					this.addEditorSourceView( contentContainer );
 				} else{
 					// default to reading
-					this.addEditorReadingView();
+					this.addEditorReadingView( contentContainer );
 				}
 			break;
 
 			case EncryptedFileContentViewStateEnum.changePassword:
-				this.addChangePasswordView();
+				this.addChangePasswordView( contentContainer );
 			break;
 		}
 

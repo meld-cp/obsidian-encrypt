@@ -37,7 +37,6 @@ export default class PasswordModal extends Modal {
 
 		contentEl.empty();
 
-		//this.contentEl.style.width = 'auto';
 		this.invalidate();
 
 		let password = this.defaultPassword ?? '';

@@ -103,8 +103,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		const elPreIndicator = createSpan( { text: textBeforeIndicator } );
 		const elPostIndicator = createSpan( { text: textAfterIndicator } );
 
-		const elIndicator = createSpan( { text: '🔐' } );
-		elIndicator.style.cursor  = 'pointer';
+		const elIndicator = createSpan( { text: '🔐', cls: 'meld-encrypt-inline-reading-marker' } );
 		elIndicator.onClickEvent( async () =>
 			await this.handleReadingIndicatorClick(
 				ctx.sourcePath,
