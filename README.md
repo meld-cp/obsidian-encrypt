@@ -25,6 +25,11 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### 2.1.3
+- follow 'readable line length' and 'show inline title' settings in encrypted notes
+- update layout and styling
+- enable spell check when editing
+
 ### 2.1.2
 - add inline encrypted text marker (clickable) in reading view
 
