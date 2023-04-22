@@ -8,7 +8,7 @@ import { CryptoHelperObsolete } from "./CryptoHelperObsolete";
 export class CryptoHelperFactory{
 
 	public static BuildDefault(): ICryptoHelper{
-		return new CryptoHelper2304( 16, 16, 600000 );
+		return new CryptoHelper2304( 16, 16, 210000 );
 	}
 
 	public static BuildFromFileData( data: FileData ) : ICryptoHelper {
@@ -18,7 +18,7 @@ export class CryptoHelperFactory{
 
 		// note				v2.0	CryptoHelper2304
 		if ( data.version == '2.0' ){
-			return new CryptoHelper2304( 16, 16, 600000 );
+			return new CryptoHelper2304( 16, 16, 210000  );
 		}
 
 		throw new Error( `Unable to determine ICryptoHelper for File ver ${data.version}`);
@@ -39,7 +39,7 @@ export class CryptoHelperFactory{
 		}
 
 		if ( decryptable.version == 2 ){
-			return new CryptoHelper2304( 16, 16, 600000 );
+			return new CryptoHelper2304( 16, 16, 210000 );
 		}
 
 		throw new Error( `Unable to determine ICryptoHelper for Decryptable ver ${decryptable.version}`);
