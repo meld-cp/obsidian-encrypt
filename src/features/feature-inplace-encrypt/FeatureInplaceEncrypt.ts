@@ -1,6 +1,4 @@
 import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext } from "obsidian";
-import { CryptoHelper } from "../../services/CryptoHelper";
-import { CryptoHelperObsolete } from "../../services/CryptoHelperObsolete";
 import DecryptModal from "./DecryptModal";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
@@ -9,13 +7,25 @@ import { IFeatureInplaceEncryptSettings } from "./IFeatureInplaceEncryptSettings
 import PasswordModal from "./PasswordModal";
 import { UiHelper } from "../../services/UiHelper";
 import { SessionPasswordService } from "src/services/SessionPasswordService";
+import { CryptoHelperFactory } from "src/services/CryptoHelperFactory";
+import { Decryptable } from "./Decryptable";
+
+
+
+const _PREFIX_B = '%%🔐 β ';
+const _PREFIX_B_VISIBLE = '🔐 β ';
 
 const _PREFIX_A = '%%🔐α ';
 const _PREFIX_A_VISIBLE = '🔐α ';
 const _PREFIX_OBSOLETE = '%%🔐 ';
 
+const _PREFIX_ENCODE_DEFAULT = _PREFIX_B;
+const _PREFIX_ENCODE_DEFAULT_VISIBLE = _PREFIX_B_VISIBLE;
+
 // Should be listed by evaluation priority
 const _PREFIXES = [
+	_PREFIX_B,
+	_PREFIX_B_VISIBLE,
 	_PREFIX_A,
 	_PREFIX_A_VISIBLE,
 	_PREFIX_OBSOLETE,
@@ -77,7 +87,13 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 		
 		const markerStart = InplaceTextHelper.findFirstMarker( _PREFIXES, text );
-		if ( markerStart == null || markerStart.marker != _PREFIX_A_VISIBLE ){
+		if (
+			markerStart == null
+			|| !(
+				markerStart.marker == _PREFIX_A_VISIBLE
+				|| markerStart.marker == _PREFIX_B_VISIBLE
+			)
+		){
 			//console.debug( 'not visible or null', markerStart );
 			return;
 		}
@@ -116,8 +132,12 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	}
 
-	private async handleReadingIndicatorClick( path: string, decryptable:Decryptable ){
+	private async handleReadingIndicatorClick( path: string, decryptable?:Decryptable ){
 		// indicator click handler
+		if (decryptable == null){
+			new Notice('❌ Decryption failed!');
+			return;
+		}
 
 		if ( await this.showDecryptedTextIfPasswordKnown( path, decryptable ) ){
 			return;
@@ -145,11 +165,10 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	}
 	
 	private async showDecryptedResultForPassword( decryptable: Decryptable, pw:string ): Promise<boolean> {
-		const crypto = new CryptoHelper();
-			const decryptedText = await crypto.decryptFromBase64(
-			decryptable.base64CipherText,
-			pw
-		);
+		const crypto =  CryptoHelperFactory.BuildFromDecryptable( decryptable );
+
+		const decryptedText = await crypto.decryptFromBase64( decryptable.base64CipherText, pw );
+
 		// show result
 		if (decryptedText === null) {
 			return false;
@@ -417,6 +436,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			const hint = pwModal.resultHint ?? '';
 
 			if (selectionAnalysis.canEncrypt) {
+
 				const encryptable = new Encryptable();
 				encryptable.text = selectionText;
 				encryptable.hint = hint;
@@ -433,32 +453,20 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				// remember password
 				SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
 
-			} else {
+			} else if ( selectionAnalysis.decryptable ) {
 
-				let decryptSuccess : boolean;
-				if (selectionAnalysis.decryptable?.version == 1){
-					decryptSuccess = await this.decryptSelection_a(
-						editor,
-						selectionAnalysis.decryptable,
-						pw,
-						finalSelectionStart,
-						finalSelectionEnd,
-						decryptInPlace
-					);
-				}else{
-					decryptSuccess = await this.decryptSelectionObsolete(
-						editor,
-						selectionAnalysis,
-						pw,
-						finalSelectionStart,
-						finalSelectionEnd,
-						decryptInPlace
-					);
-				}
+				const decryptSuccess = await this.decryptSelection(
+					editor,
+					selectionAnalysis.decryptable,
+					pw,
+					finalSelectionStart,
+					finalSelectionEnd,
+					decryptInPlace
+				);
 
 				// remember password?
 				if ( decryptSuccess ) {
-					SessionPasswordService.putByPath(	{ password:pw, hint: hint }, activeFile.path );
+					SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
 				}
 				
 			}
@@ -477,7 +485,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		showInReadingView: boolean
 	) {
 		//encrypt
-		const crypto = new CryptoHelper();
+		const crypto = CryptoHelperFactory.BuildDefault();
 		const encodedText = this.encodeEncryption(
 			await crypto.encryptToBase64(encryptable.text, password),
 			encryptable.hint,
@@ -487,7 +495,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		editor.replaceSelection(encodedText);
 	}
 
-	private async decryptSelection_a(
+	private async decryptSelection(
 		editor: Editor,
 		decryptable: Decryptable,
 		password: string,
@@ -495,9 +503,10 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		selectionEnd: CodeMirror.Position,
 		decryptInPlace: boolean
 	) : Promise<boolean> {
+
 		// decrypt
 
-		const crypto = new CryptoHelper();
+		const crypto = CryptoHelperFactory.BuildFromDecryptable(decryptable);
 		const decryptedText = await crypto.decryptFromBase64(decryptable.base64CipherText, password);
 		if (decryptedText === null) {
 			new Notice('❌ Decryption failed!');
@@ -522,49 +531,12 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		return true;
 	}
 
-	private async decryptSelectionObsolete(
-		editor: Editor,
-		selectionAnalysis: SelectionAnalysis,
-		password: string,
-		selectionStart: CodeMirror.Position,
-		selectionEnd: CodeMirror.Position,
-		decryptInPlace: boolean
-	) :Promise<boolean> {
-		// decrypt
-		//console.debug(selectionAnalysis);
-		const base64CipherText = selectionAnalysis.decryptable.base64CipherText;
-		const crypto = new CryptoHelperObsolete();
-		const decryptedText = await crypto.decryptFromBase64(base64CipherText, password);
-		if (decryptedText === null) {
-			new Notice('❌ Decryption failed!');
-			return false;
-		} else {
-
-			if (decryptInPlace) {
-				editor.setSelection(selectionStart, selectionEnd);
-				editor.replaceSelection(decryptedText);
-			} else {
-				const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText );
-				decryptModal.onClose = () => {
-					editor.focus();
-					if (decryptModal.decryptInPlace) {
-						editor.setSelection(selectionStart, selectionEnd);
-						editor.replaceSelection(decryptedText);
-					}
-				}
-				decryptModal.open();
-			}
-		}
-		return true;
-	}
-
-
 	private encodeEncryption( encryptedText: string, hint: string, showInReadingView: boolean ): string {
 		if (
 			!_PREFIXES.some( (prefix) => encryptedText.contains(prefix) )
 			&& !_SUFFIXES.some( (suffix) => encryptedText.contains(suffix) )
 		) {
-			const prefix = showInReadingView ? _PREFIX_A_VISIBLE : _PREFIX_A;
+			const prefix = showInReadingView ? _PREFIX_ENCODE_DEFAULT_VISIBLE : _PREFIX_ENCODE_DEFAULT;
 			const suffix = showInReadingView ? _SUFFIX_NO_COMMENT : _SUFFIX_WITH_COMMENT;
 
 			if ( hint.length > 0 ){
@@ -589,7 +561,7 @@ class SelectionAnalysis{
 	canDecrypt: boolean;
 	canEncrypt: boolean;
 	containsEncryptedMarkers: boolean;
-	decryptable : Decryptable;
+	decryptable? : Decryptable;
 
 	constructor(text: string){
 		this.process(text);
@@ -637,8 +609,14 @@ class SelectionAnalysis{
 			return null; // invalid format
 		}
 		
-		result.version = this.hasObsoleteEncryptedPrefix ? 0 : 1;
-		
+		if ( this.hasObsoleteEncryptedPrefix ){
+			result.version = 0;
+		}else if ( this.prefix == _PREFIX_B || this.prefix == _PREFIX_B_VISIBLE ){
+			result.version = 2;
+		}else if ( this.prefix == _PREFIX_A || this.prefix == _PREFIX_A_VISIBLE ){
+			result.version = 1;
+		}
+
 		// remove markers from start and end	
 		const content = text.substring(this.prefix.length, text.length - this.suffix.length);
 		//console.debug({content});
@@ -669,13 +647,6 @@ class Encryptable{
 	text:string;
 	hint:string;
 }
-
-class Decryptable{
-	version: number;
-	base64CipherText:string;
-	hint:string;
-}
-
 
 interface IMarkerPosition{
 	marker:string;
