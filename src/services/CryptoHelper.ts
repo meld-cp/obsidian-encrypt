@@ -6,6 +6,10 @@ const salt			= utf8Encoder.encode('XHWnDAT6ehMVY2zD');
 
 export class CryptoHelper {
 
+	// constructor(){
+	// 	console.debug('new CryptoHelper');
+	// }
+
 	private async deriveKey(password:string) :Promise<CryptoKey> {
 		const buffer     = utf8Encoder.encode(password);
 		const key        = await crypto.subtle.importKey('raw', buffer, {name: 'PBKDF2'}, false, ['deriveKey']);

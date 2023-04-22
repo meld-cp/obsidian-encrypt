@@ -2,9 +2,9 @@ import { MarkdownRenderer, Menu, Notice, Setting, TextFileView } from 'obsidian'
 import { WorkspaceLeaf } from "obsidian";
 import { SessionPasswordService } from 'src/services/SessionPasswordService';
 import { UiHelper } from 'src/services/UiHelper';
-import { CryptoHelper } from '../../services/CryptoHelper';
 import { IFeatureWholeNoteEncryptSettings } from './IFeatureWholeNoteEncryptSettings';
 import { ObsidianEx } from 'src/services/ObsidianEx';
+import { CryptoHelperFactory } from 'src/services/CryptoHelperFactory';
 
 enum EncryptedFileContentViewStateEnum{
 	init,
@@ -347,7 +347,7 @@ export class EncryptedFileContentView extends TextFileView {
 		editorContainer.focus();
 
 		editorContainer.on('input', '*', async (ev, target) =>{
-			console.debug({container: editorContainer});
+			//console.debug({container: editorContainer});
 			this.currentEditorSourceText = editorContainer.innerText;
 			await this.encodeAndSave();
 		});
@@ -632,13 +632,14 @@ export class EncryptedFileContentView extends TextFileView {
 
 }
 
-class FileData{
+export class FileData {
 	
-	public version = "1.0";
+	public version = '1.0';
 	public hint: string;
 	public encodedData:string;
 
-	constructor( hint:string, encodedData:string ){
+	constructor( version:string, hint:string, encodedData:string ){
+		this.version = version;
 		this.hint = hint;
 		this.encodedData = encodedData;
 	}
@@ -646,18 +647,20 @@ class FileData{
 
 class FileDataHelper{
 
+	public static DEFAULT_VERSION = '2.0';
+
 	public static async encode( pass: string, hint:string, text:string ) : Promise<FileData>{
-		const crypto = new CryptoHelper();
+		const crypto = CryptoHelperFactory.BuildDefault();
 		const encryptedData = await crypto.encryptToBase64(text, pass);
-		return new FileData(hint, encryptedData);
+		return new FileData( FileDataHelper.DEFAULT_VERSION, hint, encryptedData);
 	}
 
 	public static async decrypt( data: FileData, pass:string ) : Promise<string|null>{
 		if ( data.encodedData == '' ){
 			return '';
 		}
-		const crypto = new CryptoHelper();
-		return await crypto.decryptFromBase64(data.encodedData, pass);
+		const crypto = CryptoHelperFactory.BuildFromFileData( data );
+		return await crypto.decryptFromBase64( data.encodedData, pass );
 	}
 }
 
@@ -670,8 +673,8 @@ class JsonFileEncoding {
 	public static decode( encodedText:string ) : FileData{
 		//console.debug('JsonFileEncoding.decode',{encodedText});
 		if (encodedText === ''){
-			return new FileData( "", "" );
+			return new FileData( FileDataHelper.DEFAULT_VERSION, '', '' );
 		}
-		return JSON.parse(encodedText) as FileData;
+		return JSON.parse( encodedText ) as FileData;
 	}
 }
