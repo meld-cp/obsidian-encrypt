@@ -27,6 +27,10 @@
 	margin-right: auto;
 }
 
+.meld-encrypt-encrypted-note-view .editor-reading-view{
+	user-select: text;
+}
+
 .meld-encrypt-encrypted-note-view .editor-reading-view,
 .meld-encrypt-encrypted-note-view .editor-source-view{
 	height: 100%;	
