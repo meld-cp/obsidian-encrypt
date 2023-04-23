@@ -1,4 +1,4 @@
-import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext } from "obsidian";
+import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext, MarkdownRenderer } from "obsidian";
 import DecryptModal from "./DecryptModal";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
@@ -12,8 +12,8 @@ import { Decryptable } from "./Decryptable";
 
 
 
-const _PREFIX_B = '%%🔐 β ';
-const _PREFIX_B_VISIBLE = '🔐 β ';
+const _PREFIX_B = '%%🔐β ';
+const _PREFIX_B_VISIBLE = '🔐β ';
 
 const _PREFIX_A = '%%🔐α ';
 const _PREFIX_A_VISIBLE = '🔐α ';
@@ -52,8 +52,9 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		this.pluginSettings = settings;
 		this.featureSettings = settings.featureInplaceEncrypt;
 
-		
-		this.plugin.registerMarkdownPostProcessor( (el,ctx) => this.processEncryptedCodeBlockProcessor(el, ctx) );
+		this.plugin.registerMarkdownPostProcessor(
+			(el,ctx) => this.processEncryptedCodeBlockProcessor(el, ctx)
+		);
 
 		plugin.addCommand({
 			id: 'meld-encrypt',
@@ -75,7 +76,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	}
 
-	private processEncryptedCodeBlockProcessor(el: HTMLElement, ctx: MarkdownPostProcessorContext){
+	private async processEncryptedCodeBlockProcessor(el: HTMLElement, ctx: MarkdownPostProcessorContext){
 
 		const si = ctx.getSectionInfo(el);
 		if (si == null){
@@ -111,24 +112,25 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			return;
 		}
 		
-		const textBeforeIndicator = InplaceTextHelper.extractTextBeforeMarker(text, markerStart );
-		const textAfterIndicator = InplaceTextHelper.extractTextAfterMarker(text, markerEnd);
+		const textBeforeIndicator = InplaceTextHelper.extractTextBeforeMarker( text, markerStart );
+		const textAfterIndicator = InplaceTextHelper.extractTextAfterMarker( text, markerEnd );
 
+		const newMd = textBeforeIndicator
+			+ '<span class="meld-encrypt-inline-reading-marker">🔐</span>'
+			+ textAfterIndicator
+		;
 
-		// create elements
-		const elPreIndicator = createSpan( { text: textBeforeIndicator } );
-		const elPostIndicator = createSpan( { text: textAfterIndicator } );
-
-		const elIndicator = createSpan( { text: '🔐', cls: 'meld-encrypt-inline-reading-marker' } );
-		elIndicator.onClickEvent( async () =>
+		el.empty();
+		await MarkdownRenderer.renderMarkdown( newMd, el, ctx.sourcePath, this.plugin );
+		
+		//console.debug( {el} );
+		const elIndicator = el.querySelector('.meld-encrypt-inline-reading-marker') as HTMLSpanElement;
+		elIndicator?.onClickEvent( async () =>
 			await this.handleReadingIndicatorClick(
 				ctx.sourcePath,
 				selectionAnalysis.decryptable
 			)
 		);
-
-		el.empty();
-		el.append( elPreIndicator, elIndicator, elPostIndicator );
 
 	}
 
