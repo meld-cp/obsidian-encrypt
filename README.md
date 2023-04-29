@@ -25,6 +25,11 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### 2.2.0
+- stronger encryption (thanks @brycx)
+- fix #92 - Enable selection text in Reading view
+- fix #93 - Encrypting text in-place in a table breaks
+
 ### 2.1.3
 - follow 'readable line length' and 'show inline title' settings in encrypted notes
 - update layout and styling
@@ -33,20 +38,8 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 ### 2.1.2
 - add inline encrypted text marker (clickable) in reading view
 
-### 2.1.1
-- Limited support for markdown in `.encrypted` notes
-- New setting to select the default view when opening `.encrypted` notes (Source or Reading)
 
-### v2.1.0
-- Auto decrypt note if password remembered
-- Clear remembered password when re-locking file
-- When changing password, remember it if 'remember passwords' is active
-- Change wording for 'Remember Password Timeout' in settings
-- Add new setting to remember password by parent folder path
-- Code refactors
-
-### v2.0.5
-- fix creating encrypted note on mobile
+**(See more at the bottom of this page)**
 
 ---
 
@@ -109,22 +102,25 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 ---
 ## ⚜️ Settings
 
-| Common Settings | |
+### Common Settings
+| | |
 |--|--|
-| ⚙️ Confirm password | Confirm password when encrypting |
-| ⚙️ Remember password | Remember the last used password for this session. |
-| ⚙️ Remember Password Timeout | The number of minutes to remember the last used password. |
-| ⚙️ Remember Password Using | Remember passwords by using File or Parent path |
+| Confirm password | Confirm password when encrypting |
+| Remember password | Remember the last used password for this session. |
+| Remember Password Timeout | The number of minutes to remember the last used password. |
+| Remember Password Using | Remember passwords by using File or Parent path |
 
-|Whole note encryption Settings| |
+### Whole note encryption Settings
+| | |
 |--|--|
-| ⚙️ Add ribbon icon to create note | Adds a ribbon icon to the left bar to create an encrypted note. |
-| ⚙️ Default view for new tabs | The default view that a new encrypted note tab gets opened in |
+| Add ribbon icon to create note | Adds a ribbon icon to the left bar to create an encrypted note. |
+| Default view for new tabs | The default view that a new encrypted note tab gets opened in |
 
-|In-place encryption Settings| |
+### In-place encryption Settings
+| | |
 |--|--|
-| ⚙️ Expand selection to whole line | Partial selections will get expanded to the whole line |
-| ⚙️ By default, show encrypted marker when reading | When encrypting inline text, should the default be to have a visible marker in Reading view |
+| Expand selection to whole line | Partial selections will get expanded to the whole line |
+| By default, show encrypted marker when reading | When encrypting inline text, should the default be to have a visible marker in Reading view |
 
 ---
 
@@ -138,6 +134,21 @@ Thank you for your support 😊
 ---
 
 ## ⚜️ Previous changes
+
+### 2.1.1
+- Limited support for markdown in `.encrypted` notes
+- New setting to select the default view when opening `.encrypted` notes (Source or Reading)
+
+### v2.1.0
+- Auto decrypt note if password remembered
+- Clear remembered password when re-locking file
+- When changing password, remember it if 'remember passwords' is active
+- Change wording for 'Remember Password Timeout' in settings
+- Add new setting to remember password by parent folder path
+- Code refactors
+
+### v2.0.5
+- fix creating encrypted note on mobile
 
 ### v2.0.4
 - fix password remembered even when 'remember password' setting is unchecked
