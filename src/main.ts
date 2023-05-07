@@ -2,6 +2,7 @@ import { Plugin } from 'obsidian';
 import MeldEncryptSettingsTab from './settings/MeldEncryptSettingsTab';
 import { IMeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings';
 import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInplaceEncrypt';
+import FeatureFolderEncrypt from './features/feature-inplace-encrypt/FeatureFolderEncrypt';
 import FeatureWholeNoteEncrypt from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature';
 import { SessionPasswordService } from './services/SessionPasswordService';
@@ -19,6 +20,7 @@ export default class MeldEncrypt extends Plugin {
 		await this.loadSettings();
 
 		this.enabledFeatures.push(
+      new FeatureFolderEncrypt(),
 			new FeatureWholeNoteEncrypt(),
 			new FeatureInplaceEncrypt()
 		);
