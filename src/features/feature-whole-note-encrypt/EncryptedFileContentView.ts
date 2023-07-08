@@ -309,7 +309,7 @@ export class EncryptedFileContentView extends TextFileView {
 	private async encodeAndSave( ){
 		try{
 
-			//console.debug('encodeAndSave');
+			//console.debug('encodeAndSave', {currentEditorSourceText:this.currentEditorSourceText});
 			
 			const fileData = await FileDataHelper.encode(
 				this.encryptionPassword,
@@ -339,15 +339,14 @@ export class EncryptedFileContentView extends TextFileView {
 		editorContainer.spellcheck = true;
 		editorContainer.autocapitalize = 'on';
 		editorContainer.translate = false;
-		editorContainer.contentEditable = 'true';
-		//editorContainer.autocorrect="on"
+		editorContainer.contentEditable = 'plaintext-only';
+		//console.debug( 'addEditorSourceView', {currentEditorSourceText:this.currentEditorSourceText} );
 		editorContainer.innerText = this.currentEditorSourceText;
 
 
 		editorContainer.focus();
 
 		editorContainer.on('input', '*', async (ev, target) =>{
-			//console.debug({container: editorContainer});
 			this.currentEditorSourceText = editorContainer.innerText;
 			await this.encodeAndSave();
 		});
@@ -667,12 +666,13 @@ class FileDataHelper{
 class JsonFileEncoding {
 
 	public static encode( data: FileData ) : string{
+		//console.debug( 'JsonFileEncoding.encode', {data} );
 		return JSON.stringify(data, null, 2);
 	}
 
 	public static decode( encodedText:string ) : FileData{
 		//console.debug('JsonFileEncoding.decode',{encodedText});
-		if (encodedText === ''){
+		if ( encodedText === '' ){
 			return new FileData( FileDataHelper.DEFAULT_VERSION, '', '' );
 		}
 		return JSON.parse( encodedText ) as FileData;
