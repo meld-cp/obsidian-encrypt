@@ -70,5 +70,43 @@ export class UiHelper{
 		return sControl;
 	}
 
+	public static buildFolderSetting(
+		{
+			container,
+			name,
+			desc = '',
+			autoFocus = false,
+			initialValue = '',
+			onChangeCallback,
+			onEnterCallback,
+		}: IBuildPasswordSettingParams
+	) : Setting {
+		const sControl = new Setting(container)
+			.setName(name)
+			.setDesc(desc)
+			.addText( tc => {
+				tc.setValue(initialValue);
+				tc.inputEl.type = 'text';
+				if (onChangeCallback!=null){
+					tc.onChange( onChangeCallback );
+				}
+				if (onEnterCallback!=null){
+					tc.inputEl.onkeydown = (ev)=> {
+						if ( ev.key === 'Enter' ) {
+							ev.preventDefault();
+							onEnterCallback( tc.getValue() );
+						}
+					}
+				}
+				if (autoFocus){
+					setTimeout(() => tc.inputEl.focus(), 0);
+				}
+			} )
+		;
+
+		return sControl;
+	}
+
+
 
 }

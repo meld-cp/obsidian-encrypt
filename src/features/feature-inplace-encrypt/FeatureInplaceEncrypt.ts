@@ -550,7 +550,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	}
 }
 
-class SelectionAnalysis{
+export class SelectionAnalysis{
 	processedText:string;
 	isEmpty: boolean;
 	
@@ -655,7 +655,7 @@ interface IMarkerPosition{
 	position:number;
 }
 
-class InplaceTextHelper{
+export class InplaceTextHelper{
 	static extractTextBeforeMarker(text: string, marker: IMarkerPosition) {
 		return text.substring( 0, marker.position );
 	}
