@@ -1,6 +1,6 @@
 import { MemoryCache } from "./MemoryCache";
 
-interface IPasswordAndHint{
+export interface IPasswordAndHint{
 	password: string;
 	hint: string;
 }
@@ -75,6 +75,24 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 
 		const key = SessionPasswordService.getPathCacheKey( path );
+		return this.cache.get( key, SessionPasswordService.blankPasswordAndHint );
+	}
+
+	public static putByKey( pw: IPasswordAndHint, key:string ): void {
+		if (!SessionPasswordService.isActive){
+			return;
+		}
+		this.cache.put( key, pw );
+		SessionPasswordService.updateExpiryTime();
+	}
+
+	public static getByKey( key: string ) : IPasswordAndHint {
+		if (!SessionPasswordService.isActive){
+			return SessionPasswordService.blankPasswordAndHint;
+		}
+		this.clearIfExpired();
+		SessionPasswordService.updateExpiryTime();
+
 		return this.cache.get( key, SessionPasswordService.blankPasswordAndHint );
 	}
 

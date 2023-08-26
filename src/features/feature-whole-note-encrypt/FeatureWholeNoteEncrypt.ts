@@ -22,6 +22,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			(leaf) => new EncryptedFileContentView(leaf, this.settings )
 		);
 			
+		//TODO: create a constant for 'encrypted' extension (update code base)
 		this.plugin.registerExtensions(['encrypted'], VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
 			
 		this.plugin.addCommand({

@@ -1,4 +1,4 @@
-import { FileData } from "src/features/feature-whole-note-encrypt/EncryptedFileContentView";
+import { FileData } from "./FileDataHelper";
 import { Decryptable } from "src/features/feature-inplace-encrypt/Decryptable";
 import { CryptoHelper } from "./CryptoHelper";
 import { ICryptoHelper } from "./ICryptoHelper";
