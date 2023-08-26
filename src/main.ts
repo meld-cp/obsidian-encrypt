@@ -54,10 +54,9 @@ export default class MeldEncrypt extends Plugin {
 			confirmPassword: true,
 			rememberPassword: true,
 			rememberPasswordTimeout: 30,
-			rememberPasswordLevel: SessionPasswordService.LevelFullPath,
+			rememberPasswordLevel: SessionPasswordService.LevelFilename,
 
 			featureWholeNoteEncrypt: {
-				addRibbonIconToCreateNote: true,
 				defaultView: EditViewEnum.source.toString()
 			},
 			

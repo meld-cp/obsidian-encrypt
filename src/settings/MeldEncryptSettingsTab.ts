@@ -37,7 +37,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Confirm password?')
-			.setDesc('Confirm password when encrypting.')
+			.setDesc('Confirm password when encrypting. (Recommended)')
 			.addToggle( toggle =>{
 				toggle
 					.setValue(this.settings.confirmPassword)
@@ -63,7 +63,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 
 			let timeoutString = `For ${rememberPasswordTimeout} minutes`;
 			if( rememberPasswordTimeout == 0 ){
-				timeoutString = 'Always';
+				timeoutString = 'Until Obsidian is closed';
 			}
 
 			pwTimeoutSetting.setName( `Remember Password (${timeoutString})` )
@@ -72,11 +72,11 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Remember password?')
-			.setDesc('Remember the last used passwords when encrypting or decrypting.')
+			.setDesc('Remember the last used passwords when encrypting or decrypting.  Passwords are remembered until they timeout or Obsidian is closed')
 			.addToggle( toggle =>{
 				toggle
 					.setValue(this.settings.rememberPassword)
-					.onChange( async value =>{
+					.onChange( async value => {
 						this.settings.rememberPassword = value;
 						await this.plugin.saveSettings();
 						SessionPasswordService.setActive( this.settings.rememberPassword );
@@ -103,12 +103,12 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		;
 
 		const rememberPasswordLevelSetting = new Setting(containerEl)
-			.setDesc('Remember passwords by using')
+			.setDesc('Remember passwords by using a notes file name or parent folder')
 			.addDropdown( cb =>{
 				cb
-					.addOption( SessionPasswordService.LevelFullPath, 'Full Path')
-					.addOption( SessionPasswordService.LevelParentPath, 'Parent Path')
-					.setValue(this.settings.rememberPasswordLevel)
+					.addOption( SessionPasswordService.LevelFilename, 'File Name')
+					.addOption( SessionPasswordService.LevelParentPath, 'Parent Folder')
+					.setValue( this.settings.rememberPasswordLevel )
 					.onChange( async value => {
 						this.settings.rememberPasswordLevel = value;
 						await this.plugin.saveSettings();
