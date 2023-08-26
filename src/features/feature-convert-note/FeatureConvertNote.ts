@@ -130,9 +130,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 			const encryptedFileContent = await this.encryptFile(file, pw);
 
-			await this.closeUpdateAndReopen( file, ENCRYPTED_FILE_EXTENSION, encryptedFileContent);
-
-			SessionPasswordService.putByFile( pw, file );
+			await this.closeUpdateRememberPasswordThenReopen( file, ENCRYPTED_FILE_EXTENSION, encryptedFileContent, pw );
 			
 			new Notice( '🔐 Note was encrypted 🔐' );
 
@@ -154,7 +152,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			const decryptedContent = await this.decryptFile( file, passwordAndHint.password );
 			if (decryptedContent != null){
 				// update file
-				await this.closeUpdateAndReopen( file, 'md', decryptedContent );
+				await this.closeUpdateRememberPasswordThenReopen( file, 'md', decryptedContent, passwordAndHint );
 				return;
 			}
 		}
@@ -177,7 +175,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 				throw new Error('Decryption failed');
 			}
 
-			await this.closeUpdateAndReopen( file, 'md', content );
+			await this.closeUpdateRememberPasswordThenReopen( file, 'md', content, passwordAndHint );
 
 			new Notice( '🔓 Note was decrypted 🔓' );
 
@@ -188,7 +186,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		}
 	}
 
-	private async closeUpdateAndReopen( file:TFile, newFileExtension: string, content: string) {
+	private async closeUpdateRememberPasswordThenReopen( file:TFile, newFileExtension: string, content: string, pw:IPasswordAndHint ) {
 		
 		let didDetach = false;
 
@@ -204,6 +202,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			const newFilepath = Utils.getFilePathWithNewExtension(file, newFileExtension);
 			await app.vault.rename( file, newFilepath );
 			await app.vault.modify( file, content );
+			SessionPasswordService.putByFile( pw, file );
 		}finally{
 			if(didDetach){
 				await app.workspace.getLeaf().openFile(file);
