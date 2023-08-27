@@ -6,7 +6,9 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"dev-tool-decrypt": "tsc -noEmit -skipLibCheck && node esbuild-tool-decrypt.config.mjs",
+		"build-tool-decrypt": "tsc -noEmit -skipLibCheck && node esbuild-tool-decrypt.config.mjs production"
 	},
 	"keywords": [],
 	"author": "",
