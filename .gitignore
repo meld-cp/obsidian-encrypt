@@ -10,3 +10,6 @@ package-lock.json
 dist
 *.map
 test-vault
+
+# tools
+src/tools/offline-decrypt.js
