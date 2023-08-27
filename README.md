@@ -25,6 +25,13 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### 2.3.0
+- add encrypt/decrypt of `.md` or `.encrypted` notes #68 (via file context menu, ribbon icon or command palette, helps with #91, #103, #108, #114)
+- fix double blank line #107
+- fix offline decrypt tool #111 (found in `/tools/decrypt.html`)
+- ribbon icon changes
+- code refactor and clean up
+
 ### 2.2.0
 - stronger encryption (thanks @brycx)
 - fix #92 - Enable selection text in Reading view
@@ -51,9 +58,9 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 <img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
 -->
 
-### Standalone, always encrypted, notes (.encrypted files)
+### Whole encrypted notes (.encrypted files)
 #### To create a new encrypted note
-1. Select 'Create encrypted note' from the command palette.
+1. Select 'Create encrypted note' from the command palette (or click the ribbon icon).
 2. Enter and confirm a password and optional hint to use.
 3. Edit your encrypted note (it's contents will be encrypted and saved to disk).
 
@@ -64,8 +71,19 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 #### To changing an encrypted notes password and hint
 1. Open the note as usual from the navigation tree.
 2. Enter the password for the note.
-3. Click 'Change Password' from the tab title bar or tab context menu.
+3. Click the 'Change Password' icon from the tab title bar or tab context menu.
 4. Enter the new password and hint.
+
+#### To encrypt/decrypt an existing note
+- Right-click the file and choose 'Encrypt note' or 'Decrypt note'.
+
+OR
+
+- Select the ribbon icon named 'Convert to or from an Encrypted note' to toggle the active file between encrypted and not.
+
+OR
+
+- Select 'Convert to or from an Encrypted note' from the command palette (or even better, bind a hot key)
 
 ### In-place Encryption
 
@@ -105,15 +123,14 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 ### Common Settings
 | | |
 |--|--|
-| Confirm password | Confirm password when encrypting |
+| Confirm password | Confirm password when encrypting (recommended) |
 | Remember password | Remember the last used password for this session. |
 | Remember Password Timeout | The number of minutes to remember the last used password. |
-| Remember Password Using | Remember passwords by using File or Parent path |
+| Remember Password Using | Remember passwords by using `File Name` or `Parent Folder` matching |
 
 ### Whole note encryption Settings
 | | |
 |--|--|
-| Add ribbon icon to create note | Adds a ribbon icon to the left bar to create an encrypted note. |
 | Default view for new tabs | The default view that a new encrypted note tab gets opened in |
 
 ### In-place encryption Settings
