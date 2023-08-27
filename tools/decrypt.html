@@ -3,8 +3,8 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Decryptor Tool for Obsidian Meld Encrypt Plugin</title>
-	<script src="crypto-helper.js"></script>
+	<title>Decrypt Tool for Obsidian Meld Encrypt Plugin</title>
+	<script src="offline-decrypt.js"></script>
 	<style>
 		:root{
 			font-family: Arial, Helvetica, sans-serif;
@@ -61,36 +61,11 @@
 			font-size: 0.8em;
 		}
 	</style>
-	<script defer>
-		function decryptHandler(){
-			const eTextEncrypted = document.querySelector('#et');
-			const ePassword = document.querySelector('#pw');
-			const eTextDecrypted = document.querySelector('#dt');
-			const eMessage = document.querySelector('#m');
-			
-			eMessage.innerHTML = '';
-			
-			const ch = new modules.CryptoHelperV2();
-			
-			ch.decryptFromBase64(
-				eTextEncrypted.value,
-				ePassword.value
-			).then( result => {
-				if (result ===  null){
-					eMessage.innerHTML = '👎 Decryption failed';
-					eTextDecrypted.value = '';
-				}else{
-					eMessage.innerHTML = '👍 Decrypted';
-					eTextDecrypted.value = result
-				}
-			});
-		}
-	</script>
 </head>
 <body>
 
 	<div class="row-500">
-		<h1>🔐 Decryptor Tool for Obsidian Meld Encrypt Plugin 🔐</h1>
+		<h1>🔐 Decrypt Tool for Obsidian Meld Encrypt Plugin 🔐</h1>
 		
 		<p>Use this tool to decrypt notes without using the Obsidian Meld Encrypt Plugin.</p>
 
@@ -100,7 +75,7 @@
 		<label for="pw">Password</label>
 		<div class="col">
 			<input id="pw" type="password">
-			<button type="button" onclick="decryptHandler()">🔓 Decrypt</button>
+			<button id="btnDecrypt" type="button">🔓 Decrypt</button>
 			<span id="m"></span>
 		</div>
 
@@ -111,6 +86,27 @@
 
 	</div>
 
+	<script>
+		document.getElementById('btnDecrypt').onclick = (ev) => decryptHandler();
 
+		async function decryptHandler(){
+			const eTextEncrypted = document.querySelector('#et');
+			const ePassword = document.querySelector('#pw');
+			const eTextDecrypted = document.querySelector('#dt');
+			const eMessage = document.querySelector('#m');
+			
+			eMessage.innerHTML = '';
+			
+			const result = await $.decrypt(eTextEncrypted.value, ePassword.value);
+
+			if (result ===  null){
+				eMessage.innerHTML = '👎 Decryption failed';
+				eTextDecrypted.value = '';
+			}else{
+				eMessage.innerHTML = '👍 Decrypted';
+				eTextDecrypted.value = result
+			}
+		}
+	</script>
 </body>
 </html>

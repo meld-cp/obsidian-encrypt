@@ -1,6 +1,8 @@
+import { TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache";
+import { Utils } from "./Utils";
 
-interface IPasswordAndHint{
+export interface IPasswordAndHint{
 	password: string;
 	hint: string;
 }
@@ -16,9 +18,13 @@ export class SessionPasswordService{
 	private static baseMinutesToExpire = 0;
 	private static expiryTime : number | null = null;
 
-	public static LevelFullPath = 'fullPath';
+	public static LevelFilename = 'filename';
 	public static LevelParentPath = 'parentPath';
-	private static level = SessionPasswordService.LevelFullPath;
+	private static allLevels = [
+		SessionPasswordService.LevelFilename,
+		SessionPasswordService.LevelParentPath
+	];
+	private static level = SessionPasswordService.LevelFilename;
 
 	public static setActive( isActive: boolean) {
 		SessionPasswordService.isActive = isActive;
@@ -40,7 +46,10 @@ export class SessionPasswordService{
 		if ( SessionPasswordService.level == level ){
 			return;
 		}
-		SessionPasswordService.level = level;
+		if ( SessionPasswordService.allLevels.contains(level) ){
+			SessionPasswordService.level = level;
+		}
+		SessionPasswordService.level = SessionPasswordService.LevelFilename;
 		this.clear();
 	}
 
@@ -54,7 +63,30 @@ export class SessionPasswordService{
 			SessionPasswordService.expiryTime = Date.now() + SessionPasswordService.baseMinutesToExpire * 1000 * 60;
 		}
 	}
-	
+
+	public static putByFile( pw: IPasswordAndHint, file:TFile ): void {
+		if (!SessionPasswordService.isActive){
+			return;
+		}
+
+		const key = SessionPasswordService.getFileCacheKey( file );
+		this.cache.put( key, pw );
+
+
+		SessionPasswordService.updateExpiryTime();
+	}
+
+	public static getByFile( file:TFile  ) : IPasswordAndHint {
+		if (!SessionPasswordService.isActive){
+			return SessionPasswordService.blankPasswordAndHint;
+		}
+		this.clearIfExpired();
+		SessionPasswordService.updateExpiryTime();
+
+		const key = SessionPasswordService.getFileCacheKey( file );
+		return this.cache.get( key, SessionPasswordService.blankPasswordAndHint );
+	}
+
 	public static putByPath( pw: IPasswordAndHint, path:string ): void {
 		if (!SessionPasswordService.isActive){
 			return;
@@ -92,6 +124,16 @@ export class SessionPasswordService{
 		}
 	}
 
+	private static getFileCacheKey( file : TFile ) : string {
+		switch (SessionPasswordService.level) {
+			case SessionPasswordService.LevelParentPath: {
+				return file.parent.path;
+			}
+			default:
+				return Utils.getFilePathExcludingExtension( file );
+		}
+	}
+
 	private static clearIfExpired() : void{
 		if ( SessionPasswordService.expiryTime == null ){
 			return;
@@ -100,6 +142,11 @@ export class SessionPasswordService{
 			return;
 		}
 		this.clear();
+	}
+
+	public static clearForFile( file: TFile ) : void {
+		const key = SessionPasswordService.getFileCacheKey( file );
+		this.cache.removeKey( key );
 	}
 
 	public static clearForPath( path: string ) : void {

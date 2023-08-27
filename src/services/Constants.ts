@@ -1,0 +1,1 @@
+export const ENCRYPTED_FILE_EXTENSION = 'encrypted';

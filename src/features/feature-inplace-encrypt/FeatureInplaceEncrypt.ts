@@ -9,38 +9,9 @@ import { UiHelper } from "../../services/UiHelper";
 import { SessionPasswordService } from "src/services/SessionPasswordService";
 import { CryptoHelperFactory } from "src/services/CryptoHelperFactory";
 import { Decryptable } from "./Decryptable";
+import { FeatureInplaceTextAnalysis } from "./featureInplaceTextAnalysis";
+import { _HINT, _PREFIXES, _PREFIX_A_VISIBLE, _PREFIX_B_VISIBLE, _PREFIX_ENCODE_DEFAULT, _PREFIX_ENCODE_DEFAULT_VISIBLE, _SUFFIXES, _SUFFIX_NO_COMMENT, _SUFFIX_WITH_COMMENT } from "./FeatureInplaceConstants";
 
-
-
-const _PREFIX_B = '%%🔐β ';
-const _PREFIX_B_VISIBLE = '🔐β ';
-
-const _PREFIX_A = '%%🔐α ';
-const _PREFIX_A_VISIBLE = '🔐α ';
-const _PREFIX_OBSOLETE = '%%🔐 ';
-
-const _PREFIX_ENCODE_DEFAULT = _PREFIX_B;
-const _PREFIX_ENCODE_DEFAULT_VISIBLE = _PREFIX_B_VISIBLE;
-
-// Should be listed by evaluation priority
-const _PREFIXES = [
-	_PREFIX_B,
-	_PREFIX_B_VISIBLE,
-	_PREFIX_A,
-	_PREFIX_A_VISIBLE,
-	_PREFIX_OBSOLETE,
-];
-
-const _SUFFIX_WITH_COMMENT = ' 🔐%%';
-const _SUFFIX_NO_COMMENT = ' 🔐';
-
-// Should be listed by evaluation priority
-const _SUFFIXES = [
-	_SUFFIX_WITH_COMMENT,
-	_SUFFIX_NO_COMMENT
-]
-
-const _HINT = '💡';
 
 export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	plugin:MeldEncrypt;
@@ -106,7 +77,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		
 		const encryptedText = InplaceTextHelper.removeMarkers( text, markerStart, markerEnd );
 		
-		const selectionAnalysis = new SelectionAnalysis( encryptedText );
+		const selectionAnalysis = new FeatureInplaceTextAnalysis( encryptedText );
 		
 		if ( !selectionAnalysis.canDecrypt ){
 			return;
@@ -167,7 +138,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	}
 	
 	private async showDecryptedResultForPassword( decryptable: Decryptable, pw:string ): Promise<boolean> {
-		const crypto =  CryptoHelperFactory.BuildFromDecryptable( decryptable );
+		const crypto =  CryptoHelperFactory.BuildFromDecryptableOrThrow( decryptable );
 
 		const decryptedText = await crypto.decryptFromBase64( decryptable.base64CipherText, pw );
 
@@ -375,7 +346,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		decryptInPlace: boolean,
 		allowEncryption = true
 	) : boolean {
-		const selectionAnalysis = new SelectionAnalysis( selectionText );
+		const selectionAnalysis = new FeatureInplaceTextAnalysis( selectionText );
 		//console.debug(selectionAnalysis);
 
 		if (selectionAnalysis.isEmpty) {
@@ -508,7 +479,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 		// decrypt
 
-		const crypto = CryptoHelperFactory.BuildFromDecryptable(decryptable);
+		const crypto = CryptoHelperFactory.BuildFromDecryptableOrThrow(decryptable);
 		const decryptedText = await crypto.decryptFromBase64(decryptable.base64CipherText, password);
 		if (decryptedText === null) {
 			new Notice('❌ Decryption failed!');
@@ -535,8 +506,8 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	private encodeEncryption( encryptedText: string, hint: string, showInReadingView: boolean ): string {
 		if (
-			!_PREFIXES.some( (prefix) => encryptedText.contains(prefix) )
-			&& !_SUFFIXES.some( (suffix) => encryptedText.contains(suffix) )
+			!_PREFIXES.some( (prefix) => encryptedText.includes(prefix) )
+			&& !_SUFFIXES.some( (suffix) => encryptedText.includes(suffix) )
 		) {
 			const prefix = showInReadingView ? _PREFIX_ENCODE_DEFAULT_VISIBLE : _PREFIX_ENCODE_DEFAULT;
 			const suffix = showInReadingView ? _SUFFIX_NO_COMMENT : _SUFFIX_WITH_COMMENT;
@@ -550,100 +521,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	}
 }
 
-class SelectionAnalysis{
-	processedText:string;
-	isEmpty: boolean;
-	
-	prefix: string;
-	suffix: string;
 
-	hasObsoleteEncryptedPrefix: boolean;
-	hasEncryptedPrefix: boolean;
-	hasEncryptedSuffix: boolean;
-	canDecrypt: boolean;
-	canEncrypt: boolean;
-	containsEncryptedMarkers: boolean;
-	decryptable? : Decryptable;
-
-	constructor(text: string){
-		this.process(text);
-	}
-
-	private process( text: string ) : void{
-		//console.debug('SelectionAnalysis.process', {text});
-		
-		this.processedText = text;
-
-		this.isEmpty = text.length === 0;
-
-		this.prefix = _PREFIXES.find( (prefix) => text.startsWith(prefix) ) ?? '';
-		this.suffix = _SUFFIXES.find( (suffix) => text.endsWith(suffix) ) ?? '';
-		
-		//console.debug( {prefix:this.prefix, suffix:this.suffix} );
-		
-		this.hasEncryptedPrefix = this.prefix.length > 0;
-		this.hasEncryptedSuffix = this.suffix.length > 0;
-
-		this.hasObsoleteEncryptedPrefix = this.prefix === _PREFIX_OBSOLETE;
-
-		this.containsEncryptedMarkers = [..._PREFIXES, ..._SUFFIXES].some( (marker) => text.contains(marker ));
-
-		this.canDecrypt = this.hasEncryptedPrefix && this.hasEncryptedSuffix;
-		this.canEncrypt = !this.hasEncryptedPrefix && !this.containsEncryptedMarkers;
-		
-		if (this.canDecrypt){
-			const decryptable = this.parseDecryptableContent(text);
-			if ( decryptable != null ){
-				this.decryptable = decryptable;
-			}else{
-				this.canDecrypt = false;
-			}
-		}
-	}
-
-	private parseDecryptableContent(text: string) : Decryptable | null {
-		const result = new Decryptable();
-
-		if (
-			!this.hasEncryptedPrefix
-			|| !this.hasEncryptedSuffix
-		){
-			return null; // invalid format
-		}
-		
-		if ( this.hasObsoleteEncryptedPrefix ){
-			result.version = 0;
-		}else if ( this.prefix == _PREFIX_B || this.prefix == _PREFIX_B_VISIBLE ){
-			result.version = 2;
-		}else if ( this.prefix == _PREFIX_A || this.prefix == _PREFIX_A_VISIBLE ){
-			result.version = 1;
-		}
-
-		// remove markers from start and end	
-		const content = text.substring(this.prefix.length, text.length - this.suffix.length);
-		//console.debug({content});
-
-		if ( [..._PREFIXES, ..._SUFFIXES].some( (marker) => content.contains( marker )) ){
-			// content, itself has markers
-			return null;
-		}
-
-		// check if there is a hint
-		if (content.substring(0,_HINT.length) == _HINT){
-			const endHintMarker = content.indexOf(_HINT,_HINT.length);
-			if (endHintMarker<0){
-				return null; // invalid format
-			}
-			result.hint = content.substring(_HINT.length,endHintMarker)
-			result.base64CipherText = content.substring(endHintMarker+_HINT.length);
-		}else{
-			result.base64CipherText = content;
-		}
-		
-		return result;
-
-	}
-}
 
 class Encryptable{
 	text:string;

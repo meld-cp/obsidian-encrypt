@@ -1,7 +1,7 @@
 {
 	"id": "meld-encrypt",
 	"name": "Meld Encrypt",
-	"version": "2.2.0",
+	"version": "2.3.0",
 	"minAppVersion": "1.0.3",
 	"description": "Hide secrets in your vault",
 	"author": "meld-cp",
@@ -10,5 +10,5 @@
 	"fundingUrl": {
 		"Buy Me a Coffee": "https://www.buymeacoffee.com/cleon",
 		"GitHub Sponsor": "https://github.com/sponsors/meld-cp"
-	  }
+	}
 }

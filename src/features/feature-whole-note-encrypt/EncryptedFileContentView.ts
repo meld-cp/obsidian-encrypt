@@ -4,7 +4,8 @@ import { SessionPasswordService } from 'src/services/SessionPasswordService';
 import { UiHelper } from 'src/services/UiHelper';
 import { IFeatureWholeNoteEncryptSettings } from './IFeatureWholeNoteEncryptSettings';
 import { ObsidianEx } from 'src/services/ObsidianEx';
-import { CryptoHelperFactory } from 'src/services/CryptoHelperFactory';
+import { FileDataHelper, JsonFileEncoding } from 'src/services/FileDataHelper';
+import { ENCRYPTED_FILE_EXTENSION } from 'src/services/Constants';
 
 enum EncryptedFileContentViewStateEnum{
 	init,
@@ -81,7 +82,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 	private actionLockFile(){
 		this.encryptionPassword = '';
-		SessionPasswordService.clearForPath( this.file.path );
+		SessionPasswordService.clearForFile( this.file );
 		this.refreshView(EncryptedFileContentViewStateEnum.decryptNote);
 	}
 
@@ -138,9 +139,9 @@ export class EncryptedFileContentView extends TextFileView {
 	}
 
 	private validatePassword ( pw: string ) : string {
-		if (pw.length == 0){
-			return 'Password is too short';
-		}
+		// if ( pw.length == 0 ){
+		// 	return 'Password is too short';
+		// }
 		return '';
 	}
 
@@ -179,7 +180,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 				await this.encodeAndSave();
 				
-				SessionPasswordService.putByPath( { password: password, hint: hint }, this.file.path );
+				SessionPasswordService.putByFile( { password: password, hint: hint }, this.file );
 
 				this.currentEditNoteMode = EditViewEnum.source;
 				this.refreshView( EncryptedFileContentViewStateEnum.editNote );
@@ -187,7 +188,7 @@ export class EncryptedFileContentView extends TextFileView {
 			}
 		}
 
-		const bestGuessPassAndHint = SessionPasswordService.getByPath( this.file.path );
+		const bestGuessPassAndHint = SessionPasswordService.getByFile( this.file );
 		let password = bestGuessPassAndHint.password;
 		let confirm = '';
 		let hint = bestGuessPassAndHint.hint;
@@ -267,13 +268,14 @@ export class EncryptedFileContentView extends TextFileView {
 			.setDesc('Please provide a password to unlock this note.')
 		;
 
-		UiHelper.buildPasswordSetting({
+		const sPassword = UiHelper.buildPasswordSetting({
 			container: inputContainer,
 			name:'Password:',
 			autoFocus : true,
 			placeholder: this.formatHint(this.hint),
 			onChangeCallback: (value) => {
 				this.encryptionPassword = value;
+				sPassword.setDesc( this.validatePassword(this.encryptionPassword) );
 			},
 			onEnterCallback: async () => await this.handleDecryptButtonClick()
 		});
@@ -290,19 +292,22 @@ export class EncryptedFileContentView extends TextFileView {
 		;
 
 		// try to decode and go to edit mode if password is known
-		const bestGuessPassAndHint = SessionPasswordService.getByPath( this.file.path );
+		const bestGuessPassAndHint = SessionPasswordService.getByFile( this.file );
 		this.encryptionPassword = bestGuessPassAndHint.password;
-		
-		this.decryptWithPassword( bestGuessPassAndHint.password )
-			.then( decryptedText => {
-				if ( decryptedText != null ){
-					this.currentEditorSourceText = decryptedText;
-					this.refreshView( EncryptedFileContentViewStateEnum.editNote );
-					new Notice('Decrypted using remembered password', 2000);
-				}
-			})
-		;
 
+		if ( bestGuessPassAndHint.password.length > 0 ){
+			// try to decrypt with known password
+			
+			this.decryptWithPassword( bestGuessPassAndHint.password )
+				.then( decryptedText => {
+					if ( decryptedText != null ){
+						this.currentEditorSourceText = decryptedText;
+						this.refreshView( EncryptedFileContentViewStateEnum.editNote );
+						new Notice('Decrypted using remembered password', 2000);
+					}
+				})
+			;
+		}
 
 	}
 
@@ -405,7 +410,7 @@ export class EncryptedFileContentView extends TextFileView {
 				this.encodeAndSave();
 				this.refreshView( EncryptedFileContentViewStateEnum.editNote );
 
-				SessionPasswordService.putByPath( {password: newPassword, hint: newHint}, this.file.path );
+				SessionPasswordService.putByFile( {password: newPassword, hint: newHint}, this.file );
 
 				new Notice('Password and Hint were changed');
 			}
@@ -544,9 +549,9 @@ export class EncryptedFileContentView extends TextFileView {
 	}
 
 	async decryptWithPassword( pw: string ) : Promise<string | null>{
-		if ( pw.length == 0 ){
-			return null;
-		}
+		// if ( pw.length == 0 ){
+		// 	return null;
+		// }
 		const fileData = JsonFileEncoding.decode( this.data );
 		const decryptedText = await FileDataHelper.decrypt( fileData, pw );
 		return decryptedText;
@@ -558,7 +563,7 @@ export class EncryptedFileContentView extends TextFileView {
 		if (decryptedText === null){
 			new Notice('Decryption failed');
 		}else{
-			SessionPasswordService.putByPath( {password: this.encryptionPassword, hint: this.hint }, this.file.path );
+			SessionPasswordService.putByFile( {password: this.encryptionPassword, hint: this.hint }, this.file );
 			this.currentEditorSourceText = decryptedText;
 			this.refreshView( EncryptedFileContentViewStateEnum.editNote);
 		}
@@ -568,7 +573,7 @@ export class EncryptedFileContentView extends TextFileView {
 	// important
 	canAcceptExtension(extension: string): boolean {
 		//console.debug('EncryptedFileContentView.canAcceptExtension', {extension});
-		return extension == 'encrypted';
+		return extension == ENCRYPTED_FILE_EXTENSION;
 	}
 
 	// important
@@ -629,52 +634,4 @@ export class EncryptedFileContentView extends TextFileView {
 	}
 
 
-}
-
-export class FileData {
-	
-	public version = '1.0';
-	public hint: string;
-	public encodedData:string;
-
-	constructor( version:string, hint:string, encodedData:string ){
-		this.version = version;
-		this.hint = hint;
-		this.encodedData = encodedData;
-	}
-}
-
-class FileDataHelper{
-
-	public static DEFAULT_VERSION = '2.0';
-
-	public static async encode( pass: string, hint:string, text:string ) : Promise<FileData>{
-		const crypto = CryptoHelperFactory.BuildDefault();
-		const encryptedData = await crypto.encryptToBase64(text, pass);
-		return new FileData( FileDataHelper.DEFAULT_VERSION, hint, encryptedData);
-	}
-
-	public static async decrypt( data: FileData, pass:string ) : Promise<string|null>{
-		if ( data.encodedData == '' ){
-			return '';
-		}
-		const crypto = CryptoHelperFactory.BuildFromFileData( data );
-		return await crypto.decryptFromBase64( data.encodedData, pass );
-	}
-}
-
-class JsonFileEncoding {
-
-	public static encode( data: FileData ) : string{
-		//console.debug( 'JsonFileEncoding.encode', {data} );
-		return JSON.stringify(data, null, 2);
-	}
-
-	public static decode( encodedText:string ) : FileData{
-		//console.debug('JsonFileEncoding.decode',{encodedText});
-		if ( encodedText === '' ){
-			return new FileData( FileDataHelper.DEFAULT_VERSION, '', '' );
-		}
-		return JSON.parse( encodedText ) as FileData;
-	}
 }

@@ -4,30 +4,32 @@ import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
 import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
 import { IFeatureWholeNoteEncryptSettings } from "./IFeatureWholeNoteEncryptSettings";
+import { ENCRYPTED_FILE_EXTENSION } from "src/services/Constants";
 
 export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeature {
 
 	plugin:MeldEncrypt;
 	settings: IFeatureWholeNoteEncryptSettings;
 
-	private ribbonIconCreateNewNote?: HTMLElement | null;
-
 	async onload( plugin: MeldEncrypt, settings:IMeldEncryptPluginSettings ) {
 		this.plugin = plugin;
 		this.settings = settings.featureWholeNoteEncrypt;
-		this.updateUiForSettings();
 		
+		this.plugin.addRibbonIcon( 'file-lock-2', 'New encrypted note', (ev)=>{
+			this.processCreateNewEncryptedNoteCommand();
+		});
+
 		this.plugin.registerView(
 			VIEW_TYPE_ENCRYPTED_FILE_CONTENT,
 			(leaf) => new EncryptedFileContentView(leaf, this.settings )
 		);
 			
-		this.plugin.registerExtensions(['encrypted'], VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
+		this.plugin.registerExtensions([ENCRYPTED_FILE_EXTENSION], VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
 			
 		this.plugin.addCommand({
 			id: 'meld-encrypt-create-new-note',
 			name: 'Create new encrypted note',
-			icon: 'lock',
+			icon: 'file-lock-2',
 			callback: () => this.processCreateNewEncryptedNoteCommand(),
 		});
 		
@@ -53,8 +55,8 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			const newFilepath = normalizePath( newFileFolder.path + "/" + newFilename );
 			//console.debug('processCreateNewEncryptedNoteCommand', {newFilepath});
 			
-			this.plugin.app.vault.create(newFilepath,'').then( async f=>{
-				const leaf = this.plugin.app.workspace.getLeaf( false );
+			this.plugin.app.vault.create(newFilepath,'').then( async f => {
+				const leaf = this.plugin.app.workspace.getLeaf( true );
 				await leaf.openFile( f );
 			}).catch( reason =>{
 				new Notice(reason, 10000);
@@ -81,22 +83,6 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 		;
 
 		new Setting(containerEl)
-			.setName('Add ribbon icon to create note')
-			.setDesc('Adds a ribbon icon to the left bar to create an encrypted note.')
-			.addToggle( toggle =>{
-				toggle
-					.setValue(this.settings.addRibbonIconToCreateNote)
-				
-					.onChange( async value => {
-						this.settings.addRibbonIconToCreateNote = value;
-						await saveSettingCallback();
-						this.updateUiForSettings();
-					})
-				;
-			})
-		;
-
-		new Setting(containerEl)
 			.setName('Default view for new tabs')
 			.setDesc('The default view that a new encrypted note tab gets opened in')
 			.addDropdown( cb =>{
@@ -108,7 +94,6 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 					.onChange( async value => {
 						this.settings.defaultView = value;
 						await saveSettingCallback();
-						//this.updateUiForSettings();
 					})
 				;
 			})
@@ -116,20 +101,4 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 
 	}
 
-	public updateUiForSettings(){
-		if (this.settings.addRibbonIconToCreateNote){
-			// turn on ribbon icon
-			if (this.ribbonIconCreateNewNote == null){
-				this.ribbonIconCreateNewNote = this.plugin.addRibbonIcon( 'lock', 'Create new encrypted note', (ev)=>{
-					this.processCreateNewEncryptedNoteCommand();
-				});
-			}
-		}else{
-			// turn off ribbon icon
-			if (this.ribbonIconCreateNewNote != null){
-				this.ribbonIconCreateNewNote.remove();
-				this.ribbonIconCreateNewNote = null;
-			}
-		}
-	}
 }
