@@ -27,7 +27,7 @@ export class FileDataHelper{
 		if ( data.encodedData == '' ){
 			return '';
 		}
-		const crypto = CryptoHelperFactory.BuildFromFileData( data );
+		const crypto = CryptoHelperFactory.BuildFromFileDataOrThrow( data );
 		return await crypto.decryptFromBase64( data.encodedData, pass );
 	}
 }
@@ -39,7 +39,7 @@ export class JsonFileEncoding {
 		return JSON.stringify(data, null, 2);
 	}
 
-	public static decode( encodedText:string ) : FileData{
+	public static decode( encodedText:string ) : FileData {
 		//console.debug('JsonFileEncoding.decode',{encodedText});
 		if ( encodedText === '' ){
 			return new FileData( FileDataHelper.DEFAULT_VERSION, '', '' );

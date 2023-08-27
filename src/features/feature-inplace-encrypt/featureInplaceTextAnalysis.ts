@@ -44,7 +44,7 @@ export class FeatureInplaceTextAnalysis{
 		
 		if (this.canDecrypt){
 			const decryptable = this.parseDecryptableContent(text);
-			console.debug( {decryptable} );
+			//console.debug( {decryptable} );
 			if ( decryptable != null ){
 				this.decryptable = decryptable;
 			}else{

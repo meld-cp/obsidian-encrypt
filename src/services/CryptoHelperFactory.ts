@@ -11,7 +11,15 @@ export class CryptoHelperFactory{
 		return new CryptoHelper2304( 16, 16, 210000 );
 	}
 
-	public static BuildFromFileData( data: FileData ) : ICryptoHelper {
+	public static BuildFromFileDataOrThrow( data: FileData ) : ICryptoHelper {
+		const result = CryptoHelperFactory.BuildFromFileDataOrNull(data);
+		if ( result != null ){
+			return result;
+		}
+		throw new Error( `Unable to determine ICryptoHelper for File ver ${data.version}`);
+	}
+
+	public static BuildFromFileDataOrNull( data: FileData ) : ICryptoHelper | null {
 		if ( data.version == '1.0' ){
 			return new CryptoHelper();
 		}
@@ -21,7 +29,7 @@ export class CryptoHelperFactory{
 			return new CryptoHelper2304( 16, 16, 210000  );
 		}
 
-		throw new Error( `Unable to determine ICryptoHelper for File ver ${data.version}`);
+		return null;
 	}
 
 	public static BuildFromDecryptableOrThrow( decryptable: Decryptable ) : ICryptoHelper {
