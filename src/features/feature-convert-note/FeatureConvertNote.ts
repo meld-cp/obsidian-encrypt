@@ -198,9 +198,8 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		});
 
 		try{
-			//return await this.updateFile( file, newFileExtension, content );
 			const newFilepath = Utils.getFilePathWithNewExtension(file, newFileExtension);
-			await app.vault.rename( file, newFilepath );
+			await app.fileManager.renameFile( file, newFilepath );
 			await app.vault.modify( file, content );
 			SessionPasswordService.putByFile( pw, file );
 		}finally{

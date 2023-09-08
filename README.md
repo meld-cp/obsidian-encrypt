@@ -25,6 +25,9 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### 2.3.1
+- fix encrypt/decrypt of notes don't update links (#118)
+
 ### 2.3.0
 - add encrypt/decrypt of `.md` or `.encrypted` notes #68 (via file context menu, ribbon icon or command palette, helps with #91, #103, #108, #114)
 - fix double blank line #107
