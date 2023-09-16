@@ -6,7 +6,8 @@ import PluginPasswordModal from "src/PluginPasswordModal";
 import { IPasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
 import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
 import { Utils } from "src/services/Utils";
-import { ENCRYPTED_FILE_EXTENSION } from "src/services/Constants";
+import "src/services/Constants";
+import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "src/services/Constants";
 
 export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	
@@ -41,7 +42,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 							}
 						);
 					}
-					if ( file.extension == ENCRYPTED_FILE_EXTENSION ){
+					if ( ENCRYPTED_FILE_EXTENSIONS.contains( file.extension ) ){
 						menu.addItem( (item) => {
 							item
 								.setTitle('Decrypt note')
@@ -71,7 +72,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		if ( file == null ){
 			return false;
 		}
-		return file.extension == ENCRYPTED_FILE_EXTENSION;
+		return ENCRYPTED_FILE_EXTENSIONS.contains( file.extension );
 	}
 
 	private processCommandEncryptNote( file:TFile ){
@@ -107,7 +108,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			});
 		}
 
-		if ( file?.extension == ENCRYPTED_FILE_EXTENSION ){
+		if ( file && ENCRYPTED_FILE_EXTENSIONS.contains( file.extension ) ){
 			this.getPasswordAndDecryptFile( file ).catch( reason => {
 				if (reason){
 					new Notice(reason, 10000);
@@ -130,7 +131,12 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 			const encryptedFileContent = await this.encryptFile(file, pw);
 
-			await this.closeUpdateRememberPasswordThenReopen( file, ENCRYPTED_FILE_EXTENSION, encryptedFileContent, pw );
+			await this.closeUpdateRememberPasswordThenReopen(
+				file,
+				ENCRYPTED_FILE_EXTENSION_DEFAULT,
+				encryptedFileContent,
+				pw
+			);
 			
 			new Notice( '🔐 Note was encrypted 🔐' );
 

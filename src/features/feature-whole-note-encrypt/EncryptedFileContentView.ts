@@ -5,7 +5,8 @@ import { UiHelper } from 'src/services/UiHelper';
 import { IFeatureWholeNoteEncryptSettings } from './IFeatureWholeNoteEncryptSettings';
 import { ObsidianEx } from 'src/services/ObsidianEx';
 import { FileDataHelper, JsonFileEncoding } from 'src/services/FileDataHelper';
-import { ENCRYPTED_FILE_EXTENSION } from 'src/services/Constants';
+import 'src/services/Constants';
+import { ENCRYPTED_FILE_EXTENSIONS } from 'src/services/Constants';
 
 enum EncryptedFileContentViewStateEnum{
 	init,
@@ -572,8 +573,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 	// important
 	canAcceptExtension(extension: string): boolean {
-		//console.debug('EncryptedFileContentView.canAcceptExtension', {extension});
-		return extension == ENCRYPTED_FILE_EXTENSION;
+		return ENCRYPTED_FILE_EXTENSIONS.contains( extension );
 	}
 
 	// important

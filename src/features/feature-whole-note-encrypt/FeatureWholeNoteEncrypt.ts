@@ -4,7 +4,8 @@ import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
 import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
 import { IFeatureWholeNoteEncryptSettings } from "./IFeatureWholeNoteEncryptSettings";
-import { ENCRYPTED_FILE_EXTENSION } from "src/services/Constants";
+import "src/services/Constants";
+import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "src/services/Constants";
 
 export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeature {
 
@@ -24,7 +25,10 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			(leaf) => new EncryptedFileContentView(leaf, this.settings )
 		);
 			
-		this.plugin.registerExtensions([ENCRYPTED_FILE_EXTENSION], VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
+		this.plugin.registerExtensions(
+			ENCRYPTED_FILE_EXTENSIONS,
+			VIEW_TYPE_ENCRYPTED_FILE_CONTENT
+		);
 			
 		this.plugin.addCommand({
 			id: 'meld-encrypt-create-new-note',
@@ -41,7 +45,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 
 	private processCreateNewEncryptedNoteCommand(): boolean{
 		try{
-			const newFilename = moment().format('[Untitled] YYYYMMDD hhmmss[.encrypted]');
+			const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
 			
 			let newFileFolder : TFolder;
 			const activeFile = this.plugin.app.workspace.getActiveFile();
