@@ -51,8 +51,8 @@ export class EncryptedFileContentView extends TextFileView {
 		this.defaultEditNoteView = ( settings.defaultView as EditViewEnum ) ?? EditViewEnum.source;
 		this.currentEditNoteMode = this.defaultEditNoteView;
 
-		this.elActionEditView = this.addAction( this.iconSourceView, 'Source', () => this.actionToggleEditMode() );
-		this.elActionReadingView = this.addAction( this.iconReadingView, 'Reading', () => this.actionToggleEditMode() );
+		this.elActionEditView = this.addAction( this.iconSourceView, 'Source', () => this.toggleReadingView() );
+		this.elActionReadingView = this.addAction( this.iconReadingView, 'Reading', () => this.toggleReadingView() );
 		this.elActionIconLockNote = this.addAction( this.iconLockFile, 'Lock', () => this.actionLockFile() );
 		this.elActionChangePassword = this.addAction( this.iconChangePassword, 'Change Password', () => this.actionChangePassword() );
 		
@@ -64,9 +64,10 @@ export class EncryptedFileContentView extends TextFileView {
 		this.containerEl.classList.add('meld-encrypt-encrypted-note-view');
 		this.contentEl.classList.add('meld-encrypt-encrypted-note-view-content');
 
+
 	}
 
-	private actionToggleEditMode(){
+	public toggleReadingView(){
 		if ( this.currentView != EncryptedFileContentViewStateEnum.editNote ){
 			return;
 		}
@@ -101,7 +102,7 @@ export class EncryptedFileContentView extends TextFileView {
 					.setSection('action')
 					.setIcon( this.iconToggleEditView )
 					.setTitle('Toggle Editing/Reading')
-					.onClick( () => this.actionToggleEditMode() )
+					.onClick( () => this.toggleReadingView() )
 				;
 			});
 			menu.addItem( m =>{
