@@ -74,7 +74,7 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 1. Open the note as usual from the navigation tree.
 2. Enter the password for the note.
 
-#### To changing an encrypted notes password and hint
+#### To change an encrypted note's password and hint
 1. Open the note as usual from the navigation tree.
 2. Enter the password for the note.
 3. Click the 'Change Password' icon from the tab title bar or tab context menu.
