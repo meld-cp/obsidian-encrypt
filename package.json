@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-sample-plugin",
-	"version": "2.3.1",
+	"version": "2.3.2",
 	"description": "Hide secrets in your vault",
 	"main": "main.js",
 	"scripts": {
