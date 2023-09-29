@@ -36,6 +36,13 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			icon: 'file-lock-2',
 			callback: () => this.processCreateNewEncryptedNoteCommand(),
 		});
+
+		this.plugin.addCommand({
+			id: 'meld-encrypt-toggle-reading-view',
+			name: 'Toggle Reading View',
+			icon: 'edit',
+			callback: () => this.processToggleReadingViewCommand(),
+		});
 		
 	}
 
@@ -43,7 +50,12 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 		this.plugin.app.workspace.detachLeavesOfType(VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
 	}
 
-	private processCreateNewEncryptedNoteCommand(): boolean{
+	private processToggleReadingViewCommand() {
+		const view = this.plugin.app.workspace.getActiveViewOfType( EncryptedFileContentView );
+		view?.toggleReadingView();
+	}
+
+	private processCreateNewEncryptedNoteCommand() {
 		try{
 			const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
 			
@@ -66,12 +78,9 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 				new Notice(reason, 10000);
 			});
 
-			return true;
-			
 		}catch(e){
 			console.error(e);
 			new Notice(e, 10000);
-			return false;
 		}
 
 	}
