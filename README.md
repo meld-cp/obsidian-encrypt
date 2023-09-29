@@ -25,6 +25,9 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### 2.3.2
+- change to using `.mdenc` file extensions for encrypted notes ([#117](https://github.com/meld-cp/obsidian-encrypt/issues/117))
+
 ### 2.3.1
 - fix encrypt/decrypt of notes don't update links (#118)
 
