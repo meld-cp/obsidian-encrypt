@@ -33,16 +33,16 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 - fix encrypt/decrypt of notes don't update links (#118)
 
 ### 2.3.0
-- add encrypt/decrypt of `.md` or `.encrypted` notes #68 (via file context menu, ribbon icon or command palette, helps with #91, #103, #108, #114)
-- fix double blank line #107
-- fix offline decrypt tool #111 (found in `/tools/decrypt.html`)
+- add encrypt/decrypt of `.md` or `.encrypted` notes [#68](https://github.com/meld-cp/obsidian-encrypt/issues/68) (via file context menu, ribbon icon or command palette, helps with [#91](https://github.com/meld-cp/obsidian-encrypt/issues/91), [#103](https://github.com/meld-cp/obsidian-encrypt/issues/103), [#108](https://github.com/meld-cp/obsidian-encrypt/issues/108), [#114](https://github.com/meld-cp/obsidian-encrypt/issues/114))
+- fix double blank line [#107](https://github.com/meld-cp/obsidian-encrypt/issues/107)
+- fix offline decrypt tool [#111](https://github.com/meld-cp/obsidian-encrypt/issues/111) (found in `/tools/decrypt.html`)
 - ribbon icon changes
 - code refactor and clean up
 
 ### 2.2.0
 - stronger encryption (thanks @brycx)
-- fix #92 - Enable selection text in Reading view
-- fix #93 - Encrypting text in-place in a table breaks
+- fix [#92](https://github.com/meld-cp/obsidian-encrypt/issues/92) - Enable selection text in Reading view
+- fix [#93](https://github.com/meld-cp/obsidian-encrypt/issues/93) - Encrypting text in-place in a table breaks
 
 ### 2.1.3
 - follow 'readable line length' and 'show inline title' settings in encrypted notes
@@ -193,8 +193,8 @@ Due to popular demand, the encrypt in-place functionality is no longer scheduled
 
 ### v2.0.1
 Bug fixes
-- fix large files can't be encrypted (#41)
-- add 'Change Password' and 'Lock' actions to note tab context menu (#49)
+- fix large files can't be encrypted ([#41](https://github.com/meld-cp/obsidian-encrypt/issues/41))
+- add 'Change Password' and 'Lock' actions to note tab context menu ([#49](https://github.com/meld-cp/obsidian-encrypt/issues/49))
 
 ### v2.0.0
 
