@@ -39,20 +39,6 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 - ribbon icon changes
 - code refactor and clean up
 
-### 2.2.0
-- stronger encryption (thanks @brycx)
-- fix [#92](https://github.com/meld-cp/obsidian-encrypt/issues/92) - Enable selection text in Reading view
-- fix [#93](https://github.com/meld-cp/obsidian-encrypt/issues/93) - Encrypting text in-place in a table breaks
-
-### 2.1.3
-- follow 'readable line length' and 'show inline title' settings in encrypted notes
-- update layout and styling
-- enable spell check when editing
-
-### 2.1.2
-- add inline encrypted text marker (clickable) in reading view
-
-
 **(See more at the bottom of this page)**
 
 ---
@@ -158,6 +144,19 @@ Thank you for your support 😊
 ---
 
 ## ⚜️ Previous changes
+
+### 2.2.0
+- stronger encryption (thanks @brycx)
+- fix [#92](https://github.com/meld-cp/obsidian-encrypt/issues/92) - Enable selection text in Reading view
+- fix [#93](https://github.com/meld-cp/obsidian-encrypt/issues/93) - Encrypting text in-place in a table breaks
+
+### 2.1.3
+- follow 'readable line length' and 'show inline title' settings in encrypted notes
+- update layout and styling
+- enable spell check when editing
+
+### 2.1.2
+- add inline encrypted text marker (clickable) in reading view
 
 ### 2.1.1
 - Limited support for markdown in `.encrypted` notes
