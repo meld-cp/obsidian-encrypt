@@ -30,7 +30,7 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 - change to using `.mdenc` file extensions for encrypted notes ([#117](https://github.com/meld-cp/obsidian-encrypt/issues/117))
 
 ### 2.3.1
-- fix encrypt/decrypt of notes don't update links (#118)
+- fix encrypt/decrypt of notes don't update links ([#118](https://github.com/meld-cp/obsidian-encrypt/issues/118))
 
 ### 2.3.0
 - add encrypt/decrypt of `.md` or `.encrypted` notes [#68](https://github.com/meld-cp/obsidian-encrypt/issues/68) (via file context menu, ribbon icon or command palette, helps with [#91](https://github.com/meld-cp/obsidian-encrypt/issues/91), [#103](https://github.com/meld-cp/obsidian-encrypt/issues/103), [#108](https://github.com/meld-cp/obsidian-encrypt/issues/108), [#114](https://github.com/meld-cp/obsidian-encrypt/issues/114))
