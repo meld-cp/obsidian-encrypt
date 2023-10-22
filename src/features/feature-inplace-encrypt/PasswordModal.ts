@@ -5,7 +5,7 @@ export default class PasswordModal extends Modal {
 	
 	// input
 	private defaultPassword?: string | null = null;
-	private defaultHint?: string | null = null;
+	private defaultHint: string;
 	private confirmPassword: boolean;
 	private isEncrypting: boolean;
 	public showInReadingView: boolean;
@@ -13,7 +13,7 @@ export default class PasswordModal extends Modal {
 	// output
 	public resultConfirmed = false;
 	public resultPassword?: string | null = null;
-	public resultHint?: string | null = null;
+	public resultHint: string;
 	public resultShowInReadingView?: boolean | null = null;
 
 	constructor(
@@ -29,7 +29,7 @@ export default class PasswordModal extends Modal {
 		this.confirmPassword = confirmPassword;
 		this.showInReadingView = defaultShowInReadingView
 		this.isEncrypting = isEncrypting;
-		this.defaultHint = hint;
+		this.defaultHint = hint ?? '';
 	}
 
 	onOpen() {
@@ -41,7 +41,7 @@ export default class PasswordModal extends Modal {
 
 		let password = this.defaultPassword ?? '';
 		let confirmPass = '';
-		let hint = this.defaultHint ?? '';
+		let hint = this.defaultHint;
 		let showInReadingView = this.showInReadingView;
 
 		new Setting(contentEl).setHeading().setName(
@@ -53,7 +53,7 @@ export default class PasswordModal extends Modal {
 		UiHelper.buildPasswordSetting({
 			container: contentEl,
 			name: 'Password:',
-			placeholder: this.isEncrypting ? '' : `Hint: ${this.defaultHint}`,
+			placeholder: ( this.isEncrypting || hint.length == 0 ) ? '' : `Hint: ${hint}`,
 			initialValue: password,
 			autoFocus: true,
 			onChangeCallback: (value) => {
@@ -200,7 +200,7 @@ export default class PasswordModal extends Modal {
 	private invalidate(){
 		this.resultConfirmed = false;
 		this.resultPassword = null;
-		this.resultHint = null;
+		this.resultHint = '';
 	}
 
 }
