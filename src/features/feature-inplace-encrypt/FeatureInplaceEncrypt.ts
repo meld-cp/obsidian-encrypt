@@ -10,7 +10,7 @@ import { SessionPasswordService } from "src/services/SessionPasswordService";
 import { CryptoHelperFactory } from "src/services/CryptoHelperFactory";
 import { Decryptable } from "./Decryptable";
 import { FeatureInplaceTextAnalysis } from "./featureInplaceTextAnalysis";
-import { _HINT, _PREFIXES, _PREFIX_A_VISIBLE, _PREFIX_B_VISIBLE, _PREFIX_ENCODE_DEFAULT, _PREFIX_ENCODE_DEFAULT_VISIBLE, _SUFFIXES, _SUFFIX_NO_COMMENT, _SUFFIX_WITH_COMMENT } from "./FeatureInplaceConstants";
+import { _HINT, _PREFIXES, _PREFIX_ENCODE_DEFAULT, _PREFIX_ENCODE_DEFAULT_VISIBLE, _SUFFIXES, _SUFFIX_NO_COMMENT, _SUFFIX_WITH_COMMENT } from "./FeatureInplaceConstants";
 
 
 export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
@@ -48,61 +48,70 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	}
 
 	private async processEncryptedCodeBlockProcessor(el: HTMLElement, ctx: MarkdownPostProcessorContext){
-
 		const si = ctx.getSectionInfo(el);
 		if (si == null){
 			return;
 		}
 
-		// isolate code block lines
+		// Isolate code block lines
 		const text = InplaceTextHelper.extractTextLines( si.text, si.lineStart, si.lineEnd );
-
 		
-		const markerStart = InplaceTextHelper.findFirstMarker( _PREFIXES, text );
-		if (
-			markerStart == null
-			|| !(
-				markerStart.marker == _PREFIX_A_VISIBLE
-				|| markerStart.marker == _PREFIX_B_VISIBLE
-			)
-		){
-			//console.debug( 'not visible or null', markerStart );
-			return;
+		// Replace encrypted text with a bindable marker
+		let newMd = ''
+		let decryptable = ''
+		let state = 0;
+		for ( let i = 0; i < text.length ; i++ ) {
+			const ch1 = text.charAt(i);
+			const ch2 = text.charAt(i+1);
+			if ( state == 0 /* find start marker */ ){
+				if ( ch1 == '\uD83D' && ch2 == '\uDD10' /*🔐*/ ){
+					i++;
+					decryptable = '';
+					state = 1;
+				}else{
+					newMd += ch1;
+				}
+			} else if ( state == 1 /* gather encrypted text */ ){
+				if ( ch1 == '\uD83D' && ch2 == '\uDD10' /*🔐*/ ){
+					newMd += `<span class="meld-encrypt-inline-reading-marker" data-meld-encrypt-encrypted="🔐${decryptable}🔐">🔐</span>`;
+					i++;
+					state = 0;
+				}else{
+					decryptable += ch1;
+				}
+			}
+			
 		}
-		
-		const markerEnd = InplaceTextHelper.findFirstMarker( _SUFFIXES, text, markerStart.position + markerStart.marker.length);
-		if ( markerEnd == null ){
-			return;
-		}
-		
-		const encryptedText = InplaceTextHelper.removeMarkers( text, markerStart, markerEnd );
-		
-		const selectionAnalysis = new FeatureInplaceTextAnalysis( encryptedText );
-		
-		if ( !selectionAnalysis.canDecrypt ){
-			return;
-		}
-		
-		const textBeforeIndicator = InplaceTextHelper.extractTextBeforeMarker( text, markerStart );
-		const textAfterIndicator = InplaceTextHelper.extractTextAfterMarker( text, markerEnd );
-
-		const newMd = textBeforeIndicator
-			+ '<span class="meld-encrypt-inline-reading-marker">🔐</span>'
-			+ textAfterIndicator
-		;
 
 		el.empty();
 		await MarkdownRenderer.renderMarkdown( newMd, el, ctx.sourcePath, this.plugin );
 		
-		//console.debug( {el} );
-		const elIndicator = el.querySelector('.meld-encrypt-inline-reading-marker') as HTMLSpanElement;
-		elIndicator?.onClickEvent( async () =>
-			await this.handleReadingIndicatorClick(
-				ctx.sourcePath,
-				selectionAnalysis.decryptable
-			)
-		);
+		// bind events
+		const elIndicators = el.querySelectorAll('.meld-encrypt-inline-reading-marker');
+		this.bindReadingIndicatorEventHandlers( ctx.sourcePath, elIndicators );
 
+	}
+
+	private bindReadingIndicatorEventHandlers( sourcePath: string, elements: NodeListOf<Element> ){
+		elements.forEach( el => {
+			const htmlEl = el as HTMLElement;
+			if ( htmlEl == null ){
+				return;
+			}
+			
+			htmlEl.onClickEvent( async (ev) => {
+				const targetEl = ev.target as HTMLElement;
+				if ( targetEl == null ){
+					return;
+				}
+				const encryptedText = targetEl.dataset['meldEncryptEncrypted'] as string;
+				if ( encryptedText == null ){
+					return;
+				}
+				const selectionAnalysis = new FeatureInplaceTextAnalysis( encryptedText );
+				await this.handleReadingIndicatorClick( sourcePath, selectionAnalysis.decryptable );
+			});
+		} );
 	}
 
 	private async handleReadingIndicatorClick( path: string, decryptable?:Decryptable ){
@@ -546,6 +555,7 @@ class InplaceTextHelper{
 	}
 
 	public static extractTextLines(text: string, lineStart: number, lineEnd: number) {
+		//console.debug({'text.split' : text.split('\n')})
 		return text.split('\n').slice(lineStart, lineEnd+1).join('\n');
 	}
 
