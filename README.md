@@ -25,6 +25,11 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### 2.3.3
+- fix broken consecutive in-place markers in reading view ([#102](https://github.com/meld-cp/obsidian-encrypt/issues/102))
+- fix bottom text is hidden when editing encrypted whole-notes ([#124](https://github.com/meld-cp/obsidian-encrypt/issues/124))
+
+
 ### 2.3.2
 - add key-bindable command to toggle reading view for encrypted notes ([#116](https://github.com/meld-cp/obsidian-encrypt/issues/116))
 - change to using `.mdenc` file extensions for encrypted notes ([#117](https://github.com/meld-cp/obsidian-encrypt/issues/117))
