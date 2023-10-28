@@ -342,22 +342,91 @@ export class EncryptedFileContentView extends TextFileView {
 		this.addHeader( container, 'Editing an encrypted note');
 
 		// build source view
-		const editorContainer = container.createDiv( { cls:'editor-source-view' } );
-		editorContainer.spellcheck = true;
-		editorContainer.autocapitalize = 'on';
-		editorContainer.translate = false;
-		editorContainer.contentEditable = 'plaintext-only';
-		//console.debug( 'addEditorSourceView', {currentEditorSourceText:this.currentEditorSourceText} );
-		editorContainer.innerText = this.currentEditorSourceText;
-
+		const editorContainer = container.createDiv( { cls:'editor-source-view' }, el =>{
+			el.spellcheck = true;
+			el.autocapitalize = 'on';
+			el.translate = false;
+			el.contentEditable = 'plaintext-only';
+			el.style.tabSize = '4';
+			el.innerText = this.currentEditorSourceText;
+		} );
 
 		editorContainer.focus();
 
-		editorContainer.on('input', '*', async (ev, target) =>{
-			this.currentEditorSourceText = editorContainer.innerText;
-			await this.encodeAndSave();
+		editorContainer.on( 'keydown', '*', (ev, target) => {
+			if ( ev.key == 'Tab' ){
+				this.handleTabInEditor( ev, editorContainer );
+			}
+		});
+
+		editorContainer.on('input', '*', async (ev, target) => {
+			this.updateAndSaveEditorSourceText(editorContainer);
 		});
 	
+	}
+
+	private async updateAndSaveEditorSourceText( editor: HTMLElement ){
+		this.currentEditorSourceText = editor.innerText;
+		await this.encodeAndSave();
+	}
+
+	private handleTabInEditor( ev:KeyboardEvent, editor: HTMLElement ){
+
+		const sel = window.getSelection();
+		if ( sel == null || sel.rangeCount < 1 ){
+			return;
+		}
+
+		ev.preventDefault();
+
+		const indenting = !ev.shiftKey;
+
+		for (let i = 0; i < sel.rangeCount; i++) {
+			
+			const rng = sel.getRangeAt(i);
+			const rangeNodes = this.getRangeNodes( rng );
+
+			for ( let j = 0; j < rangeNodes.length; j++ ) {
+				
+				const n = rangeNodes[j];
+
+				if ( n instanceof Text ){
+
+					if ( indenting ){
+						n.insertData( 0, '\t' );
+					}else{
+						if ( n.data.startsWith( '\t' ) ){
+							n.replaceData( 0, 1, '' );
+						}
+					}
+
+				}
+			}
+
+		}
+	
+		this.updateAndSaveEditorSourceText(editor);
+	}
+
+	private getRangeNodes( r : Range ) : Array<Node> {
+		const result = Array<Node>();
+
+		if ( r.startContainer == r.endContainer ){
+			return [ r.startContainer ];
+		}
+
+		let n : Node | null = r.startContainer;
+		if ( n == r.commonAncestorContainer ){
+			n = r.commonAncestorContainer.firstChild;
+		}
+		while ( n != null ){
+			if ( r.intersectsNode(n) ){
+				result.push(n);
+			}
+			n = n.nextSibling;
+		}
+
+		return result;
 	}
 
 	private addEditorReadingView( container: HTMLElement ) {
