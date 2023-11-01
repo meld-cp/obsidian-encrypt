@@ -1,4 +1,4 @@
-import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext, MarkdownRenderer } from "obsidian";
+import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext } from "obsidian";
 import DecryptModal from "./DecryptModal";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
@@ -53,38 +53,14 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			return;
 		}
 
-		// Isolate code block lines
-		const text = InplaceTextHelper.extractTextLines( si.text, si.lineStart, si.lineEnd );
+		const reInplaceMatcher = /🔐(.*)🔐/g;
 		
-		// Replace encrypted text with a bindable marker
-		let newMd = ''
-		let decryptable = ''
-		let state = 0;
-		for ( let i = 0; i < text.length ; i++ ) {
-			const ch1 = text.charAt(i);
-			const ch2 = text.charAt(i+1);
-			if ( state == 0 /* find start marker */ ){
-				if ( ch1 == '\uD83D' && ch2 == '\uDD10' /*🔐*/ ){
-					i++;
-					decryptable = '';
-					state = 1;
-				}else{
-					newMd += ch1;
-				}
-			} else if ( state == 1 /* gather encrypted text */ ){
-				if ( ch1 == '\uD83D' && ch2 == '\uDD10' /*🔐*/ ){
-					newMd += `<span class="meld-encrypt-inline-reading-marker" data-meld-encrypt-encrypted="🔐${decryptable}🔐">🔐</span>`;
-					i++;
-					state = 0;
-				}else{
-					decryptable += ch1;
-				}
-			}
-			
-		}
+		const newInnerHTML = el.innerHTML.replace(
+			reInplaceMatcher,
+			'<span class="meld-encrypt-inline-reading-marker" data-meld-encrypt-encrypted="🔐$1🔐">🔐</span>'
+		)
 
-		el.empty();
-		await MarkdownRenderer.renderMarkdown( newMd, el, ctx.sourcePath, this.plugin );
+		el.innerHTML = newInnerHTML;
 		
 		// bind events
 		const elIndicators = el.querySelectorAll('.meld-encrypt-inline-reading-marker');
@@ -530,59 +506,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	}
 }
 
-
-
 class Encryptable{
 	text:string;
 	hint:string;
-}
-
-interface IMarkerPosition{
-	marker:string;
-	position:number;
-}
-
-class InplaceTextHelper{
-	static extractTextBeforeMarker(text: string, marker: IMarkerPosition) {
-		return text.substring( 0, marker.position );
-	}
-	static extractTextAfterMarker(text: string, marker: IMarkerPosition) {
-		return text.substring( marker.position + marker.marker.length );
-	}
-
-	public static removeMarkers(text: string, markerStart: IMarkerPosition, markerEnd: IMarkerPosition) {
-		return text.substring( markerStart.position, markerEnd.position + markerEnd.marker.length );
-	}
-
-	public static extractTextLines(text: string, lineStart: number, lineEnd: number) {
-		//console.debug({'text.split' : text.split('\n')})
-		return text.split('\n').slice(lineStart, lineEnd+1).join('\n');
-	}
-
-	public static findFirstMarker( markers:string[], text:string, startPos = 0 ) : IMarkerPosition | null {
-
-		let firstMarkerPos : number | null = null;
-		let firstMarker : string | null = null;
-
-		markers.forEach(m => {
-			const pos = text.indexOf( m, startPos );
-			//console.debug({m,pos});
-			if ( pos != -1 && ( firstMarkerPos == null || pos < firstMarkerPos ) ){
-				firstMarkerPos = pos;
-				firstMarker = m;
-			}
-		});
-
-		if ( firstMarker == null || firstMarkerPos == null ){
-			return null;
-		}
-
-		return {
-			marker: firstMarker,
-			position: firstMarkerPos
-		};
-	}
-
-
-
 }
