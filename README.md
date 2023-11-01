@@ -52,7 +52,7 @@ https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/
 <img alt="Run the Encrypt/Decrypt command" src="https://raw.githubusercontent.com/meld-cp/obsidian-encrypt/main/docs/assets/eg_ed_cp.png" /> 
 -->
 
-### Whole encrypted notes (.encrypted files)
+### Whole encrypted notes (`.mdenc` files)
 #### To create a new encrypted note
 1. Select 'Create encrypted note' from the command palette (or click the ribbon icon).
 2. Enter and confirm a password and optional hint to use.
