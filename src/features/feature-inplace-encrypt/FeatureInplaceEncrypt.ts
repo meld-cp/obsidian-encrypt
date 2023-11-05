@@ -47,25 +47,53 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	}
 
-	private async processEncryptedCodeBlockProcessor(el: HTMLElement, ctx: MarkdownPostProcessorContext){
-		const si = ctx.getSectionInfo(el);
-		if (si == null){
+	private replaceMarkersRecursive( node: Node ) {
+		if ( node instanceof HTMLElement ){
+			node.childNodes.forEach( n => this.replaceMarkersRecursive(n) );
 			return;
 		}
-
-		const reInplaceMatcher = /🔐(.*)🔐/g;
 		
-		const newInnerHTML = el.innerHTML.replace(
-			reInplaceMatcher,
-			'<span class="meld-encrypt-inline-reading-marker" data-meld-encrypt-encrypted="🔐$1🔐">🔐</span>'
-		)
+		if ( node instanceof Text ){
+			
+			const text = node.textContent;
 
-		el.innerHTML = newInnerHTML;
-		
+			if ( text == null ){
+				return;
+			}
+
+			if ( !text.contains( '🔐' ) ){
+				return;
+			}
+
+			const parent = node.parentElement;
+			if ( parent == null ){
+				return;
+			}
+
+			
+			const reInplaceMatcher = /🔐(.*?)🔐/g;
+			
+			parent.removeChild( node );
+
+			for ( const markerMatch of text.matchAll( reInplaceMatcher ) ) {
+				parent.createSpan( {
+					cls: 'meld-encrypt-inline-reading-marker',
+					text : '🔐',
+					attr : {
+						'data-meld-encrypt-encrypted' : markerMatch[0]
+					}
+				} );
+			}
+
+		}
+
+	}
+
+	private async processEncryptedCodeBlockProcessor(el: HTMLElement, ctx: MarkdownPostProcessorContext){
+		this.replaceMarkersRecursive(el);
 		// bind events
 		const elIndicators = el.querySelectorAll('.meld-encrypt-inline-reading-marker');
 		this.bindReadingIndicatorEventHandlers( ctx.sourcePath, elIndicators );
-
 	}
 
 	private bindReadingIndicatorEventHandlers( sourcePath: string, elements: NodeListOf<Element> ){
