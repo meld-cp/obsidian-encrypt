@@ -25,6 +25,10 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 > Please report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+### 2.3.5
+- #132 broke some other plugins, this fixes that fix 🤞 ([#136](https://github.com/meld-cp/obsidian-encrypt/issues/136))
+
+
 ### 2.3.4
 - improve indenting when editing encrypted whole-notes ([#108](https://github.com/meld-cp/obsidian-encrypt/issues/108))
 - fix incorrect rendering of markdown for in-place encrypted notes in reading view ([#132](https://github.com/meld-cp/obsidian-encrypt/issues/132))
