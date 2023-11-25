@@ -19,7 +19,7 @@ You can install the plugin via the Community Plugins tab within Obsidian by sear
 
 <a href="https://www.buymeacoffee.com/cleon"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=cleon&button_colour=FFDD00&font_colour=000000&outline_colour=000000&coffee_colour=ffffff"></a>
 
-Please visit the [Change Log](https://github.com/meld-cp/obsidian-encrypt/blob/main/CHANGELOG.md) for a listing off changes.
+Please visit the [Change Log](https://github.com/meld-cp/obsidian-encrypt/blob/main/CHANGELOG.md) for a listing of changes.
 
 Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
