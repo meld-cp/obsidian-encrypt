@@ -1,0 +1,99 @@
+# Change Log
+
+Do you find this plugin useful?  You can support further development by...  
+<a href="https://www.buymeacoffee.com/cleon"><img src="https://img.buymeacoffee.com/button-api/?text=Buying me a coffee&emoji=&slug=cleon&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
+
+Thank you for your support 😊
+
+Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
+
+
+## v2.3.5
+- #132 broke some other plugins, this fixes that fix 🤞 ([#136](https://github.com/meld-cp/obsidian-encrypt/issues/136))
+
+
+## v2.3.4
+- improve indenting when editing encrypted whole-notes ([#108](https://github.com/meld-cp/obsidian-encrypt/issues/108))
+- fix incorrect rendering of markdown for in-place encrypted notes in reading view ([#132](https://github.com/meld-cp/obsidian-encrypt/issues/132))
+
+
+## v2.3.3
+- fix broken consecutive in-place markers in reading view ([#102](https://github.com/meld-cp/obsidian-encrypt/issues/102))
+- fix bottom text is hidden when editing encrypted whole-notes ([#124](https://github.com/meld-cp/obsidian-encrypt/issues/124))
+
+
+## v2.3.2
+- add key-bindable command to toggle reading view for encrypted notes ([#116](https://github.com/meld-cp/obsidian-encrypt/issues/116))
+- change to using `.mdenc` file extensions for encrypted notes ([#117](https://github.com/meld-cp/obsidian-encrypt/issues/117))
+
+## v2.3.1
+- fix encrypt/decrypt of notes don't update links ([#118](https://github.com/meld-cp/obsidian-encrypt/issues/118))
+
+## v2.3.0
+- add encrypt/decrypt of `.md` or `.encrypted` notes [#68](https://github.com/meld-cp/obsidian-encrypt/issues/68) (via file context menu, ribbon icon or command palette, helps with [#91](https://github.com/meld-cp/obsidian-encrypt/issues/91), [#103](https://github.com/meld-cp/obsidian-encrypt/issues/103), [#108](https://github.com/meld-cp/obsidian-encrypt/issues/108), [#114](https://github.com/meld-cp/obsidian-encrypt/issues/114))
+- fix double blank line [#107](https://github.com/meld-cp/obsidian-encrypt/issues/107)
+- fix offline decrypt tool [#111](https://github.com/meld-cp/obsidian-encrypt/issues/111) (found in `/tools/decrypt.html`)
+- ribbon icon changes
+- code refactor and clean up
+
+## v2.2.0
+- stronger encryption (thanks @brycx)
+- fix [#92](https://github.com/meld-cp/obsidian-encrypt/issues/92) - Enable selection text in Reading view
+- fix [#93](https://github.com/meld-cp/obsidian-encrypt/issues/93) - Encrypting text in-place in a table breaks
+
+## v2.1.3
+- follow 'readable line length' and 'show inline title' settings in encrypted notes
+- update layout and styling
+- enable spell check when editing
+
+## v2.1.2
+- add inline encrypted text marker (clickable) in reading view
+
+## v2.1.1
+- Limited support for markdown in `.encrypted` notes
+- New setting to select the default view when opening `.encrypted` notes (Source or Reading)
+
+## v2.1.0
+- Auto decrypt note if password remembered
+- Clear remembered password when re-locking file
+- When changing password, remember it if 'remember passwords' is active
+- Change wording for 'Remember Password Timeout' in settings
+- Add new setting to remember password by parent folder path
+- Code refactors
+
+## v2.0.5
+- fix creating encrypted note on mobile
+
+## v2.0.4
+- fix password remembered even when 'remember password' setting is unchecked
+
+## v2.0.3
+- add common password session cache
+- also remember passwords for whole note encryption
+- add password peek button
+
+## v2.0.2
+
+Due to popular demand, the encrypt in-place functionality is no longer scheduled for removal 🙄🥳.
+
+**Changes**
+- Code refactors
+- UI clean up
+- Update usage docs
+
+## v2.0.1
+Bug fixes
+- fix large files can't be encrypted ([#41](https://github.com/meld-cp/obsidian-encrypt/issues/41))
+- add 'Change Password' and 'Lock' actions to note tab context menu ([#49](https://github.com/meld-cp/obsidian-encrypt/issues/49))
+
+## v2.0.0
+
+To make encrypted notes more resilient, starting from v2.0.0, the plugin introduces a new .encrypted note.
+
+The advantages of this new approach are:
+
+- Your note contents are always encrypted on disk.
+- Encrypted bytes are hidden away from the user making it difficult to accidentally corrupt the encryption and thus making the note un-decryptable.
+- Encrypted notes are easily identifiable by their '.encrypted' file extension.
+- Better workflow for editing encrypted notes.
+
