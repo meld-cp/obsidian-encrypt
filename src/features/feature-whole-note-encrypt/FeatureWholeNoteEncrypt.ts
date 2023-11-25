@@ -92,7 +92,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 
 		new Setting(containerEl)
 			.setHeading()
-			.setName('Whole Note Encryption Settings')
+			.setName('Whole note encryption')
 		;
 
 		new Setting(containerEl)

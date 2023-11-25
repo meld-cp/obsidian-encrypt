@@ -27,14 +27,6 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 		
-		containerEl.createEl('h1', {text: 'Settings for Meld Encrypt'});
-
-		// build common settings
-		new Setting(containerEl)
-			.setHeading()
-			.setName('Common Settings')
-		;
-
 		new Setting(containerEl)
 			.setName('Confirm password?')
 			.setDesc('Confirm password when encrypting. (Recommended)')

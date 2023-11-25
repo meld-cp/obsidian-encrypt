@@ -212,7 +212,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	): void {
 		new Setting(containerEl)
 			.setHeading()
-			.setName('In-place Encryption Settings')
+			.setName('In-place encryption')
 		;
 
 		// Selection encrypt feature settings below
