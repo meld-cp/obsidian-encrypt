@@ -125,7 +125,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 		const defaultPw = SessionPasswordService.getByFile( file );
 		
-		const pm = new PluginPasswordModal(app, 'Encrypt Note', true, true, defaultPw );
+		const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt Note', true, true, defaultPw );
 		try{
 			const pw = await pm.openAsync();
 
@@ -164,11 +164,11 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		}
 		
 		// fetch from user
-		const encryptedFileContent = await app.vault.read( file );
+		const encryptedFileContent = await this.plugin.app.vault.read( file );
 		const encryptedData = JsonFileEncoding.decode( encryptedFileContent );
 
 
-		const pwm = new PluginPasswordModal(app, 'Decrypt Note', false, false, { password: '', hint: encryptedData.hint } );
+		const pwm = new PluginPasswordModal(this.plugin.app, 'Decrypt Note', false, false, { password: '', hint: encryptedData.hint } );
 		try{
 			passwordAndHint = await pwm.openAsync();
 			
@@ -205,24 +205,24 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 		try{
 			const newFilepath = Utils.getFilePathWithNewExtension(file, newFileExtension);
-			await app.fileManager.renameFile( file, newFilepath );
-			await app.vault.modify( file, content );
+			await this.plugin.app.fileManager.renameFile( file, newFilepath );
+			await this.plugin.app.vault.modify( file, content );
 			SessionPasswordService.putByFile( pw, file );
 		}finally{
 			if(didDetach){
-				await app.workspace.getLeaf().openFile(file);
+				await this.plugin.app.workspace.getLeaf().openFile(file);
 			}
 		}
 	}
 
 	private async encryptFile(file: TFile, passwordAndHint:IPasswordAndHint ) : Promise<string> {
-		const content = await app.vault.read( file );
+		const content = await this.plugin.app.vault.read( file );
 		const encryptedData = await FileDataHelper.encode( passwordAndHint.password, passwordAndHint.hint, content );
 		return JsonFileEncoding.encode( encryptedData );
 	}
 
 	private async decryptFile(file: TFile, password:string) : Promise<string | null> {
-		const encryptedFileContent = await app.vault.read( file );
+		const encryptedFileContent = await this.plugin.app.vault.read( file );
 		const encryptedData = JsonFileEncoding.decode( encryptedFileContent );
 		return await FileDataHelper.decrypt(encryptedData, password );
 	}
