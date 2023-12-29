@@ -7,6 +7,9 @@ Thank you for your support 😊
 
 Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+## v2.3.6
+- Fix internal links not working in an encrypted note ([#144](https://github.com/meld-cp/obsidian-encrypt/issues/144))
+
 
 ## v2.3.5
 - #132 broke some other plugins, this fixes that fix 🤞 ([#136](https://github.com/meld-cp/obsidian-encrypt/issues/136))
