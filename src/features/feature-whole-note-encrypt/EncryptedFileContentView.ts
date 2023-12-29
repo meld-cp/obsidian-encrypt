@@ -1,4 +1,4 @@
-import { MarkdownRenderer, Menu, Notice, Setting, TextFileView } from 'obsidian';
+import { MarkdownRenderer, Menu, Notice, Setting, TextFileView, normalizePath } from 'obsidian';
 import { WorkspaceLeaf } from "obsidian";
 import { SessionPasswordService } from 'src/services/SessionPasswordService';
 import { UiHelper } from 'src/services/UiHelper';
@@ -362,7 +362,7 @@ export class EncryptedFileContentView extends TextFileView {
 		editorContainer.on('input', '*', async (ev, target) => {
 			this.updateAndSaveEditorSourceText(editorContainer);
 		});
-	
+
 	}
 
 	private async updateAndSaveEditorSourceText( editor: HTMLElement ){
@@ -449,6 +449,15 @@ export class EncryptedFileContentView extends TextFileView {
 		).catch( reason => {
 			console.error( reason );
 		});
+
+		// handle link clicks in reading view
+		readingContainer.on('click', 'a.internal-link',async (ev, target) => {
+			if (target instanceof HTMLAnchorElement){
+				const linkPath = normalizePath(decodeURI(target.pathname));
+				this.app.workspace.openLinkText(linkPath, this.file.path, ev.ctrlKey);
+			}
+		});
+
 		
 	}
 
