@@ -17,7 +17,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 		this.settings = settings.featureWholeNoteEncrypt;
 		
 		this.plugin.addRibbonIcon( 'file-lock-2', 'New encrypted note', (ev)=>{
-			this.processCreateNewEncryptedNoteCommand();
+			this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() );
 		});
 
 		this.plugin.registerView(
@@ -34,7 +34,7 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			id: 'meld-encrypt-create-new-note',
 			name: 'Create new encrypted note',
 			icon: 'file-lock-2',
-			callback: () => this.processCreateNewEncryptedNoteCommand(),
+			callback: () => this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() ),
 		});
 
 		this.plugin.addCommand({
@@ -44,6 +44,19 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 			callback: () => this.processToggleReadingViewCommand(),
 		});
 		
+		this.plugin.registerEvent(
+			this.plugin.app.workspace.on( 'file-menu', (menu, file) => {
+				if (file instanceof TFolder){
+					menu.addItem( (item) => {
+						item
+							.setTitle('New encrypted note')
+							.setIcon('file-lock-2')
+							.onClick( () => this.processCreateNewEncryptedNoteCommand( file ) );
+						}
+					);
+				}
+			})
+		);
 	}
 
 	onunload() {
@@ -55,21 +68,21 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 		view?.toggleReadingView();
 	}
 
-	private processCreateNewEncryptedNoteCommand() {
+	private getDefaultFileFolder() : TFolder {
+		const activeFile = this.plugin.app.workspace.getActiveFile();
+
+		if (activeFile != null){
+			return this.plugin.app.fileManager.getNewFileParent(activeFile.path);
+		}else{
+			return this.plugin.app.fileManager.getNewFileParent('');
+		}
+	}
+
+	private processCreateNewEncryptedNoteCommand( parentFolder: TFolder ) {
 		try{
 			const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
 			
-			let newFileFolder : TFolder;
-			const activeFile = this.plugin.app.workspace.getActiveFile();
-
-			if (activeFile != null){
-				newFileFolder = this.plugin.app.fileManager.getNewFileParent(activeFile.path);
-			}else{
-				newFileFolder = this.plugin.app.fileManager.getNewFileParent('');
-			}
-
-			const newFilepath = normalizePath( newFileFolder.path + "/" + newFilename );
-			//console.debug('processCreateNewEncryptedNoteCommand', {newFilepath});
+			const newFilepath = normalizePath( parentFolder.path + "/" + newFilename );
 			
 			this.plugin.app.vault.create(newFilepath,'').then( async f => {
 				const leaf = this.plugin.app.workspace.getLeaf( true );
