@@ -266,22 +266,31 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			endPos = { line: endLine, ch: endLineText.length }; // want the end of last line
 		}else{
 			if ( !editor.somethingSelected() ){
-				//console.debug('nothing selected, assume user wants to decrypt, expand to start and end markers');
-				// nothing selected, assume user wants to decrypt, expand to start and end markers
+				// nothing selected, first assume user wants to decrypt, expand to start and end markers...
+				// but if no markers found then prompt to encrypt text
 				const foundStartPos = this.getClosestPrefixCursorPos( editor );
-				if ( foundStartPos == null ){
-					return false;
-				}
-				startPos = foundStartPos;
-
 				const foundEndPos = this.getClosestSuffixCursorPos(editor);
-				if ( foundEndPos == null ){
-					return false;
+
+				if (
+					foundStartPos == null
+					|| foundEndPos == null
+					|| ( startPos.line < foundStartPos.line )
+					|| ( endPos.line > foundEndPos.line )
+				){
+					// selection is empty, prompt for text to encrypt
+					return this.promptForTextToEncrypt(
+						checking,
+						editor,
+						startPos
+					);
 				}
+
+				startPos = foundStartPos;
 				endPos = foundEndPos;
 			}
 		}
 
+		// Encrypt or Decrypt selected text
 		const selectionText = editor.getRange(startPos, endPos);
 
 		return this.processSelection(
@@ -292,6 +301,77 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			endPos,
 			decryptInPlace
 		);
+	}
+
+	private promptForTextToEncrypt(
+		checking: boolean,
+		editor: Editor,
+		pos: CodeMirror.Position
+	) : boolean {
+
+		// show dialog with password, confirmation, hint and text
+		// insert into editor at pos
+
+		const activeFile = this.plugin.app.workspace.getActiveFile();
+		if (activeFile == null){
+			return false;
+		}
+		
+		if (checking) {
+			return true;
+		}
+
+		// Fetch password from user
+
+		// determine default password and hint
+		let defaultPassword = '';
+		let defaultHint = '';
+		if ( this.pluginSettings.rememberPassword ){
+			const bestGuessPasswordAndHint = SessionPasswordService.getByPath( activeFile.path );
+			//console.debug({bestGuessPasswordAndHint});
+
+			defaultPassword = bestGuessPasswordAndHint.password;
+			defaultHint = bestGuessPasswordAndHint.hint;
+		}
+
+		const confirmPassword = this.pluginSettings.confirmPassword;
+
+		const pwModal = new PasswordModal(
+			this.plugin.app,
+			true,
+			confirmPassword,
+			/*defaultShowInReadingView*/ this.featureSettings.showMarkerWhenReadingDefault,
+			defaultPassword,
+			defaultHint,
+			/*showTextToEncrypt*/ true
+		);
+		pwModal.onClose = async () => {
+			if ( !pwModal.resultConfirmed ){
+				return;
+			}
+			const pw = pwModal.resultPassword ?? ''
+			const hint = pwModal.resultHint ?? '';
+			const textToEncrypt = pwModal.resultTextToEncrypt ?? '';
+
+			const encryptable = new Encryptable();
+			encryptable.text = textToEncrypt;
+			encryptable.hint = hint;
+
+			this.encryptSelection(
+				editor,
+				encryptable,
+				pw,
+				pos,
+				pos,
+				pwModal.resultShowInReadingView ?? this.featureSettings.showMarkerWhenReadingDefault
+			);
+
+			// remember password
+			SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
+		}
+		pwModal.open();
+
+		return false;
 	}
 
 	private getClosestPrefixCursorPos(editor: Editor): EditorPosition | null{
