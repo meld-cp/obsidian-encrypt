@@ -10,6 +10,7 @@ Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-e
 ## v2.3.6
 - Fix internal links not working in an encrypted note ([#144](https://github.com/meld-cp/obsidian-encrypt/issues/144))
 - Add 'New encrypted note' option to folder context menu ([#106](https://github.com/meld-cp/obsidian-encrypt/issues/106))
+- Add encrypted text directly to the note ([#143](https://github.com/meld-cp/obsidian-encrypt/issues/143))
 
 
 ## v2.3.5
