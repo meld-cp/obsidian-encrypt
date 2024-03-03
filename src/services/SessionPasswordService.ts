@@ -20,11 +20,13 @@ export class SessionPasswordService{
 
 	public static LevelFilename = 'filename';
 	public static LevelParentPath = 'parentPath';
+	public static LevelVault = 'vault';
 	private static allLevels = [
 		SessionPasswordService.LevelFilename,
-		SessionPasswordService.LevelParentPath
+		SessionPasswordService.LevelParentPath,
+		SessionPasswordService.LevelVault,
 	];
-	private static level = SessionPasswordService.LevelFilename;
+	private static level = SessionPasswordService.LevelVault;
 
 	public static setActive( isActive: boolean) {
 		SessionPasswordService.isActive = isActive;
@@ -111,26 +113,42 @@ export class SessionPasswordService{
 	}
 
 	private static getPathCacheKey( path : string ) : string {
+		//console.debug('getPathCacheKey', {path});
+
 		const parentPath = path.split('/').slice(0,-1).join('/');
-		//console.debug({path,parentPath, filepath: app.workspace.getActiveFile()});
 
 		switch (SessionPasswordService.level) {
+			case SessionPasswordService.LevelVault: {
+				//console.debug('getPathCacheKey: $vault');
+				return '$vault';
+			}
+
 			case SessionPasswordService.LevelParentPath: {
+				//console.debug('getPathCacheKey: ', parentPath);
 				return parentPath;
 			}
 		
 			default:
+				//console.debug('getPathCacheKey: ', path);
 				return path;
 		}
 	}
 
 	private static getFileCacheKey( file : TFile ) : string {
+		//console.debug('getFileCacheKey', {file});
 		switch (SessionPasswordService.level) {
+			case SessionPasswordService.LevelVault: {
+				//console.debug('getFileCacheKey: $vault');
+				return '$vault';
+			}
 			case SessionPasswordService.LevelParentPath: {
+				//console.debug('getFileCacheKey:', file.parent.path);
 				return file.parent.path;
 			}
 			default:
-				return Utils.getFilePathExcludingExtension( file );
+				const fileExExt = Utils.getFilePathExcludingExtension( file );
+				//console.debug('getFileCacheKey:', fileExExt);
+				return fileExExt;
 		}
 	}
 
@@ -154,8 +172,10 @@ export class SessionPasswordService{
 		this.cache.removeKey( key );
 	}
 
-	public static clear(): void{
+	public static clear(): number {
+		const count = this.cache.getKeys().length;
 		this.cache.clear();
+		return count;
 	}
 
 }

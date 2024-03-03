@@ -95,11 +95,13 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		;
 
 		const rememberPasswordLevelSetting = new Setting(containerEl)
-			.setDesc('Remember passwords by using a notes file name or parent folder')
+			.setName('Remember passwords by:')
+			.setDesc( this.buildRememberPasswordDescription() )
 			.addDropdown( cb =>{
 				cb
-					.addOption( SessionPasswordService.LevelFilename, 'File Name')
-					.addOption( SessionPasswordService.LevelParentPath, 'Parent Folder')
+					.addOption( SessionPasswordService.LevelVault, 'Vault')
+					.addOption( SessionPasswordService.LevelParentPath, 'Folder')
+					.addOption( SessionPasswordService.LevelFilename, 'File')
 					.setValue( this.settings.rememberPasswordLevel )
 					.onChange( async value => {
 						this.settings.rememberPasswordLevel = value;
@@ -118,6 +120,26 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 			f.buildSettingsUi( containerEl, async () => await this.plugin.saveSettings() );
 		});
 		
+	}
+
+	private buildRememberPasswordDescription( ) : DocumentFragment {
+		const f = new DocumentFragment();
+
+		const tbody = f.createEl( 'table' ).createTBody();
+		
+		let tr = tbody.createEl( 'tr' );
+		tr.createEl( 'th', { text: 'Vault:', attr: { 'align': 'left'} });
+		tr.createEl( 'td', { text: 'typically, you\'ll use the same password every time.' });
+		
+		tr = tbody.createEl( 'tr' );
+		tr.createEl( 'th', { text: 'Folder:', attr: { 'align': 'left'} });
+		tr.createEl( 'td', { text: 'typically, you\'ll use the same password for each note within a folder.' });
+
+		tr = tbody.createEl( 'tr' );
+		tr.createEl( 'th', { text: 'File:', attr: { 'align': 'left'} });
+		tr.createEl( 'td', { text: 'typically, each note will have a unique password.' });
+
+		return f;
 	}
 
 }
