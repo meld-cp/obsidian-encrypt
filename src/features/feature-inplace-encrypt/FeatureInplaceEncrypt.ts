@@ -1,4 +1,4 @@
-import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext } from "obsidian";
+import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext, MarkdownView } from "obsidian";
 import DecryptModal from "./DecryptModal";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
@@ -33,6 +33,19 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			icon: 'lock',
 			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, false )
 		});
+		
+		this.plugin.addRibbonIcon(
+			'file-lock',
+			'Encrypt/Decrypt',
+			(_) => {
+				const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView == null ){
+					console.debug('no active view found');
+					return;
+				}
+				return this.processEncryptDecryptCommand(false, activeView.editor, false);
+			}
+		);
 
 		plugin.addCommand({
 			id: 'meld-encrypt-in-place',
