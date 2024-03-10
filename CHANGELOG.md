@@ -7,6 +7,14 @@ Thank you for your support 😊
 
 Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+## v2.3.7
+- Add a setting to remember session passwords by vault ([#146](https://github.com/meld-cp/obsidian-encrypt/issues/146), [#149](https://github.com/meld-cp/obsidian-encrypt/issues/149))
+- Add a command to clear session password cache
+- Clarify 'Remember By' description in settings ([#146](https://github.com/meld-cp/obsidian-encrypt/issues/146), [#149](https://github.com/meld-cp/obsidian-encrypt/issues/149))
+- Add ribbon icon for 'Encrypt/Decrypt' command ([#157](https://github.com/meld-cp/obsidian-encrypt/issues/157))
+- Fix missing lock indicator in reading view ([#156](https://github.com/meld-cp/obsidian-encrypt/issues/156))
+- Bug fixes
+
 ## v2.3.6
 - Fix internal links not working in an encrypted note ([#144](https://github.com/meld-cp/obsidian-encrypt/issues/144))
 - Add 'New encrypted note' option to folder context menu ([#106](https://github.com/meld-cp/obsidian-encrypt/issues/106))

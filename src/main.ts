@@ -1,4 +1,4 @@
-import { Plugin } from 'obsidian';
+import { Notice, Plugin } from 'obsidian';
 import MeldEncryptSettingsTab from './settings/MeldEncryptSettingsTab';
 import { IMeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings';
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature';
@@ -35,6 +35,16 @@ export default class MeldEncrypt extends Plugin {
 		);
 		// End Settings
 
+		this.addCommand({
+			id: 'meld-encrypt-clear-password-cache',
+			name: 'Clear Session Password Cache',
+			icon: 'file-lock',
+			callback: () => {
+				const itemsCleared = SessionPasswordService.clear();
+				new Notice( `Items cleared: ${itemsCleared}` );
+			},
+		});
+
 		// load features
 		this.enabledFeatures.forEach(async f => {
 			await f.onload( this, this.settings );
@@ -54,7 +64,7 @@ export default class MeldEncrypt extends Plugin {
 			confirmPassword: true,
 			rememberPassword: true,
 			rememberPasswordTimeout: 30,
-			rememberPasswordLevel: SessionPasswordService.LevelFilename,
+			rememberPasswordLevel: SessionPasswordService.LevelVault,
 
 			featureWholeNoteEncrypt: {
 				defaultView: EditViewEnum.source.toString()

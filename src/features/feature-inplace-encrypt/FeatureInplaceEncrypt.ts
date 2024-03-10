@@ -1,4 +1,4 @@
-import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext } from "obsidian";
+import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext, MarkdownView } from "obsidian";
 import DecryptModal from "./DecryptModal";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import MeldEncrypt from "../../main";
@@ -33,6 +33,19 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			icon: 'lock',
 			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, false )
 		});
+		
+		this.plugin.addRibbonIcon(
+			'file-lock',
+			'Encrypt/Decrypt',
+			(_) => {
+				const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView == null ){
+					console.debug('no active view found');
+					return;
+				}
+				return this.processEncryptDecryptCommand(false, activeView.editor, false);
+			}
+		);
 
 		plugin.addCommand({
 			id: 'meld-encrypt-in-place',
@@ -47,50 +60,62 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	}
 
-	private replaceMarkersRecursive( node: Node ) {
-		if ( node instanceof HTMLElement ){
-			node.childNodes.forEach( n => this.replaceMarkersRecursive(n) );
-			return;
-		}
+	private replaceMarkersRecursive( node: Node, rlevel: number = 0 ) : Node[] {
 		
+		if ( node instanceof HTMLElement ){
+			for( const n of Array.from(node.childNodes) ){
+				var childNodes = this.replaceMarkersRecursive( n, rlevel+1 );
+				n.replaceWith( ...childNodes );
+			}
+			return [node];
+		}
+
 		if ( node instanceof Text ){
 			
 			const text = node.textContent;
 
 			if ( text == null ){
-				return;
+				return [node];
 			}
 
 			if ( !text.contains( '🔐' ) ){
-				return;
+				return [node];
 			}
 
-			const parent = node.parentElement;
-			if ( parent == null ){
-				return;
-			}
-
-			
 			const reInplaceMatcher = /🔐(.*?)🔐/g;
-			
-			parent.removeChild( node );
 
-			for ( const markerMatch of text.matchAll( reInplaceMatcher ) ) {
-				parent.createSpan( {
-					cls: 'meld-encrypt-inline-reading-marker',
-					text : '🔐',
-					attr : {
-						'data-meld-encrypt-encrypted' : markerMatch[0]
-					}
-				} );
+			const splits = text.split( reInplaceMatcher );
+			
+			const nodes : Node[] = [];
+
+			for (let i = 0; i < splits.length; i++) {
+				const t = splits[i];
+				if (  i % 2 != 0 ){
+					// odd indexes have indicators
+					const node = createSpan({
+						cls: 'meld-encrypt-inline-reading-marker',
+						text: '🔐',
+						attr: {
+							'data-meld-encrypt-encrypted' : `🔐${t}🔐`
+						}
+					})
+					nodes.push( node );
+				} else {
+					nodes.push( new Text( t ) );
+				}
 			}
+
+			return nodes;
 
 		}
 
+		return [node];
 	}
 
 	private async processEncryptedCodeBlockProcessor(el: HTMLElement, ctx: MarkdownPostProcessorContext){
-		this.replaceMarkersRecursive(el);
+		const replacementNodes = this.replaceMarkersRecursive(el);
+		//console.debug( 'processEncryptedCodeBlockProcessor', { el, replacementNodes } );
+		el.replaceWith( ...replacementNodes );
 		// bind events
 		const elIndicators = el.querySelectorAll('.meld-encrypt-inline-reading-marker');
 		this.bindReadingIndicatorEventHandlers( ctx.sourcePath, elIndicators );

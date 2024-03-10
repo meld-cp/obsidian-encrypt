@@ -97,7 +97,7 @@ OR
 | Confirm password | Confirm password when encrypting (recommended) |
 | Remember password | Remember the last used password for this session. |
 | Remember Password Timeout | The number of minutes to remember the last used password. |
-| Remember Password Using | Remember passwords by using `File Name` or `Parent Folder` matching |
+| Remember Password Using | Remember session passwords by using `Vault`, `Folder` or `File` matching |
 
 ### Whole note encryption
 | | |
