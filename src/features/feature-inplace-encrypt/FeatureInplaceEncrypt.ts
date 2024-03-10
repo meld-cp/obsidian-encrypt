@@ -69,20 +69,23 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			if ( parent == null ){
 				return;
 			}
-
 			
-			const reInplaceMatcher = /🔐(.*?)🔐/g;
+			
 			
 			parent.removeChild( node );
-
+			
+			const reInplaceMatcher = /🔐(.*?)🔐/g;
 			for ( const markerMatch of text.matchAll( reInplaceMatcher ) ) {
 				parent.createSpan( {
 					cls: 'meld-encrypt-inline-reading-marker',
-					text : '🔐',
-					attr : {
+					text: '🔐',
+					attr: {
 						'data-meld-encrypt-encrypted' : markerMatch[0]
 					}
 				} );
+				
+				// fixes rendering issue (https://github.com/meld-cp/obsidian-encrypt/issues/156)
+				parent.append( '\n' );
 			}
 
 		}
