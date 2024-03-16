@@ -27,50 +27,63 @@ class ListCommandHandler {
 
     async argHandler( format : string ) {
 
-        console.log( 'argHandler', { format } );
-
         const cwd = process.cwd();
 
-        if (format == 'csv') {
-            this.outputCsvHeader();
-        }
+        let onStart : () => void;
+        let onListing : (l:Listing) => void;
+        let onEnd : () => void;
         
         const listings: Listing[] = [];
 
-        for await (const listing of Utils.listings(cwd, false)) {
-            if (format == 'csv') {
-                this.outputCsvRow( listing );
-                continue;
-            }
+
+        if ( format === 'csv') {
             
-            if (format == 'json' || format == 'table') {
-                listings.push( listing );
-                continue;
-            }
-            
-            break;
+            onStart = () => console.log( 'feature,fullPath,relativePath,extension' );
+            onListing = (l) => console.log( `"${l.featureType}","${l.fullPath}","${l.relativePath}","${l.extension}"` );
+            onEnd = () => {};
+
+        } else if (format == 'json') {
+
+            onStart = () => {};
+            onListing = (l) => listings.push( l );
+            onEnd = () => console.log( JSON.stringify( listings, null, 2 ) );
+
+        } else if (format === 'table') {
+
+            onStart = () => {};
+            onListing = (l) => listings.push( l );
+            onEnd = () => console.table( listings );
+
+        }else{
+            // Default
+            onStart = () => {};
+            onListing = (l) => console.log( `${l.relativePath}` );
+            onEnd = () => {};
         }
 
-        if (format == 'csv') {
-            return;
+
+        await this.output(
+            cwd,
+            onStart,
+            onListing,
+            onEnd
+        );
+
+    }
+
+    async output(
+        dir : string,
+        startCallback : () => void,
+        perItemCallback : (l:Listing) => void,
+        endCallback : () => void
+    ) : Promise<void> {
+        startCallback();
+        for await (const l of Utils.listings(dir, false)) {
+            perItemCallback(l);
         }
-
-        if (format == 'json'){
-            console.log( JSON.stringify( listings, null, 2 ) );
-            return;
-        }
-
-        console.table( listings as Listing[] );
-    }
-    
-    outputCsvHeader() {
-        console.log( 'feature,fullPath,relativePath,extension,' );
+        endCallback();
     }
 
-    outputCsvRow( l: Listing ) {
-        console.log( `"${l.featureType}","${l.fullPath}","${l.relativePath}","${l.extension}"` );
-    }
-    
 
 }
 
@@ -299,8 +312,8 @@ const optListingFormat : yargs.Options = {
     alias: 'f',
     describe: 'format of the listing',
     type: 'string',
-    choices: ['table', 'json', 'csv'],
-    default: 'table',
+    choices: [ 'default', 'table', 'json', 'csv'],
+    default: 'default',
 }
 
 
