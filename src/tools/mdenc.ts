@@ -11,7 +11,7 @@ interface Listing {
     fullPath: string;
     relativePath: string;
     extension: string;
-    //content: string;
+    content: string | undefined;
 }
 
 class ListCommandHandler {
@@ -23,7 +23,7 @@ class ListCommandHandler {
 
         const cwd = process.cwd();
     
-        const listings = await this.fetchListings( cwd );
+        const listings = await Utils.fetchListings( cwd, false );
 
         this.outputListings( listings, format );
 
@@ -45,56 +45,25 @@ class ListCommandHandler {
             return;
         }
         
-        console.table( listings );
+        console.table( listings as Listing[] );
 
     }
 
-    async fetchListings( dir : string ) : Promise<Listing[]> {
-        
-        //console.log( 'fetchListings', dir );
-        const listing : Listing[] = [];
-
-        for await (const p of Utils.walk( dir )) {
     
-            const relativePath = '.' + path.sep + path.relative(dir, p);
-            const ext = path.extname(p).toLowerCase().slice(1);
 
-    
-            if ( !['md', ...Constants.ENCRYPTED_FILE_EXTENSIONS].includes( ext ) ){
-                continue;
-            }
+}
 
-            
-            if ( ext == 'md' ){
-                const content = await fs.promises.readFile( p, 'utf8' );
-                if (
-                    content.includes( InPlaceConstants._PREFIX_A_VISIBLE )
-                    || content.includes( InPlaceConstants._PREFIX_B_VISIBLE )
-                ){
-                    listing.push( {
-                        featureType: 'InPlace',
-                        fullPath: p,
-                        relativePath: relativePath,
-                        extension: ext,
-                        //content: content
-                    } )
-                }
-                continue;
-            }
-            
-            listing.push( {
-                featureType: 'WholeNote',
-                fullPath: p,
-                relativePath: relativePath,
-                extension: ext,
-                //content: content
-            } )
+class TestCommandHandler {
 
-        }
-
-        return listing;
+    async argHandler( passwords:string[] ) {
+        console.log( 'argHandler', {passwords} );
     }
+}
 
+class DecryptCommandHandler{
+    async argHandler( passwords:string[], outdir:string ) {
+        console.log( 'argHandler', {passwords, outdir} );
+    }
 }
 
 class Utils{
@@ -104,6 +73,54 @@ class Utils{
             if (d.isDirectory()) yield* Utils.walk(entry);
             else if (d.isFile()) yield entry;
         }
+    }
+
+    static async fetchListings( dir : string, includeContent: boolean ) : Promise<Listing[]> {
+        
+        const listing : Listing[] = [];
+
+        for await (const p of Utils.walk( dir )) {
+    
+            const ext = path.extname(p).toLowerCase().slice(1);
+
+            // exit early if not a relevant file
+            if ( !['md', ...Constants.ENCRYPTED_FILE_EXTENSIONS].includes( ext ) ){
+                continue;
+            }
+            
+            const relativePath = '.' + path.sep + path.relative(dir, p);
+            const content = ( includeContent || ext == 'md' ) ? await fs.promises.readFile( p, 'utf8' ) : undefined;
+            
+            // could have inplace encrypted notes
+            if ( ext == 'md' ){
+                
+                if (
+                    content!.includes( InPlaceConstants._PREFIX_A_VISIBLE )
+                    || content!.includes( InPlaceConstants._PREFIX_B_VISIBLE )
+                ){
+                    listing.push( {
+                        featureType: 'InPlace',
+                        fullPath: p,
+                        relativePath: relativePath,
+                        extension: ext,
+                        content: includeContent ? content : undefined
+                    } )
+                }
+                continue;
+            }
+            
+            // must be whole note encrypted
+            listing.push( {
+                featureType: 'WholeNote',
+                fullPath: p,
+                relativePath: relativePath,
+                extension: ext,
+                content: content
+            } )
+
+        }
+
+        return listing;
     }
 }
 
@@ -120,20 +137,19 @@ const optListingFormat : yargs.Options = {
     type: 'string',
     choices: ['table', 'json', 'csv'],
     default: 'table',
-    demandOption: true,
 }
 
-const cmdListHandler = new ListCommandHandler();
+
 
 yargs.default(hideBin(process.argv))
     .usage( 'Usage: $0 [command] [options]' )
     .command( 'list', 'list all encrypted artifacts within the current directory', (yargs) => yargs.option( {
         format: optListingFormat
-    } ), (argv) => cmdListHandler.argHandler(argv.format as string ) )
+    } ), (argv) => new ListCommandHandler().argHandler(argv.format as string ) )
     
     .command(['test', 'check'], 'check that all notes can be decrypted with the given password list', (yargs) => yargs.option(  {
         passwords: optPasswordList
-    } ) )
+    } ), (argv) => new TestCommandHandler().argHandler( argv.passwords as string[] ) )
     
     .command('decrypt', 'decrypt notes given a password list and an output directory',  (yargs) => yargs.option(  {
         passwords: optPasswordList,
@@ -143,7 +159,7 @@ yargs.default(hideBin(process.argv))
             type: 'string',
             demandOption: true
         }
-    } ) )
+    } ), (argv) => new DecryptCommandHandler().argHandler( argv.passwords as string[], argv.outdir as string ) ) 
     
     .demandCommand()
     .help()
@@ -151,7 +167,7 @@ yargs.default(hideBin(process.argv))
     .example([
         ['$0 list', 'Processes all *.md and *.mdenc files and list any encrypted artifacts within the current directory'],
         ['$0 test --passwords pw1 pw2', 'check that all notes can be decrypted with the given password list'],
-        ['$0 decrypt --passwords pw1 pw2 --outdir out', 'decrypt notes given a password list and an output directory'],
+        ['$0 decrypt --pw pw1 pw2 --outdir \\path\\to\\output\\', 'decrypt notes given a password list and an output directory'],
       ])
     .parse()
 ;
