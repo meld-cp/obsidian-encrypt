@@ -63,7 +63,7 @@ class ListCommandHandler {
 
 class TestCommandHandler {
 
-    async argHandler( passwords:string[] ) {
+    async argHandler( passwords:string[], onlyListFails:boolean ) {
         console.log( 'argHandler', {passwords} );
 
         const cwd = process.cwd();
@@ -80,11 +80,14 @@ class TestCommandHandler {
             }
         }
 
-        this.outputResults( results );
+        this.outputResults( results, onlyListFails );
     }
 
-    outputResults(results: TestResult[]) {
+    outputResults(results: TestResult[], onlyListFails:boolean) {
         for (const result of results) {
+            if (onlyListFails && result.success) {
+                continue;
+            }
             console.log( `${result.success ? 'PASSED' : 'FAILED'} => ${result.listing.relativePath} => ${result.message} => ${result.listing.featureType}` );
         }
     }
@@ -94,7 +97,7 @@ class TestCommandHandler {
 
         const results : TestResult[] = [];
 
-        if ( listing.content == null || listing.content.length == 0 ) {
+        if ( listing.content == null ) {
             results.push({
                 listing,
                 success: false,
@@ -111,6 +114,9 @@ class TestCommandHandler {
             const reInplaceMatcher = /🔐(.*?)🔐/g;
             const matches = Array.from( line.matchAll( reInplaceMatcher ) );
             for (const match of matches) {
+
+                const matchLoc = `line ${lineNo}, pos ${match.index!+1}`;
+
                 const encryptedText = `🔐${match[1]}🔐`;
 
                 const txtAnalysis = new FeatureInplaceTextAnalysis( encryptedText );
@@ -118,8 +124,10 @@ class TestCommandHandler {
                     results.push({
                         listing,
                         success: false,
-                        message: `line ${lineNo}, pos ${match.index!+1}`
+                        message: `${matchLoc}, cannot decrypt`
                     });
+                    //console.log(listing.relativePath, {txtAnalysis} );
+
                     continue;
                 }
 
@@ -128,23 +136,30 @@ class TestCommandHandler {
                     results.push({
                         listing,
                         success: false,
-                        message: `line ${lineNo}, pos ${match.index!+1}, unknown format`
+                        message: `${matchLoc}, unknown format`
                     });
+                    //console.log(listing.relativePath, {txtAnalysis} );
                     continue;
                 }
 
+                let wasDecrypted = false;
                 for (let pwIdx = 0; pwIdx < passwords.length; pwIdx++) {
                     const pw = passwords[pwIdx];
                     const pwNo = pwIdx + 1;
-                    const decoded = await ch.decryptFromBase64(txtAnalysis.decryptable.base64CipherText, pw);
-                    if ( decoded != null ){
+                    const decryptedText = await ch.decryptFromBase64(txtAnalysis.decryptable.base64CipherText, pw);
+                    if ( decryptedText != null ){
+                        wasDecrypted = true;
                         results.push({
                             listing,
                             success: true,
-                            message: `line ${lineNo}, pos ${match.index!+1}, password #${pwNo}`
+                            message: `${matchLoc}, password #${pwNo}`
                         });
-                        continue;
+                        break;
                     }
+                }
+
+                if (wasDecrypted){
+                    break;
                 }
 
             }
@@ -156,6 +171,14 @@ class TestCommandHandler {
 
     async testForWholeNoteDecryption( listing: Listing, passwords:string[] ) : Promise<TestResult> {
         //console.log( 'testFile', {listing, passwords} );
+
+        if( listing.content == null || listing.content.length == 0 ){
+            return {
+                listing,
+                success: false,
+                message: 'no content'
+            };
+        }
 
         const fileData = JsonFileEncoding.decode( listing.content || '' );
 
@@ -272,13 +295,20 @@ const optListingFormat : yargs.Options = {
 
 yargs.default(hideBin(process.argv))
     .usage( 'Usage: $0 [command] [options]' )
+
     .command( 'list', 'list all encrypted artifacts within the current directory', (yargs) => yargs.option( {
         format: optListingFormat
     } ), (argv) => new ListCommandHandler().argHandler(argv.format as string ) )
     
     .command(['test', 'check'], 'check that all notes can be decrypted with the given password list', (yargs) => yargs.option(  {
-        passwords: optPasswordList
-    } ), (argv) => new TestCommandHandler().argHandler( argv.passwords as string[] ) )
+        passwords: optPasswordList,
+        fails: {
+            alias: 'f',
+            describe: 'only list fails',
+            type: 'boolean',
+            default: false
+        }
+    } ), (argv) => new TestCommandHandler().argHandler( argv.passwords as string[], argv.fails as boolean ) )
     
     .command('decrypt', 'decrypt notes given a password list and an output directory',  (yargs) => yargs.option(  {
         passwords: optPasswordList,
