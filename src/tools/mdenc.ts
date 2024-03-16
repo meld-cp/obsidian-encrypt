@@ -2,9 +2,11 @@ import * as yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import * as fs from 'fs';
 import * as path from 'path';
-//import { CryptoHelperFactory } from 'src/services/CryptoHelperFactory';
+import { CryptoHelperFactory } from 'src/services/CryptoHelperFactory';
+import { JsonFileEncoding } from "src/services/FileDataHelper";
 import * as Constants from 'src/services/Constants';
 import * as InPlaceConstants from 'src/features/feature-inplace-encrypt/FeatureInplaceConstants';
+import { FeatureInplaceTextAnalysis } from 'src/features/feature-inplace-encrypt/featureInplaceTextAnalysis';
 
 interface Listing {
     featureType: 'InPlace' | 'WholeNote';
@@ -12,6 +14,12 @@ interface Listing {
     relativePath: string;
     extension: string;
     content: string | undefined;
+}
+
+interface TestResult{
+    listing: Listing;
+    success: boolean;
+    message: string;
 }
 
 class ListCommandHandler {
@@ -57,6 +65,127 @@ class TestCommandHandler {
 
     async argHandler( passwords:string[] ) {
         console.log( 'argHandler', {passwords} );
+
+        const cwd = process.cwd();
+
+        const listings = await Utils.fetchListings( cwd, true );
+
+        const results : TestResult[] = [];
+
+        for (const listing of listings) {
+            if (listing.featureType == 'InPlace'){
+               results.push( ... await this.testForInPlaceDecryption( listing, passwords ) );
+            } else if (listing.featureType == 'WholeNote'){
+                results.push( await this.testForWholeNoteDecryption( listing, passwords ) );
+            }
+        }
+
+        this.outputResults( results );
+    }
+
+    outputResults(results: TestResult[]) {
+        for (const result of results) {
+            console.log( `${result.success ? 'PASSED' : 'FAILED'} => ${result.listing.relativePath} => ${result.message} => ${result.listing.featureType}` );
+        }
+    }
+
+    async testForInPlaceDecryption( listing: Listing, passwords:string[] ) : Promise<TestResult[]> {
+        //console.log( 'testFile', {listing, passwords} );
+
+        const results : TestResult[] = [];
+
+        if ( listing.content == null || listing.content.length == 0 ) {
+            results.push({
+                listing,
+                success: false,
+                message: 'no content'
+            });
+            return results;
+        }
+
+        const lines = listing.content!.split( '\n' );
+        
+        for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+            const line = lines[lineIdx];
+            const lineNo = lineIdx + 1;
+            const reInplaceMatcher = /🔐(.*?)🔐/g;
+            const matches = Array.from( line.matchAll( reInplaceMatcher ) );
+            for (const match of matches) {
+                const encryptedText = `🔐${match[1]}🔐`;
+
+                const txtAnalysis = new FeatureInplaceTextAnalysis( encryptedText );
+                if (!txtAnalysis.canDecrypt || txtAnalysis.decryptable == null ){
+                    results.push({
+                        listing,
+                        success: false,
+                        message: `line ${lineNo}, pos ${match.index!+1}`
+                    });
+                    continue;
+                }
+
+                const ch = CryptoHelperFactory.BuildFromDecryptableOrNull( txtAnalysis.decryptable );
+                if ( ch == null ){
+                    results.push({
+                        listing,
+                        success: false,
+                        message: `line ${lineNo}, pos ${match.index!+1}, unknown format`
+                    });
+                    continue;
+                }
+
+                for (let pwIdx = 0; pwIdx < passwords.length; pwIdx++) {
+                    const pw = passwords[pwIdx];
+                    const pwNo = pwIdx + 1;
+                    const decoded = await ch.decryptFromBase64(txtAnalysis.decryptable.base64CipherText, pw);
+                    if ( decoded != null ){
+                        results.push({
+                            listing,
+                            success: true,
+                            message: `line ${lineNo}, pos ${match.index!+1}, password #${pwNo}`
+                        });
+                        continue;
+                    }
+                }
+
+            }
+            
+        }
+
+        return results;
+    }
+
+    async testForWholeNoteDecryption( listing: Listing, passwords:string[] ) : Promise<TestResult> {
+        //console.log( 'testFile', {listing, passwords} );
+
+        const fileData = JsonFileEncoding.decode( listing.content || '' );
+
+        const ch = CryptoHelperFactory.BuildFromFileDataOrNull( fileData );
+        if ( ch == null ){
+            return {
+                listing,
+                success: false,
+                message: 'Unknown format'
+            };
+        }
+        
+        for (let i = 0; i < passwords.length; i++) {
+            const pw = passwords[i];
+            const decoded = await ch.decryptFromBase64(fileData.encodedData, pw)
+            if ( decoded != null ){
+                return {
+                    listing,
+                    success: true,
+                    message: `password #${i+1}`
+                };
+            }
+        }
+
+
+        return {
+            listing,
+            success: false,
+            message: 'unable to decrypt'
+        };
     }
 }
 
