@@ -12,8 +12,8 @@ esbuild.build({
 	target: 'node16',
 	logLevel: "info",
 	sourcemap: prod ? false : 'inline',
-	treeShaking: prod,
-	minify: prod,
+	treeShaking: true,
+	minify: true,
 	outfile: './tools/mdenc.mjs',
 	//plugins:[ ]
 })

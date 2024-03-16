@@ -1,10 +1,4 @@
-//import * from "yargs";
-
-//const yargs = require('yargs')
-//const hideBin = require('yargs/helpers')
-//const argv = yargs(process.argv).argv
-
-import yargs from 'yargs';
+import yargs, { Options } from 'yargs';
 import { hideBin } from 'yargs/helpers'
 import * as fs from 'fs';
 import * as path from 'path';
@@ -12,21 +6,101 @@ import * as path from 'path';
 import * as Constants from 'src/services/Constants';
 import * as InPlaceConstants from 'src/features/feature-inplace-encrypt/FeatureInplaceConstants';
 
-const optPasswordList  = {
+interface Listing {
+    featureType: 'InPlace' | 'WholeNote';
+    fullPath: string;
+    relativePath: string;
+    extension: string;
+    //content: string;
+}
+
+class ListCommandHandler {
+    
+
+    async argHandler(args: any) {
+        //console.log( "list", args );
+        // for each *.md or *.mdenc file in the current directory, parse it and list any encrypted files
+
+        const listing : Listing[] = [];
+
+        const cwd = process.cwd();
+    
+        for await (const p of Utils.walk( cwd )) {
+    
+            const relativePath = '.' + path.sep + path.relative(cwd, p);
+            const ext = path.extname(p).toLowerCase().slice(1);
+    
+            if ( !['md', ...Constants.ENCRYPTED_FILE_EXTENSIONS, Constants.ENCRYPTED_FILE_EXTENSION_DEFAULT].includes( ext ) ){
+                continue;
+            }
+
+            const content = await fs.promises.readFile( p, 'utf8' );
+
+            if (
+                ext == 'md'
+                && (
+                    content.includes( InPlaceConstants._PREFIX_A_VISIBLE )
+                    || content.includes( InPlaceConstants._PREFIX_B_VISIBLE )
+                )
+            ){
+                listing.push( {
+                    featureType: 'InPlace',
+                    fullPath: p,
+                    relativePath: relativePath,
+                    extension: ext,
+                    //content: content
+                })
+            } else {
+                listing.push( {
+                    featureType: 'WholeNote',
+                    fullPath: p,
+                    relativePath: relativePath,
+                    extension: ext,
+                    //content: content
+                })
+            }
+
+        }
+        
+        console.table( listing );
+
+        //console.log( listing.entries( (l) => { relativePath:l.relativePath, l.extension, l.featureType } ) );
+    }
+    
+
+}
+
+class Utils{
+    static async * walk( dir : string ) : AsyncIterableIterator<string> {
+        for await (const d of await fs.promises.opendir(dir)) {
+            const entry = path.join(dir, d.name);
+            if (d.isDirectory()) yield* Utils.walk(entry);
+            else if (d.isFile()) yield entry;
+        }
+    }
+}
+
+const optPasswordList : Options  = {
     demandOption: true,
     alias: 'pw',
     describe: 'passwords to use',
     type: 'array',
 }
 
- yargs(hideBin(process.argv))
-    .command( 'list', 'list all encrypted artifacts within the current directory', () => {}, cmdListHandler )
+const cmdListHandler = new ListCommandHandler();
+
+yargs(hideBin(process.argv))
+    
+    .command( 'list', 'list all encrypted artifacts within the current directory', () => {}, cmdListHandler.argHandler )
+    
     .command(['test', 'check'], 'check that all notes can be decrypted with the given password list', {
-        //passwords: optPasswordList
+        passwords: optPasswordList
     } )
-    .command('decrypt', 'decrypt notes given a password list', {
-        //passwords: optPasswordList
+    
+    .command('decrypt', 'decrypt notes given a password list and an output directory', {
+        passwords: optPasswordList
     }, (argv: any) => { console.log( "decrypt", argv ) } )
+    
     .demandCommand()
     .help()
     .wrap( null )
@@ -37,70 +111,4 @@ const optPasswordList  = {
     .parse()
 ;
  
-async function* walk( dir : string ) : AsyncIterableIterator<string> {
-    for await (const d of await fs.promises.opendir(dir)) {
-        const entry = path.join(dir, d.name);
-        if (d.isDirectory()) yield* walk(entry);
-        else if (d.isFile()) yield entry;
-    }
-}
 
-
-async function cmdListHandler(args: any) {
-    //console.log( "list", args );
-    // for each *.md or *.mdenc file in the current directory, parse it and list any encrypted files
-
-    const cwd = process.cwd();
-
-    for await (const p of walk( cwd )) {
-
-        const relativePath = '.' + path.sep + path.relative(cwd, p);
-
-        const ext = path.extname(p).toLowerCase().slice(1);
-
-        if ( ext == 'md' ){
-            // look for inplace encrypted content
-            fs.readFile( p, (err, data) =>{
-                if (err) {
-                    console.error(err);
-                }else {
-                    //TODO: parse the file and look for encrypted content
-                    const text = data.toString();
-                    if (
-                        text.includes( InPlaceConstants._PREFIX_A_VISIBLE )
-                        || text.includes( InPlaceConstants._PREFIX_B_VISIBLE ) 
-                    ){
-                        console.log( 'In Place Encryption', relativePath );
-                    }
-                }
-            } );
-        } else if (  Constants.ENCRYPTED_FILE_EXTENSIONS.includes( ext ) ){
-            console.log( 'Whole note encryption', relativePath );
-        }
-    }
-    
-    // const files = glob.sync('**/*.{md,mdenc}', {
-    //     cwd: process.cwd(),
-    // });
-
-    // const cryptoHelper = CryptoHelperFactory.getHelper();
-    // const filesWithEncryptedContent = files.reduce((result, file) => {
-    //     const filePath = path.join(process.cwd(), file);
-    //     const fileContent = fs.readFileSync(filePath, { encoding: 'utf8' });
-    //     const encryptedContent = cryptoHelper.findEncryptedContent(fileContent);
-    //     if (encryptedContent) {
-    //         result.push({
-    //             file,
-    //             encryptedContent,
-    //         });
-    //     }
-    //     return result;
-    // }, [] as { file: string; encryptedContent: EncryptedContent; }[]);
-
-    // if (filesWithEncryptedContent.length > 0) {
-    //     console.table(filesWithEncryptedContent);
-    // } else {
-    //     console.log('No encrypted files found.');
-    // }
-
-}
