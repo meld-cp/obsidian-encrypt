@@ -30,33 +30,46 @@ class ListCommandHandler {
         console.log( 'argHandler', { format } );
 
         const cwd = process.cwd();
-    
-        const listings = await Utils.fetchListings( cwd, false );
-
-        this.outputListings( listings, format );
-
-
-    }
-
-    outputListings(listings: Listing[], format: string) {
 
         if (format == 'csv') {
-            console.log( 'feature,fullPath,relativePath,extension,' );
-            for (const l of listings) {
-                console.log( `"${l.featureType}","${l.fullPath}","${l.relativePath}","${l.extension}"` );
-            }
-            return;
+            this.outputCsvHeader();
         }
         
+        const listings: Listing[] = [];
+
+        for await (const listing of Utils.listings(cwd, false)) {
+            if (format == 'csv') {
+                this.outputCsvRow( listing );
+                continue;
+            }
+            
+            if (format == 'json' || format == 'table') {
+                listings.push( listing );
+                continue;
+            }
+            
+            break;
+        }
+
+        if (format == 'csv') {
+            return;
+        }
+
         if (format == 'json'){
             console.log( JSON.stringify( listings, null, 2 ) );
             return;
         }
-        
-        console.table( listings as Listing[] );
 
+        console.table( listings as Listing[] );
+    }
+    
+    outputCsvHeader() {
+        console.log( 'feature,fullPath,relativePath,extension,' );
     }
 
+    outputCsvRow( l: Listing ) {
+        console.log( `"${l.featureType}","${l.fullPath}","${l.relativePath}","${l.extension}"` );
+    }
     
 
 }
@@ -64,46 +77,49 @@ class ListCommandHandler {
 class TestCommandHandler {
 
     async argHandler( passwords:string[], onlyListFails:boolean ) {
-        console.log( 'argHandler', {passwords} );
 
         const cwd = process.cwd();
 
-        const listings = await Utils.fetchListings( cwd, true );
+        for await (const listing of Utils.listings(cwd, true)) {
 
-        const results : TestResult[] = [];
-
-        for (const listing of listings) {
             if (listing.featureType == 'InPlace'){
-               results.push( ... await this.testForInPlaceDecryption( listing, passwords ) );
+                
+                for await (const result of this.testForInPlaceDecryption( listing, passwords )) {
+                    this.outputResult( result, onlyListFails );
+                }
+
             } else if (listing.featureType == 'WholeNote'){
-                results.push( await this.testForWholeNoteDecryption( listing, passwords ) );
+                
+                const result = await this.testForWholeNoteDecryption( listing, passwords );
+                this.outputResult( result, onlyListFails );
+
             }
         }
 
-        this.outputResults( results, onlyListFails );
+    }
+
+    outputResult(result: TestResult, onlyListFails:boolean) {
+        if (onlyListFails && result.success) {
+            return;
+        }
+        console.log( `${result.success ? 'PASSED' : 'FAILED'} => ${result.listing.relativePath} => ${result.message} => ${result.listing.featureType}` );
     }
 
     outputResults(results: TestResult[], onlyListFails:boolean) {
         for (const result of results) {
-            if (onlyListFails && result.success) {
-                continue;
-            }
-            console.log( `${result.success ? 'PASSED' : 'FAILED'} => ${result.listing.relativePath} => ${result.message} => ${result.listing.featureType}` );
+            this.outputResult( result, onlyListFails );
         }
     }
 
-    async testForInPlaceDecryption( listing: Listing, passwords:string[] ) : Promise<TestResult[]> {
-        //console.log( 'testFile', {listing, passwords} );
-
-        const results : TestResult[] = [];
+    async * testForInPlaceDecryption( listing: Listing, passwords:string[] ) : AsyncIterableIterator<TestResult> {
 
         if ( listing.content == null ) {
-            results.push({
+            yield {
                 listing,
                 success: false,
                 message: 'no content'
-            });
-            return results;
+            };
+            return;
         }
 
         const lines = listing.content!.split( '\n' );
@@ -121,24 +137,22 @@ class TestCommandHandler {
 
                 const txtAnalysis = new FeatureInplaceTextAnalysis( encryptedText );
                 if (!txtAnalysis.canDecrypt || txtAnalysis.decryptable == null ){
-                    results.push({
+                    yield {
                         listing,
                         success: false,
                         message: `${matchLoc}, cannot decrypt`
-                    });
-                    //console.log(listing.relativePath, {txtAnalysis} );
+                    };
 
                     continue;
                 }
 
                 const ch = CryptoHelperFactory.BuildFromDecryptableOrNull( txtAnalysis.decryptable );
                 if ( ch == null ){
-                    results.push({
+                    yield {
                         listing,
                         success: false,
                         message: `${matchLoc}, unknown format`
-                    });
-                    //console.log(listing.relativePath, {txtAnalysis} );
+                    };
                     continue;
                 }
 
@@ -149,11 +163,11 @@ class TestCommandHandler {
                     const decryptedText = await ch.decryptFromBase64(txtAnalysis.decryptable.base64CipherText, pw);
                     if ( decryptedText != null ){
                         wasDecrypted = true;
-                        results.push({
+                        yield {
                             listing,
                             success: true,
                             message: `${matchLoc}, password #${pwNo}`
-                        });
+                        };
                         break;
                     }
                 }
@@ -166,12 +180,9 @@ class TestCommandHandler {
             
         }
 
-        return results;
     }
 
     async testForWholeNoteDecryption( listing: Listing, passwords:string[] ) : Promise<TestResult> {
-        //console.log( 'testFile', {listing, passwords} );
-
         if( listing.content == null || listing.content.length == 0 ){
             return {
                 listing,
@@ -203,7 +214,6 @@ class TestCommandHandler {
             }
         }
 
-
         return {
             listing,
             success: false,
@@ -220,17 +230,19 @@ class DecryptCommandHandler{
 
 class Utils{
     static async * walk( dir : string ) : AsyncIterableIterator<string> {
+        
         for await (const d of await fs.promises.opendir(dir)) {
             const entry = path.join(dir, d.name);
-            if (d.isDirectory()) yield* Utils.walk(entry);
-            else if (d.isFile()) yield entry;
+            if (d.isDirectory()) {
+                yield* Utils.walk(entry);
+            } else if (d.isFile()){
+                yield entry;
+            }
         }
     }
 
-    static async fetchListings( dir : string, includeContent: boolean ) : Promise<Listing[]> {
+    static async * listings( dir : string, includeContent: boolean ) : AsyncIterableIterator<Listing> {
         
-        const listing : Listing[] = [];
-
         for await (const p of Utils.walk( dir )) {
     
             const ext = path.extname(p).toLowerCase().slice(1);
@@ -250,35 +262,35 @@ class Utils{
                     content!.includes( InPlaceConstants._PREFIX_A_VISIBLE )
                     || content!.includes( InPlaceConstants._PREFIX_B_VISIBLE )
                 ){
-                    listing.push( {
+                    yield {
                         featureType: 'InPlace',
                         fullPath: p,
                         relativePath: relativePath,
                         extension: ext,
                         content: includeContent ? content : undefined
-                    } )
+                    }
                 }
                 continue;
             }
             
             // must be whole note encrypted
-            listing.push( {
+            yield {
                 featureType: 'WholeNote',
                 fullPath: p,
                 relativePath: relativePath,
                 extension: ext,
                 content: content
-            } )
+            }
 
         }
 
-        return listing;
     }
+
 }
 
 const optPasswordList : yargs.Options  = {
     demandOption: true,
-    alias: 'pw',
+    alias: ['p', 'pw'],
     describe: 'passwords to use',
     type: 'array',
 }
@@ -303,17 +315,17 @@ yargs.default(hideBin(process.argv))
     .command(['test', 'check'], 'check that all notes can be decrypted with the given password list', (yargs) => yargs.option(  {
         passwords: optPasswordList,
         fails: {
-            alias: 'f',
+            alias: ['f', 'fail'],
             describe: 'only list fails',
             type: 'boolean',
             default: false
         }
     } ), (argv) => new TestCommandHandler().argHandler( argv.passwords as string[], argv.fails as boolean ) )
     
-    .command('decrypt', 'decrypt notes given a password list and an output directory',  (yargs) => yargs.option(  {
+    .command('decrypt', 'decrypt notes to plain text given a password list and an output directory',  (yargs) => yargs.option(  {
         passwords: optPasswordList,
         outdir: {
-            alias: 'o',
+            alias: ['o', 'out', 'to'],
             describe: 'output directory',
             type: 'string',
             demandOption: true
@@ -326,7 +338,7 @@ yargs.default(hideBin(process.argv))
     .example([
         ['$0 list', 'Processes all *.md and *.mdenc files and list any encrypted artifacts within the current directory'],
         ['$0 test --passwords pw1 pw2', 'check that all notes can be decrypted with the given password list'],
-        ['$0 decrypt --pw pw1 pw2 --outdir \\path\\to\\output\\', 'decrypt notes given a password list and an output directory'],
+        ['$0 decrypt --pw pw1 pw2 --outdir \\path\\to\\output\\', 'decrypt notes to an output directory'],
       ])
     .parse()
 ;
