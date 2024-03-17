@@ -7,7 +7,6 @@ import { JsonFileEncoding } from "src/services/FileDataHelper";
 import * as Constants from 'src/services/Constants';
 import * as InPlaceConstants from 'src/features/feature-inplace-encrypt/FeatureInplaceConstants';
 import { FeatureInplaceTextAnalysis } from 'src/features/feature-inplace-encrypt/featureInplaceTextAnalysis';
-import { Console } from 'console';
 
 interface Listing {
     featureType: 'InPlace' | 'WholeNote';
@@ -267,11 +266,102 @@ class DecryptCommandHandler{
     }
     
     async decryptInPlaceListing(listing: Listing, passwords: string[], outdir: string, dryrun: boolean) : Promise<DecryptResult> {
+        
+        const lines = listing.content!.split( '\n' );
+        const decryptedLines : string[] = [];
+        
+        for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+            
+            const line = lines[lineIdx];
+            
+            const lineNo = lineIdx + 1;
+            
+            const reInplaceMatchers = [
+                /%%🔐(.*?)🔐%%/g,
+                /🔐(.*?)🔐/g
+            ]
+
+            let decryptedLine = line;
+            let matchCount = 0;
+            let decryptedCount = 0;
+
+            for (const reInplaceMatcher of reInplaceMatchers) {
+                
+            
+                for await (const match of decryptedLine.matchAll( reInplaceMatcher ) ) {
+                    
+                    matchCount++;
+
+                    const matchLoc = `Line ${lineNo}, pos ${match.index!+1}`;
+
+                    const matchedText = match[0];
+                    const encryptedText = `🔐${match[1]}🔐`;
+
+                    const txtAnalysis = new FeatureInplaceTextAnalysis( encryptedText );
+                    if (!txtAnalysis.canDecrypt || txtAnalysis.decryptable == null ){
+                        return {
+                            listing,
+                            success: false,
+                            message: `ERROR: ${matchLoc}, cannot decrypt`,
+                            outFile: undefined
+                        };
+                    }
+
+                    const ch = CryptoHelperFactory.BuildFromDecryptableOrNull( txtAnalysis.decryptable );
+                    if ( ch == null ){
+                        return {
+                            listing,
+                            success: false,
+                            message: `ERROR: ${matchLoc}, unknown format`,
+                            outFile: undefined
+                        };
+                    }
+
+                    let decryptedText :  string | null = null;
+                    for (let pwIdx = 0; pwIdx < passwords.length; pwIdx++) {
+                        const pw = passwords[pwIdx];
+                        decryptedText = await ch.decryptFromBase64(txtAnalysis.decryptable.base64CipherText, pw);
+                        if ( decryptedText != null ){
+                            break;
+                        }
+                    }
+
+                    if (decryptedText!==null){
+                        decryptedCount ++;
+                        decryptedLine = decryptedLine.replace( matchedText, decryptedText );
+                    }
+
+                }
+            }
+
+            if (matchCount != decryptedCount){
+                return {
+                    listing,
+                    success: false,
+                    message: `ERROR: Match count ${matchCount} != decrypted count ${decryptedCount}`,
+                    outFile: undefined
+                };
+            }
+
+            decryptedLines.push( decryptedLine );
+
+        }
+
+        let outFile = path.join( outdir, listing.relativePath );
+
+        if (!dryrun){
+            const outFileDir = path.dirname( outFile );
+            if (!fs.existsSync( outFileDir )){
+                fs.mkdirSync( outFileDir, { recursive: true } );
+            }
+            fs.writeFileSync( outFile, decryptedLines.join( '\n' ) );
+        }
+
         return Promise.resolve({
             listing,
-            success: false,
-            message: 'inplace decryption not implemented',
-            outFile: undefined
+            success: true,
+            message: 'Decrypted',
+            outFile: outFile
         });
     }
 
@@ -307,7 +397,7 @@ class DecryptCommandHandler{
             return {
                 listing,
                 success: true,
-                message: 'empty file',
+                message: 'WARN: Empty file',
                 outFile: outFile
             };
         }
@@ -319,7 +409,7 @@ class DecryptCommandHandler{
             return {
                 listing,
                 success: false,
-                message: 'Unknown format',
+                message: 'ERROR: Unknown format',
                 outFile: undefined
             };
         }
@@ -335,7 +425,7 @@ class DecryptCommandHandler{
                 return {
                     listing,
                     success: true,
-                    message: `decrypted`,
+                    message: `Decrypted`,
                     outFile: outFile
                 };
             }
@@ -344,7 +434,7 @@ class DecryptCommandHandler{
         return {
             listing,
             success: false,
-            message: `unable to decrypt`,
+            message: `ERROR: Unable to decrypt`,
             outFile: undefined
         };
     }
