@@ -7,6 +7,7 @@ import { JsonFileEncoding } from "src/services/FileDataHelper";
 import * as Constants from 'src/services/Constants';
 import * as InPlaceConstants from 'src/features/feature-inplace-encrypt/FeatureInplaceConstants';
 import { FeatureInplaceTextAnalysis } from 'src/features/feature-inplace-encrypt/featureInplaceTextAnalysis';
+import { Console } from 'console';
 
 interface Listing {
     featureType: 'InPlace' | 'WholeNote';
@@ -20,6 +21,13 @@ interface TestResult{
     listing: Listing;
     success: boolean;
     message: string;
+}
+
+interface DecryptResult{
+    listing: Listing;
+    success: boolean;
+    message: string;
+    outFile: string | undefined;
 }
 
 class ListCommandHandler {
@@ -109,19 +117,6 @@ class TestCommandHandler {
             }
         }
 
-    }
-
-    outputResult(result: TestResult, onlyListFails:boolean) {
-        if (onlyListFails && result.success) {
-            return;
-        }
-        console.log( `${result.success ? 'PASSED' : 'FAILED'} => ${result.listing.relativePath} => ${result.message} => ${result.listing.featureType}` );
-    }
-
-    outputResults(results: TestResult[], onlyListFails:boolean) {
-        for (const result of results) {
-            this.outputResult( result, onlyListFails );
-        }
     }
 
     async * testForInPlaceDecryption( listing: Listing, passwords:string[] ) : AsyncIterableIterator<TestResult> {
@@ -233,11 +228,125 @@ class TestCommandHandler {
             message: 'unable to decrypt'
         };
     }
+
+    outputResult(result: TestResult, onlyListFails:boolean) {
+        if (onlyListFails && result.success) {
+            return;
+        }
+        console.log( `${result.success ? 'PASSED' : 'FAILED'} => ${result.listing.relativePath} => ${result.message} => ${result.listing.featureType}` );
+    }
+
+    outputResults(results: TestResult[], onlyListFails:boolean) {
+        for (const result of results) {
+            this.outputResult( result, onlyListFails );
+        }
+    }
 }
 
 class DecryptCommandHandler{
-    async argHandler( passwords:string[], outdir:string ) {
-        console.log( 'argHandler', {passwords, outdir} );
+    async argHandler( passwords:string[], outdir:string, dryrun:boolean ) {
+        
+        console.log( `decrypting${dryrun?' (dry run)':''}...` );
+
+        const cwd = process.cwd();
+
+        for await (const listing of Utils.listings(cwd, true)) {
+
+            if (listing.featureType == 'InPlace'){
+                
+                 const result = await this.decryptInPlaceListing( listing, passwords, outdir, dryrun );
+                 this.outputResult( result );
+                 
+            } else if (listing.featureType == 'WholeNote'){
+                
+                const result = await this.decryptWholeNoteListing( listing, passwords, outdir, dryrun );
+                this.outputResult( result );
+
+            }
+        }
+    }
+    
+    async decryptInPlaceListing(listing: Listing, passwords: string[], outdir: string, dryrun: boolean) : Promise<DecryptResult> {
+        return Promise.resolve({
+            listing,
+            success: false,
+            message: 'inplace decryption not implemented',
+            outFile: undefined
+        });
+    }
+
+    outputResult(result: DecryptResult) {
+        console.log( `${result.message} : ${result.listing.relativePath}${result.outFile == null ? '' : ' => `' + result.outFile + '`'}` );
+    }
+
+    async decryptWholeNoteListing(listing: Listing, passwords: string[], outdir: string, dryrun:boolean ) : Promise<DecryptResult> {
+
+        let outFile = path.join( outdir, listing.relativePath );
+
+        // change extension
+        const fileName = path.basename(outFile);
+        const extension = path.extname(outFile);
+        const newFileName = fileName.replace(extension, '.md');
+
+        // final outfile
+        outFile = path.join(path.dirname(outFile), newFileName);
+        
+        if (!dryrun){
+            const outFileDir = path.dirname( outFile );
+            if (!fs.existsSync( outFileDir )){
+                fs.mkdirSync( outFileDir, { recursive: true } );
+            }
+        }
+
+        if( listing.content == null || listing.content.length == 0 ){
+
+            if (!dryrun){
+                fs.writeFileSync( outFile, '' );
+            }
+
+            return {
+                listing,
+                success: true,
+                message: 'empty file',
+                outFile: outFile
+            };
+        }
+
+        const fileData = JsonFileEncoding.decode( listing.content || '' );
+
+        const ch = CryptoHelperFactory.BuildFromFileDataOrNull( fileData );
+        if ( ch == null ){
+            return {
+                listing,
+                success: false,
+                message: 'Unknown format',
+                outFile: undefined
+            };
+        }
+        
+        for (let i = 0; i < passwords.length; i++) {
+            const pw = passwords[i];
+            const decoded = await ch.decryptFromBase64(fileData.encodedData, pw)
+            if ( decoded != null ){
+                if (!dryrun){
+                    fs.writeFileSync( outFile, decoded );
+                }
+
+                return {
+                    listing,
+                    success: true,
+                    message: `decrypted`,
+                    outFile: outFile
+                };
+            }
+        }
+
+        return {
+            listing,
+            success: false,
+            message: `unable to decrypt`,
+            outFile: undefined
+        };
     }
 }
 
@@ -342,8 +451,14 @@ yargs.default(hideBin(process.argv))
             describe: 'output directory',
             type: 'string',
             demandOption: true
+        },
+        dryrun: {
+            alias: ['dr', 'dry'],
+            describe: 'dry run',
+            type: 'boolean',
+            default: false
         }
-    } ), (argv) => new DecryptCommandHandler().argHandler( argv.passwords as string[], argv.outdir as string ) ) 
+    } ), (argv) => new DecryptCommandHandler().argHandler( argv.passwords as string[], argv.outdir as string, argv.dryrun !== false ) ) 
     
     .demandCommand()
     .help()
