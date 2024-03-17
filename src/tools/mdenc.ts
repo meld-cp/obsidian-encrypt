@@ -338,7 +338,7 @@ class DecryptCommandHandler{
                 return {
                     listing,
                     success: false,
-                    message: `ERROR: Match count ${matchCount} != decrypted count ${decryptedCount}`,
+                    message: `ERROR: Unable to decrypt all matches. Line ${lineNo}, match count ${matchCount} != decrypted count ${decryptedCount}`,
                     outFile: undefined
                 };
             }
