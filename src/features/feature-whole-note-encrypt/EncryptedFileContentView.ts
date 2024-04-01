@@ -318,7 +318,7 @@ export class EncryptedFileContentView extends TextFileView {
 
 			//console.debug('encodeAndSave', {currentEditorSourceText:this.currentEditorSourceText});
 			
-			const fileData = await FileDataHelper.encode(
+			const fileData = await FileDataHelper.encrypt(
 				this.encryptionPassword,
 				this.hint,
 				this.currentEditorSourceText

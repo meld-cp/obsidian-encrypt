@@ -217,7 +217,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 	private async encryptFile(file: TFile, passwordAndHint:IPasswordAndHint ) : Promise<string> {
 		const content = await this.plugin.app.vault.read( file );
-		const encryptedData = await FileDataHelper.encode( passwordAndHint.password, passwordAndHint.hint, content );
+		const encryptedData = await FileDataHelper.encrypt( passwordAndHint.password, passwordAndHint.hint, content );
 		return JsonFileEncoding.encode( encryptedData );
 	}
 

@@ -7,6 +7,7 @@ import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInp
 import FeatureWholeNoteEncrypt from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
 import { EditViewEnum } from './features/feature-whole-note-encrypt/EncryptedFileContentView';
 import FeatureConvertNote from './features/feature-convert-note/FeatureConvertNote';
+import { EncryptedMarkdownView } from './EncryptedMarkdownView';
 
 export default class MeldEncrypt extends Plugin {
 
@@ -50,9 +51,32 @@ export default class MeldEncrypt extends Plugin {
 			await f.onload( this, this.settings );
 		});
 
+		this.registerView(
+			EncryptedMarkdownView.VIEW_TYPE,
+			(leaf) => new EncryptedMarkdownView(leaf)
+		);
+			
+		this.registerExtensions( ['mymd'], EncryptedMarkdownView.VIEW_TYPE );
+
+		
+		// const origModify = this.app.vault.modify;
+
+		// this.app.vault.modify = async (file, data, options) => {
+		// 	console.debug('modify', {file, data, options});
+		// 	if (file.extension == 'mymd') {
+		// 		this.app.vault.adapter.write(file.path, data);
+		// 		return;
+		// 	}
+		// 	await origModify(file, data, options);
+		// 	//await this.onFileChanged(file);
+		// };
+
+
 	}
 	
-	onunload() {
+	override onunload() {
+		console.debug('onunload');
+		this.app.workspace.detachLeavesOfType(EncryptedMarkdownView.VIEW_TYPE);
 		this.enabledFeatures.forEach(async f => {
 			f.onunload();
 		});

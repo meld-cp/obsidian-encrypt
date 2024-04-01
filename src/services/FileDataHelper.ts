@@ -17,7 +17,7 @@ export class FileDataHelper{
 
 	public static DEFAULT_VERSION = '2.0';
 
-	public static async encode( pass: string, hint:string, text:string ) : Promise<FileData>{
+	public static async encrypt( pass: string, hint:string, text:string ) : Promise<FileData>{
 		const crypto = CryptoHelperFactory.BuildDefault();
 		const encryptedData = await crypto.encryptToBase64(text, pass);
 		return new FileData( FileDataHelper.DEFAULT_VERSION, hint, encryptedData);
