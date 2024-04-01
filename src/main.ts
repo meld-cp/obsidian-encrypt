@@ -57,25 +57,10 @@ export default class MeldEncrypt extends Plugin {
 		);
 			
 		this.registerExtensions( ['mymd'], EncryptedMarkdownView.VIEW_TYPE );
-
 		
-		// const origModify = this.app.vault.modify;
-
-		// this.app.vault.modify = async (file, data, options) => {
-		// 	console.debug('modify', {file, data, options});
-		// 	if (file.extension == 'mymd') {
-		// 		this.app.vault.adapter.write(file.path, data);
-		// 		return;
-		// 	}
-		// 	await origModify(file, data, options);
-		// 	//await this.onFileChanged(file);
-		// };
-
-
 	}
 	
 	override onunload() {
-		console.debug('onunload');
 		this.app.workspace.detachLeavesOfType(EncryptedMarkdownView.VIEW_TYPE);
 		this.enabledFeatures.forEach(async f => {
 			f.onunload();

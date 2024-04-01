@@ -39,6 +39,15 @@ export class JsonFileEncoding {
 		return JSON.stringify(data, null, 2);
 	}
 
+	public static isEncoded( text: string ) : boolean {
+		try {
+			JSON.parse( text );
+			return true;
+		} catch ( error ) {
+			return false;
+		}
+	}
+
 	public static decode( encodedText:string ) : FileData {
 		//console.debug('JsonFileEncoding.decode',{encodedText});
 		if ( encodedText === '' ){

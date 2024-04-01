@@ -7,7 +7,6 @@ export class EncryptedMarkdownView extends MarkdownView {
 
     static VIEW_TYPE = 'meld-encrypted-view';
 
-    isInitialised : boolean =  false;
     passwordAndHint : IPasswordAndHint | null = null;
     isEncrypted : boolean = false;
 
@@ -27,28 +26,29 @@ export class EncryptedMarkdownView extends MarkdownView {
         // something is setting the view data, perhaps from reading from the file
         //console.debug('setViewData', {data, clear});
 
-        if (!this.isEncrypted){
+        if (this.file == null) {
             super.setViewData(data, clear);
             return;
         }
 
-        if (this.file == null) {
-            return;
-        }
-
         // try to decode data
-        this.encryptedData = JsonFileEncoding.decode( data );
+        if ( JsonFileEncoding.isEncoded(data) ){
+            this.encryptedData = JsonFileEncoding.decode( data );
+            
+            this.passwordAndHint = SessionPasswordService.getByFile( this.file );
+            this.passwordAndHint.hint = this.encryptedData.hint;
+            // kick off decryption task
+            console.debug( 'Decrypting file content' );
+            this.tryDecryptingFileContent();
+        }else{
+            console.debug('setting plain view data', {data});
+            super.setViewData(data, clear);
+        }
         
-        // try to decrypt data
-        this.passwordAndHint = SessionPasswordService.getByFile( this.file );
-        this.passwordAndHint.hint = this.encryptedData.hint;
-        
-        // kick off decryption task
-        this.tryDecodeFileContent();
 
     }
 
-    async tryDecodeFileContent() : Promise<void> {
+    async tryDecryptingFileContent() : Promise<void> {
 
         if (this.encryptedData == null) {
             new Notice('encryptedData == null');
@@ -57,6 +57,11 @@ export class EncryptedMarkdownView extends MarkdownView {
 
         if (this.passwordAndHint == null) {
             new Notice('passwordAndHint == null');
+            return;
+        }
+
+        if (this.file == null) {
+            new Notice('file == null');
             return;
         }
 
@@ -75,17 +80,19 @@ export class EncryptedMarkdownView extends MarkdownView {
             );
             this.passwordAndHint = await pwm.openAsync();
 
-            await this.tryDecodeFileContent();
+            await this.tryDecryptingFileContent();
             
             return;
         }else{
             // decryption succeeded
             
             // save the password in the cache
-            SessionPasswordService.putByFile( this.passwordAndHint!, this.file! );
+            SessionPasswordService.putByFile( this.passwordAndHint, this.file );
             
             // set the view data
             super.setViewData( decryptedText, false );
+
+            console.debug( 'file content decrypted' );
 
             return;
         }
@@ -117,6 +124,8 @@ export class EncryptedMarkdownView extends MarkdownView {
             this.passwordAndHint!.hint,
             dataToSave
         );
+
+        console.debug( 'file content encrypted, calling save' );
 
         // call the real save.. which will call getViewData
         await super.save(clear);
