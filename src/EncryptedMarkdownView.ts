@@ -1,4 +1,4 @@
-import { MarkdownEditView, MarkdownPreviewView, MarkdownView, MarkdownViewModeType, Notice, TFile, View, ViewStateResult, WorkspaceLeaf } from "obsidian";
+import { MarkdownView, Notice, WorkspaceLeaf } from "obsidian";
 import { FileData, FileDataHelper, JsonFileEncoding } from "./services/FileDataHelper";
 import { IPasswordAndHint, SessionPasswordService } from "./services/SessionPasswordService";
 import PluginPasswordModal from "./PluginPasswordModal";
@@ -11,6 +11,11 @@ export class EncryptedMarkdownView extends MarkdownView {
 
     encryptedData : FileData | null = null;
 
+    constructor(leaf: WorkspaceLeaf) {
+        console.debug('EncryptedMarkdownView.constructor', {leaf});
+        super(leaf);
+        super.setViewData('', false);
+    }
     override getViewType(): string {
         return EncryptedMarkdownView.VIEW_TYPE;
     }
@@ -20,8 +25,9 @@ export class EncryptedMarkdownView extends MarkdownView {
     }
     
     override setViewData(data: string, clear: boolean): void {
+        super.setViewData('', false);
         // something is setting the view data, perhaps from reading from the file
-
+        console.debug('setViewData', {data, clear});
         if (this.file == null) {
             super.setViewData(data, clear);
             return;
@@ -29,7 +35,16 @@ export class EncryptedMarkdownView extends MarkdownView {
 
         // try to decode data
         if ( JsonFileEncoding.isEncoded(data) ){
-            this.encryptedData = JsonFileEncoding.decode( data );
+            
+            const decodedData = JsonFileEncoding.decode( data );
+            if (this.encryptedData?.encodedData == decodedData.encodedData){
+                return;
+            }
+            console.debug({
+                decodedData,
+                encryptedData: this.encryptedData
+            });
+            this.encryptedData = decodedData;
             
             this.passwordAndHint = SessionPasswordService.getByFile( this.file );
             this.passwordAndHint.hint = this.encryptedData.hint;
@@ -100,12 +115,6 @@ export class EncryptedMarkdownView extends MarkdownView {
     
     override getViewData(): string {
         // something is reading the data.. maybe to save it
-        // console.debug( 'getViewData', {
-        //     mode: this.getMode(),
-        //     viewdata: super.getViewData(),
-        //     encryptedData: this.encryptedData
-        // } );
-        
         return JsonFileEncoding.encode( this.encryptedData! );
     }
    
@@ -139,10 +148,5 @@ export class EncryptedMarkdownView extends MarkdownView {
         await super.save(clear);
         
     }
-
-}
-
-
-class EncryptedMarkdownPreviewView extends MarkdownPreviewView{
 
 }

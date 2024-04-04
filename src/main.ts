@@ -67,7 +67,7 @@ export default class MeldEncrypt extends Plugin {
 
 		this.registerEvent(
 
-            this.app.workspace.on('active-leaf-change', (leaf) => {
+            this.app.workspace.on('active-leaf-change', async (leaf) => {
 				if ( leaf == null ){
 					this.statusIndicator.hide();
 					return;
@@ -86,21 +86,21 @@ export default class MeldEncrypt extends Plugin {
 						return;
 					}
 					
-					
 					if (leaf.view instanceof EncryptedMarkdownView){
 						this.statusIndicator.show();
 						return;
 					}
-					if ( file.extension == 'mymd' ){
-						
-						//const wantReadingMode = viewState.state.mode == 'preview';
-						//console.debug( 'do something here with', {viewState} )
-						viewState.state.file = file.name;
-						viewState.type = EncryptedMarkdownView.VIEW_TYPE;
-						leaf.setViewState( viewState );
-						//leaf.openFile( file, viewState );
 
+					if ( file.extension == 'mymd' ){
+						// file is encrypted but has the wrong view type
+						
 						this.statusIndicator.show();
+						
+						//console.debug( 'do something here with', {viewState} )
+						viewState.type = EncryptedMarkdownView.VIEW_TYPE;
+						
+						await leaf.setViewState( viewState );
+
 						return;
 					}
 
@@ -108,30 +108,6 @@ export default class MeldEncrypt extends Plugin {
 				}
 			} )
         )
-
-
-		// this.registerEvent(
-        //     this.app.workspace.on('layout-change', () => {
-		// 		const file = this.app.workspace.getActiveFile();
-		// 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-				
-		// 		if (file == null){
-		// 			return;
-		// 		}
-
-		// 		console.debug('layout-change', {
-		// 			file: file,
-		// 			view: view
-		// 		});
-
-		// 		if (file.extension == 'mymd'){
-		// 			if (view?.getViewType() != EncryptedMarkdownView.VIEW_TYPE){
-		// 				view?.leaf.detach();
-		// 				new Notice('Changing modes for encrypted files is not supported');
-		// 			}
-		// 		}
-		// 	} )
-        // )
 
 	}
 	
