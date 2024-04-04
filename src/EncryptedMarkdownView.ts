@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, WorkspaceLeaf } from "obsidian";
+import { MarkdownView, Notice } from "obsidian";
 import { FileData, FileDataHelper, JsonFileEncoding } from "./services/FileDataHelper";
 import { IPasswordAndHint, SessionPasswordService } from "./services/SessionPasswordService";
 import PluginPasswordModal from "./PluginPasswordModal";
@@ -11,11 +11,11 @@ export class EncryptedMarkdownView extends MarkdownView {
 
     encryptedData : FileData | null = null;
 
-    constructor(leaf: WorkspaceLeaf) {
-        console.debug('EncryptedMarkdownView.constructor', {leaf});
-        super(leaf);
-        super.setViewData('', false);
-    }
+    // constructor(leaf: WorkspaceLeaf) {
+    //     console.debug('EncryptedMarkdownView.constructor', {leaf});
+    //     super(leaf);
+    //     super.setViewData('', false);
+    // }
     override getViewType(): string {
         return EncryptedMarkdownView.VIEW_TYPE;
     }
@@ -27,7 +27,7 @@ export class EncryptedMarkdownView extends MarkdownView {
     override setViewData(data: string, clear: boolean): void {
         super.setViewData('', false);
         // something is setting the view data, perhaps from reading from the file
-        console.debug('setViewData', {data, clear});
+        //console.debug('setViewData', {data, clear});
         if (this.file == null) {
             super.setViewData(data, clear);
             return;
@@ -36,21 +36,15 @@ export class EncryptedMarkdownView extends MarkdownView {
         // try to decode data
         if ( JsonFileEncoding.isEncoded(data) ){
             
-            const decodedData = JsonFileEncoding.decode( data );
-            if (this.encryptedData?.encodedData == decodedData.encodedData){
-                return;
-            }
-            console.debug({
-                decodedData,
-                encryptedData: this.encryptedData
-            });
-            this.encryptedData = decodedData;
+            this.encryptedData = JsonFileEncoding.decode( data );
             
             this.passwordAndHint = SessionPasswordService.getByFile( this.file );
             this.passwordAndHint.hint = this.encryptedData.hint;
+
             // kick off decryption task
-            console.debug( 'Decrypting file content' );
+            //console.debug( 'Decrypting file content' );
             this.tryDecryptingFileContent();
+
         }else{
             //console.debug('setting plain view data', {data});
             super.setViewData(data, clear);
@@ -60,7 +54,7 @@ export class EncryptedMarkdownView extends MarkdownView {
     }
 
     async tryDecryptingFileContent() : Promise<void> {
-        console.time( 'tryDecryptingFileContent' );
+        // console.time( 'tryDecryptingFileContent' );
         try{
             if (this.encryptedData == null) {
                 new Notice('encryptedData == null');
@@ -109,7 +103,7 @@ export class EncryptedMarkdownView extends MarkdownView {
                 return;
             }
         }finally{
-            console.timeEnd( 'tryDecryptingFileContent' );
+            //console.timeEnd( 'tryDecryptingFileContent' );
         }
     }
     
@@ -142,7 +136,7 @@ export class EncryptedMarkdownView extends MarkdownView {
             dataToSave
         );
 
-        console.debug( 'file content encrypted, calling save' );
+        //console.debug( 'file content encrypted, calling save' );
 
         // call the real save.. which will call getViewData
         await super.save(clear);
