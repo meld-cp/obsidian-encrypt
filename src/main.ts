@@ -65,38 +65,36 @@ export default class MeldEncrypt extends Plugin {
 		this.statusIndicator.setText('🔐');
 
 
+		this.registerEvent( this.app.workspace.on('layout-change', () => {
+			const view = this.app.workspace.getActiveViewOfType(EncryptedMarkdownView);
+			if (view == null){
+				this.statusIndicator.hide();
+				return;
+			}
+			this.statusIndicator.show();
+		}));
+
 		this.registerEvent(
 
             this.app.workspace.on('active-leaf-change', async (leaf) => {
 				if ( leaf == null ){
-					this.statusIndicator.hide();
 					return;
 				}
-				const viewState = leaf.getViewState();
 				
-				// console.debug('active-leaf-change', {
-				// 	leaf,
-				// 	viewState
-				// } );
+				if ( leaf.view instanceof EncryptedMarkdownView ){
+					return;
+				}
 
-				if ( leaf.view instanceof MarkdownView){
+				if ( leaf.view instanceof MarkdownView ){
+
 					const file = leaf.view.file;
-					if (file == null){
-						this.statusIndicator.hide();
+					if ( file == null ){
 						return;
 					}
 					
-					if (leaf.view instanceof EncryptedMarkdownView){
-						this.statusIndicator.show();
-						return;
-					}
-
 					if ( file.extension == 'mymd' ){
 						// file is encrypted but has the wrong view type
-						
-						this.statusIndicator.show();
-						
-						//console.debug( 'do something here with', {viewState} )
+						const viewState = leaf.getViewState();
 						viewState.type = EncryptedMarkdownView.VIEW_TYPE;
 						
 						await leaf.setViewState( viewState );
@@ -104,8 +102,8 @@ export default class MeldEncrypt extends Plugin {
 						return;
 					}
 
-					this.statusIndicator.hide();
 				}
+
 			} )
         )
 
