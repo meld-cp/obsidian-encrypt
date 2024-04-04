@@ -11,7 +11,7 @@ export class SessionPasswordService{
 
 	private static isActive = true;
 
-	private static blankPasswordAndHint : IPasswordAndHint = { password:'', hint:'' };
+	public static blankPasswordAndHint : IPasswordAndHint = { password:'', hint:'' };
 
 	private static cache = new MemoryCache<IPasswordAndHint>();
 	
@@ -143,7 +143,7 @@ export class SessionPasswordService{
 			}
 			case SessionPasswordService.LevelParentPath: {
 				//console.debug('getFileCacheKey:', file.parent.path);
-				return file.parent.path;
+				return file.parent!.path;
 			}
 			default:
 				const fileExExt = Utils.getFilePathExcludingExtension( file );
