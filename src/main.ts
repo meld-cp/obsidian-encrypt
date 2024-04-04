@@ -1,4 +1,4 @@
-import { Notice, Plugin } from 'obsidian';
+import { MarkdownView, Notice, Plugin } from 'obsidian';
 import MeldEncryptSettingsTab from './settings/MeldEncryptSettingsTab';
 import { IMeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings';
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature';
@@ -14,6 +14,8 @@ export default class MeldEncrypt extends Plugin {
 	private settings: IMeldEncryptPluginSettings;
 
 	private enabledFeatures : IMeldEncryptPluginFeature[] = [];
+
+	private statusIndicator: HTMLElement;
 
 	async onload() {
 		
@@ -57,7 +59,80 @@ export default class MeldEncrypt extends Plugin {
 		);
 			
 		this.registerExtensions( ['mymd'], EncryptedMarkdownView.VIEW_TYPE );
-		
+
+		this.statusIndicator = this.addStatusBarItem();
+		this.statusIndicator.hide();
+		this.statusIndicator.setText('🔐');
+
+
+		this.registerEvent(
+
+            this.app.workspace.on('active-leaf-change', (leaf) => {
+				if ( leaf == null ){
+					this.statusIndicator.hide();
+					return;
+				}
+				const viewState = leaf.getViewState();
+				
+				// console.debug('active-leaf-change', {
+				// 	leaf,
+				// 	viewState
+				// } );
+
+				if ( leaf.view instanceof MarkdownView){
+					const file = leaf.view.file;
+					if (file == null){
+						this.statusIndicator.hide();
+						return;
+					}
+					
+					
+					if (leaf.view instanceof EncryptedMarkdownView){
+						this.statusIndicator.show();
+						return;
+					}
+					if ( file.extension == 'mymd' ){
+						
+						//const wantReadingMode = viewState.state.mode == 'preview';
+						//console.debug( 'do something here with', {viewState} )
+						viewState.state.file = file.name;
+						viewState.type = EncryptedMarkdownView.VIEW_TYPE;
+						leaf.setViewState( viewState );
+						//leaf.openFile( file, viewState );
+
+						this.statusIndicator.show();
+						return;
+					}
+
+					this.statusIndicator.hide();
+				}
+			} )
+        )
+
+
+		// this.registerEvent(
+        //     this.app.workspace.on('layout-change', () => {
+		// 		const file = this.app.workspace.getActiveFile();
+		// 		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+				
+		// 		if (file == null){
+		// 			return;
+		// 		}
+
+		// 		console.debug('layout-change', {
+		// 			file: file,
+		// 			view: view
+		// 		});
+
+		// 		if (file.extension == 'mymd'){
+		// 			if (view?.getViewType() != EncryptedMarkdownView.VIEW_TYPE){
+		// 				view?.leaf.detach();
+		// 				new Notice('Changing modes for encrypted files is not supported');
+		// 			}
+		// 		}
+		// 	} )
+        // )
+
 	}
 	
 	override onunload() {
