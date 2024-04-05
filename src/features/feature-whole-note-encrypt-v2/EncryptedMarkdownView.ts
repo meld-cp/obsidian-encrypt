@@ -145,8 +145,10 @@ export class EncryptedMarkdownView extends MarkdownView {
         // something is setting the view data, perhaps from reading from the
         // file... or some other plugin is adding some markdown
 
-        if (this.file == null) {
-            console.error('file == null');
+        //console.debug('setViewData', {data, clear});
+
+        if ( this.file == null ) {
+            console.debug( 'View data will not be set because file is null' )
             return;
         }
 
@@ -154,18 +156,41 @@ export class EncryptedMarkdownView extends MarkdownView {
             return;
         }
 
+        if ( JsonFileEncoding.isEncoded(data) ){
+            console.debug( 'View is being set with already encoded data, trying to decode' )
+            if (this.passwordAndHint == null){
+                console.error('passwordAndHint == null');
+                return;
+            }
+            const newEncoded = JsonFileEncoding.decode(data);
+            FileDataHelper.decrypt( newEncoded, this.passwordAndHint.password ).then( decryptedText => {
+                if ( decryptedText == null ){
+                    console.error('decryption failed');
+                    return;
+                }
+                this.setUnencryptedViewData(decryptedText, clear);
+            });
+            return;
+        }
+
+
         this.setUnencryptedViewData(data, clear);
 
     }
 
    
     override async save(clear?: boolean | undefined): Promise<void> {
-        //console.debug('save', {clear, 'file.ext': this.file?.extension});
+        console.debug('save', {clear, 'file.ext': this.file?.extension});
         this.isSavingInProgress = true;
         try{
             
             if (this.file == null){
                 console.debug('Saving was prevented beacuse there is no file loaded in the view yet');
+                return;
+            }
+
+            if ( !ENCRYPTED_FILE_EXTENSIONS.includes( this.file.extension ) ){
+                console.debug('Saving was prevented because the file is not an encrypted file');
                 return;
             }
 
@@ -178,6 +203,7 @@ export class EncryptedMarkdownView extends MarkdownView {
                 console.debug('Saving was prevented beacuse there is no password set');
                 return;
             }
+
             
             const unencryptedDataToSave = this.getUnencryptedViewData();
             
