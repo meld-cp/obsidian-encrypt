@@ -173,6 +173,22 @@ export default class PluginPasswordModal extends Modal {
 
 	}
 
+	open2Async(): Promise<IPasswordAndHint|null> {
+		return new Promise<IPasswordAndHint|null>( (resolve, reject) =>{
+
+			this.onClose = () =>{
+				if (this.resultConfirmed == true){
+					resolve( this.resultPassword );
+				}else{
+					resolve( null );
+				}
+			}
+
+			this.open();
+
+		} );
+	}
+
 	openAsync(): Promise<IPasswordAndHint> {
 		return new Promise<IPasswordAndHint>( (resolve, reject) =>{
 
