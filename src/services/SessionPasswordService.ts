@@ -89,6 +89,18 @@ export class SessionPasswordService{
 		return this.cache.get( key, SessionPasswordService.blankPasswordAndHint );
 	}
 
+	public static getByFileOrNull( file:TFile  ) : IPasswordAndHint | null {
+		if (!SessionPasswordService.isActive){
+			return null;
+		}
+		this.clearIfExpired();
+		SessionPasswordService.updateExpiryTime();
+
+		const key = SessionPasswordService.getFileCacheKey( file );
+		
+		return this.cache.getOrNull( key );
+	}
+
 	public static putByPath( pw: IPasswordAndHint, path:string ): void {
 		if (!SessionPasswordService.isActive){
 			return;

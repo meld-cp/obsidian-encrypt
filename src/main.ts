@@ -1,13 +1,13 @@
-import { MarkdownView, Notice, Plugin } from 'obsidian';
+import { Notice, Plugin } from 'obsidian';
 import MeldEncryptSettingsTab from './settings/MeldEncryptSettingsTab';
 import { IMeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings';
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature';
 import { SessionPasswordService } from './services/SessionPasswordService';
+import { EditViewEnum } from './features/feature-whole-note-encrypt/EncryptedFileContentView';
 import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInplaceEncrypt';
 import FeatureWholeNoteEncrypt from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
-import { EditViewEnum } from './features/feature-whole-note-encrypt/EncryptedFileContentView';
 import FeatureConvertNote from './features/feature-convert-note/FeatureConvertNote';
-import { EncryptedMarkdownView } from './EncryptedMarkdownView';
+import FeatureWholeNoteEncryptV2 from './features/feature-whole-note-encrypt-v2/FeatureWholeNoteEncryptV2';
 
 export default class MeldEncrypt extends Plugin {
 
@@ -15,15 +15,14 @@ export default class MeldEncrypt extends Plugin {
 
 	private enabledFeatures : IMeldEncryptPluginFeature[] = [];
 
-	private statusIndicator: HTMLElement;
-
 	async onload() {
 		
 		// Settings
 		await this.loadSettings();
 
 		this.enabledFeatures.push(
-			new FeatureWholeNoteEncrypt(),
+			//new FeatureWholeNoteEncrypt(),
+			new FeatureWholeNoteEncryptV2(),
 			new FeatureConvertNote(),
 			new FeatureInplaceEncrypt(),
 		);
@@ -53,64 +52,9 @@ export default class MeldEncrypt extends Plugin {
 			await f.onload( this, this.settings );
 		});
 
-		this.registerView(
-			EncryptedMarkdownView.VIEW_TYPE,
-			(leaf) => new EncryptedMarkdownView(leaf)
-		);
-			
-		this.registerExtensions( ['mymd'], EncryptedMarkdownView.VIEW_TYPE );
-
-		this.statusIndicator = this.addStatusBarItem();
-		this.statusIndicator.hide();
-		this.statusIndicator.setText('🔐');
-
-
-		this.registerEvent( this.app.workspace.on('layout-change', () => {
-			const view = this.app.workspace.getActiveViewOfType(EncryptedMarkdownView);
-			if (view == null){
-				this.statusIndicator.hide();
-				return;
-			}
-			this.statusIndicator.show();
-		}));
-
-		this.registerEvent(
-
-            this.app.workspace.on('active-leaf-change', async (leaf) => {
-				if ( leaf == null ){
-					return;
-				}
-				
-				if ( leaf.view instanceof EncryptedMarkdownView ){
-					return;
-				}
-
-				if ( leaf.view instanceof MarkdownView ){
-
-					const file = leaf.view.file;
-					if ( file == null ){
-						return;
-					}
-					
-					if ( file.extension == 'mymd' ){
-						// file is encrypted but has the wrong view type
-						const viewState = leaf.getViewState();
-						viewState.type = EncryptedMarkdownView.VIEW_TYPE;
-						
-						await leaf.setViewState( viewState );
-
-						return;
-					}
-
-				}
-
-			} )
-        )
-
 	}
 	
 	override onunload() {
-		this.app.workspace.detachLeavesOfType(EncryptedMarkdownView.VIEW_TYPE);
 		this.enabledFeatures.forEach(async f => {
 			f.onunload();
 		});
