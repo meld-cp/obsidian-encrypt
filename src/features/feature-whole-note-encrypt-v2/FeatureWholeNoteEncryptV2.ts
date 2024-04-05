@@ -1,8 +1,10 @@
 import MeldEncrypt from "src/main";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
-//import { IMeldEncryptPluginSettings } from "src/settings/MeldEncryptPluginSettings";
 import { EncryptedMarkdownView } from "./EncryptedMarkdownView";
-import { MarkdownView, TFile } from "obsidian";
+import { MarkdownView, TFolder, normalizePath, moment } from "obsidian";
+import PluginPasswordModal from "src/PluginPasswordModal";
+import { IPasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
+import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
 
 export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeature {
 
@@ -14,37 +16,31 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 		this.plugin = plugin;
 		//this.settings = settings.featureWholeNoteEncrypt;
 		
-		// this.plugin.addRibbonIcon( 'file-lock-2', 'New encrypted note', (ev)=>{
-		// 	this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() );
-		// });
+		this.plugin.addRibbonIcon( 'file-lock-2', 'New encrypted note', async (ev)=>{
+			await this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() );
+		});
 
-		// this.plugin.addCommand({
-		// 	id: 'meld-encrypt-create-new-note',
-		// 	name: 'Create new encrypted note',
-		// 	icon: 'file-lock-2',
-		// 	callback: () => this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() ),
-		// });
+		this.plugin.addCommand({
+			id: 'meld-encrypt-create-new-note',
+			name: 'Create new encrypted note',
+			icon: 'file-lock-2',
+			callback: async () => await this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() ),
+		});
 
-		// this.plugin.addCommand({
-		// 	id: 'meld-encrypt-toggle-reading-view',
-		// 	name: 'Toggle Reading View',
-		// 	icon: 'edit',
-		// 	callback: () => this.processToggleReadingViewCommand(),
-		// });
 		
-		// this.plugin.registerEvent(
-		// 	this.plugin.app.workspace.on( 'file-menu', (menu, file) => {
-		// 		if (file instanceof TFolder){
-		// 			menu.addItem( (item) => {
-		// 				item
-		// 					.setTitle('New encrypted note')
-		// 					.setIcon('file-lock-2')
-		// 					.onClick( () => this.processCreateNewEncryptedNoteCommand( file ) );
-		// 				}
-		// 			);
-		// 		}
-		// 	})
-		// );
+		this.plugin.registerEvent(
+			this.plugin.app.workspace.on( 'file-menu', (menu, file) => {
+				if (file instanceof TFolder){
+					menu.addItem( (item) => {
+						item
+							.setTitle('New encrypted note')
+							.setIcon('file-lock-2')
+							.onClick( () => this.processCreateNewEncryptedNoteCommand( file ) );
+						}
+					);
+				}
+			})
+		);
 
 		this.statusIndicator = this.plugin.addStatusBarItem();
 		this.statusIndicator.hide();
@@ -111,6 +107,51 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 
 			} )
         )
+
+	}
+
+	private getDefaultFileFolder() : TFolder {
+		const activeFile = this.plugin.app.workspace.getActiveFile();
+
+		if (activeFile != null){
+			return this.plugin.app.fileManager.getNewFileParent(activeFile.path);
+		}else{
+			return this.plugin.app.fileManager.getNewFileParent('');
+		}
+	}
+
+	private async processCreateNewEncryptedNoteCommand( parentFolder: TFolder ) : Promise<void> {
+		
+		const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${EncryptedMarkdownView.EXTENSIONS[0]}]`);
+		const newFilepath = normalizePath( parentFolder.path + "/" + newFilename );
+		
+		// prompt for password
+		const pwm = new PluginPasswordModal(
+			this.plugin.app,
+			'Please provide a password for encryption',
+			true,
+			true,
+			SessionPasswordService.getByPath( newFilepath )
+		);
+		
+		let pwh : IPasswordAndHint;
+		try{
+			pwh = await pwm.openAsync();
+		}catch(e){
+			return; // cancelled
+		}
+
+		// create the new file
+		const fileData = await FileDataHelper.encrypt( pwh.password, pwh.hint, '' )
+		const fileContents = JsonFileEncoding.encode( fileData );
+		const file = await this.plugin.app.vault.create( newFilepath, fileContents );
+		
+		// cache the password
+		SessionPasswordService.putByFile( pwh, file );
+
+		// open the file
+		const leaf = this.plugin.app.workspace.getLeaf( true );
+		await leaf.openFile( file );
 
 	}
 

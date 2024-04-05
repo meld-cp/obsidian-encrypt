@@ -1,4 +1,4 @@
-import { MarkdownView, Notice } from "obsidian";
+import { MarkdownView, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import { FileData, FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper";
 import { IPasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService";
 import PluginPasswordModal from "../../PluginPasswordModal";
@@ -6,11 +6,20 @@ import PluginPasswordModal from "../../PluginPasswordModal";
 export class EncryptedMarkdownView extends MarkdownView {
 
     static VIEW_TYPE = 'meld-encrypted-view';
-    static EXTENSIONS = [ 'mdenc', 'mymd' ];
+    static EXTENSIONS = [ 'mdenc' ];
 
     passwordAndHint : IPasswordAndHint | null = null;
     encryptedData : FileData | null = null;
     isSavingEnabled = false;
+    
+    override allowNoFile = false;
+
+    origFile:TFile | null;
+
+    constructor(leaf: WorkspaceLeaf) {
+        super(leaf);
+        this.origFile = this.file;
+    }
 
     override getViewType(): string {
         return EncryptedMarkdownView.VIEW_TYPE;
@@ -19,7 +28,19 @@ export class EncryptedMarkdownView extends MarkdownView {
     override canAcceptExtension(extension: string): boolean {
         return EncryptedMarkdownView.EXTENSIONS.includes( extension );    
     }
-    
+
+    override async onRename(file: TFile): Promise<void> {
+        //console.debug('onRename', { newfile: file, oldfile:this.file});
+        if (this.origFile){
+            SessionPasswordService.clearForFile( this.origFile );
+        }
+
+        if (this.passwordAndHint!=null){
+            SessionPasswordService.putByFile( this.passwordAndHint, file );
+        }
+        await super.onRename(file);    
+    }
+
     override setViewData(data: string, clear: boolean): void {
         // something is setting the view data, perhaps from reading from the file
         super.setViewData('', false);
