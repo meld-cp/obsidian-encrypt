@@ -5,6 +5,7 @@ import { MarkdownView, TFolder, normalizePath, moment } from "obsidian";
 import PluginPasswordModal from "src/PluginPasswordModal";
 import { IPasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
 import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
+import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "src/services/Constants";
 
 export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeature {
 
@@ -47,7 +48,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 		this.statusIndicator.setText('🔐');
 
 		this.plugin.registerEvent( this.plugin.app.workspace.on('editor-menu', (menu, editor, info) => {
-			if( info.file == null || !EncryptedMarkdownView.EXTENSIONS.includes( info.file.extension ) ){
+			if( info.file == null || !ENCRYPTED_FILE_EXTENSIONS.includes( info.file.extension ) ){
 				return;
 			}
 			if (info instanceof EncryptedMarkdownView){
@@ -64,7 +65,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 
 		this.plugin.registerView( EncryptedMarkdownView.VIEW_TYPE, (leaf) => new EncryptedMarkdownView(leaf) );
 			
-		this.plugin.registerExtensions( EncryptedMarkdownView.EXTENSIONS, EncryptedMarkdownView.VIEW_TYPE );
+		this.plugin.registerExtensions( ENCRYPTED_FILE_EXTENSIONS, EncryptedMarkdownView.VIEW_TYPE );
 
 		this.plugin.registerEvent( this.plugin.app.workspace.on('layout-change', () => {
 			const view = this.plugin.app.workspace.getActiveViewOfType(EncryptedMarkdownView);
@@ -93,7 +94,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 						return;
 					}
 					
-					if ( EncryptedMarkdownView.EXTENSIONS.includes( file.extension ) ){
+					if ( ENCRYPTED_FILE_EXTENSIONS.includes( file.extension ) ){
 						// file is encrypted but has the wrong view type
 						const viewState = leaf.getViewState();
 						viewState.type = EncryptedMarkdownView.VIEW_TYPE;
@@ -122,7 +123,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 
 	private async processCreateNewEncryptedNoteCommand( parentFolder: TFolder ) : Promise<void> {
 		
-		const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${EncryptedMarkdownView.EXTENSIONS[0]}]`);
+		const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
 		const newFilepath = normalizePath( parentFolder.path + "/" + newFilename );
 		
 		// prompt for password

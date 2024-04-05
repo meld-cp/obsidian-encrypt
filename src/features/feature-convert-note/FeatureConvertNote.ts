@@ -8,6 +8,7 @@ import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
 import { Utils } from "src/services/Utils";
 import "src/services/Constants";
 import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "src/services/Constants";
+import { EncryptedMarkdownView } from "../feature-whole-note-encrypt-v2/EncryptedMarkdownView";
 
 export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	
@@ -198,7 +199,12 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 		this.plugin.app.workspace.iterateAllLeaves( l=> {
 			if ( l.view instanceof TextFileView && l.view.file == file ){
-				l.detach();
+				//console.debug('closeUpdateRememberPasswordThenReopen: Detaching', {file, content});
+				if ( l.view instanceof EncryptedMarkdownView ){
+					l.view.detachSafely();
+				}else{
+					l.detach();
+				}
 				didDetach = true;
 			}
 		});

@@ -40,7 +40,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			(_) => {
 				const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView == null ){
-					console.debug('no active view found');
+					//console.debug('no active view found');
 					return;
 				}
 				return this.processEncryptDecryptCommand(false, activeView.editor, false);

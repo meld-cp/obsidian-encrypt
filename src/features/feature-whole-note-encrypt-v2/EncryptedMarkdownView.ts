@@ -2,11 +2,11 @@ import { MarkdownView, Notice, TFile } from "obsidian";
 import { FileData, FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper";
 import { IPasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService";
 import PluginPasswordModal from "../../PluginPasswordModal";
+import { ENCRYPTED_FILE_EXTENSIONS } from "src/services/Constants";
 
 export class EncryptedMarkdownView extends MarkdownView {
 
     static VIEW_TYPE = 'meld-encrypted-view';
-    static EXTENSIONS = [ 'mdenc' ];
 
     passwordAndHint : IPasswordAndHint | null = null;
     encryptedData : FileData | null = null;
@@ -24,7 +24,7 @@ export class EncryptedMarkdownView extends MarkdownView {
     }
 
     override canAcceptExtension(extension: string): boolean {
-        return EncryptedMarkdownView.EXTENSIONS.includes( extension );    
+        return ENCRYPTED_FILE_EXTENSIONS.includes( extension );    
     }
 
     override async onLoadFile(file: TFile): Promise<void> {
@@ -90,13 +90,17 @@ export class EncryptedMarkdownView extends MarkdownView {
         //console.debug('onLoadFile done');
     }
 
-
+    public detachSafely(){
+        this.save();
+        this.isSavingEnabled = false;
+        this.leaf.detach();
+    }
 
     override async onUnloadFile(file: TFile): Promise<void> {
-        console.debug('onUnloadFile', {file});
+        //console.debug('onUnloadFile', {file});
         if ( this.passwordAndHint == null || this.encryptedData == null ) {
             return;
-        }    
+        }
 
         await super.onUnloadFile(file);
     }    
@@ -156,6 +160,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 
    
     override async save(clear?: boolean | undefined): Promise<void> {
+        //console.debug('save', {clear, 'file.ext': this.file?.extension});
         this.isSavingInProgress = true;
         try{
             
@@ -165,7 +170,7 @@ export class EncryptedMarkdownView extends MarkdownView {
             }
 
             if (!this.isSavingEnabled){
-                console.debug('Saving was prevented because the file was not yet loaded with a password');
+                console.debug('Saving was prevented because the file was not yet loaded with a password or was explicitly disabled');
                 return;
             }
 
