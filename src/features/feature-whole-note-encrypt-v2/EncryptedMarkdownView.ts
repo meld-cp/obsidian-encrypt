@@ -166,6 +166,7 @@ export class EncryptedMarkdownView extends MarkdownView {
             FileDataHelper.decrypt( newEncoded, this.passwordAndHint.password ).then( decryptedText => {
                 if ( decryptedText == null ){
                     console.error('View was being set with already encoceded data but the decryption failed, closing view');
+                    this.isSavingEnabled = false; // don't overwrite the data when we detach
                     this.leaf.detach();
                     return;
                 }
