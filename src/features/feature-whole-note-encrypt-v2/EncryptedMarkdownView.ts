@@ -11,14 +11,24 @@ export class EncryptedMarkdownView extends MarkdownView {
     passwordAndHint : IPasswordAndHint | null = null;
     encryptedData : FileData | null = null;
     isSavingEnabled = false;
+
+    isLoadingFileInProgress = false;
+    isSavingInProgress = false;
     
     override allowNoFile = false;
 
     origFile:TFile | null;
-
-    constructor(leaf: WorkspaceLeaf) {
-        super(leaf);
-        this.origFile = this.file;
+    
+    override async onLoadFile(file: TFile): Promise<void> {
+        console.debug('onLoadFile', {file});
+        this.isLoadingFileInProgress = true;
+        try{
+            this.origFile = file;
+            await super.onLoadFile(file);
+        }finally{
+            this.isLoadingFileInProgress = false;
+        }
+        console.debug('onLoadFile done');
     }
 
     override getViewType(): string {
@@ -41,17 +51,52 @@ export class EncryptedMarkdownView extends MarkdownView {
         await super.onRename(file);    
     }
 
+    private getViewDataFinal(): string {
+        return super.getViewData();
+    }
+
+    override getViewData(): string {
+        // something is reading the data.. maybe to save it
+        const isSavingInProgress = this.isSavingInProgress;
+        const unencryptedViewData = super.getViewData();
+        const encryptedData = this.encryptedData;
+        console.debug('EncryptedMarkdownView.getViewData', {
+            isSavingInProgress,
+            unencryptedViewData,
+            encryptedData
+        })
+
+        if (isSavingInProgress) {
+            return JsonFileEncoding.encode( this.encryptedData! );
+        }
+        
+        return unencryptedViewData;
+    }
+
+    private setViewDataFinal(data: string, clear: boolean): void {
+        super.setViewData(data, clear);
+    }
+
     override setViewData(data: string, clear: boolean): void {
-        // something is setting the view data, perhaps from reading from the file
-        super.setViewData('', false);
+        // something is setting the view data, perhaps from reading from the
+        // file... or some other plugin is adding some markdown
+
+        console.debug('setViewData', {isLoadingFile:this.isLoadingFileInProgress, data, clear});
 
         if (this.file == null) {
-            super.setViewData(data, clear);
+            //this.setViewDataFinal(data, clear);
             return;
         }
 
-        // try to decode data
-        if ( JsonFileEncoding.isEncoded(data) ){
+        if ( this.isLoadingFileInProgress ){
+
+            // data should be encoded
+            if ( !JsonFileEncoding.isEncoded(data) ){
+                new Notice('Expected the file data to be encoded, but it is not');
+                this.leaf.detach();
+                return;
+            }
+
             this.passwordAndHint = null;
             this.encryptedData = JsonFileEncoding.decode( data );
 
@@ -63,10 +108,10 @@ export class EncryptedMarkdownView extends MarkdownView {
                 this.leaf.detach();
             });
 
-        }else{
-            super.setViewData(data, clear);
+            return;
         }
-        
+
+        this.setViewDataFinal(data, clear);
 
     }
 
@@ -160,48 +205,51 @@ export class EncryptedMarkdownView extends MarkdownView {
         SessionPasswordService.putByFile( this.passwordAndHint, this.file );
         
         // set the view data
-        super.setViewData( decryptedText, false );
+        this.setViewDataFinal( decryptedText, false );
 
         this.isSavingEnabled = true;
 
     }
     
-    override getViewData(): string {
-        // something is reading the data.. maybe to save it
-        return JsonFileEncoding.encode( this.encryptedData! );
-    }
+    
    
     override async save(clear?: boolean | undefined): Promise<void> {
+        this.isSavingInProgress = true;
+        try{
 
-        if (!this.isSavingEnabled){
-            new Notice('Unable to save, saving is disabled');
-            return;
+            if (!this.isSavingEnabled){
+                new Notice('Unable to save, saving is disabled');
+                return;
+            }
+            
+            if (this.file == null){
+                return;
+            }
+            if (this.passwordAndHint == null){
+                new Notice('Unable to save, no password set');
+                return;
+            }
+            
+            const dataToSave = this.getViewDataFinal();
+            
+            if ( JsonFileEncoding.isEncoded( dataToSave ) ){
+                // data is already encrypted, protect it from being overwritten
+                return;
+            }
+            
+            // build up-to-date encrypted dataS
+            this.encryptedData = await FileDataHelper.encrypt(
+                this.passwordAndHint.password,
+                this.passwordAndHint.hint,
+                dataToSave
+            );
+
+            // call the real save.. which will call getViewData
+            await super.save(clear);
+
+        } finally{
+            this.isSavingInProgress = false;
         }
-        
-        if (this.file == null){
-            return;
-        }
-        if (this.passwordAndHint == null){
-            new Notice('Unable to save, no password set');
-            return;
-        }
-
-        const dataToSave = super.getViewData();
-
-        if ( JsonFileEncoding.isEncoded( dataToSave ) ){
-            // data is already encrypted, protect it from being overwritten
-            return;
-        }
-
-        // build up-to-date encrypted dataS
-        this.encryptedData = await FileDataHelper.encrypt(
-            this.passwordAndHint.password,
-            this.passwordAndHint.hint,
-            dataToSave
-        );
-
-        // call the real save.. which will call getViewData
-        await super.save(clear);
         
     }
 
