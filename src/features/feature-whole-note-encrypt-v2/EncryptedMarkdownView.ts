@@ -165,7 +165,8 @@ export class EncryptedMarkdownView extends MarkdownView {
             const newEncoded = JsonFileEncoding.decode(data);
             FileDataHelper.decrypt( newEncoded, this.passwordAndHint.password ).then( decryptedText => {
                 if ( decryptedText == null ){
-                    console.error('decryption failed');
+                    console.error('View was being set with already encoceded data but the decryption failed, closing view');
+                    this.leaf.detach();
                     return;
                 }
                 this.setUnencryptedViewData(decryptedText, clear);
