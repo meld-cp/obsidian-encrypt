@@ -1,7 +1,7 @@
 import MeldEncrypt from "src/main";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import { EncryptedMarkdownView } from "./EncryptedMarkdownView";
-import { MarkdownView, TFolder, normalizePath, moment } from "obsidian";
+import { MarkdownView, TFolder, normalizePath, moment, TFile } from "obsidian";
 import PluginPasswordModal from "src/PluginPasswordModal";
 import { IPasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
 import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
@@ -43,10 +43,12 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			})
 		);
 
+		// configure status indicator
 		this.statusIndicator = this.plugin.addStatusBarItem();
 		this.statusIndicator.hide();
 		this.statusIndicator.setText('🔐');
 
+		// editor context menu
 		this.plugin.registerEvent( this.plugin.app.workspace.on('editor-menu', (menu, editor, info) => {
 			if( info.file == null || !ENCRYPTED_FILE_EXTENSIONS.includes( info.file.extension ) ){
 				return;
@@ -62,11 +64,34 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			}
 		}));
 
+		this.plugin.registerEvent( this.plugin.app.workspace.on('file-menu', (menu, file) => {
+			if ( !(file instanceof TFile) ){
+				return
+			}
+			if( !ENCRYPTED_FILE_EXTENSIONS.includes( file.extension ) ){
+				return;
+			}
 
+			const view = this.plugin.app.workspace.getActiveViewOfType( EncryptedMarkdownView );
+			if (view == null || view.file != file){
+				return;
+			}
+
+			menu.addItem( (item) => {
+				item
+					.setTitle('Change Password')
+					.setIcon('lock')
+					.onClick( async () => await view.changePassword() );
+				}
+			);
+		}))
+
+
+		// register view
 		this.plugin.registerView( EncryptedMarkdownView.VIEW_TYPE, (leaf) => new EncryptedMarkdownView(leaf) );
-			
 		this.plugin.registerExtensions( ENCRYPTED_FILE_EXTENSIONS, EncryptedMarkdownView.VIEW_TYPE );
 
+		// show status indicator for encrypted files, hide for others
 		this.plugin.registerEvent( this.plugin.app.workspace.on('layout-change', () => {
 			const view = this.plugin.app.workspace.getActiveViewOfType(EncryptedMarkdownView);
 			if (view == null){
@@ -76,6 +101,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			this.statusIndicator.show();
 		}));
 
+		// make sure the view is the right type
 		this.plugin.registerEvent(
 
             this.plugin.app.workspace.on('active-leaf-change', async (leaf) => {
@@ -84,6 +110,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 				}
 				
 				if ( leaf.view instanceof EncryptedMarkdownView ){
+					// correct view already active
 					return;
 				}
 
