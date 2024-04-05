@@ -52,7 +52,7 @@ export class EncryptedMarkdownView extends MarkdownView {
                 `Decypting "${file.basename}"`,
                 false,
                 false,
-                this.passwordAndHint
+                { password: '', hint: this.encryptedData.hint }
             ).open2Async();
 
             if ( this.passwordAndHint == null ) {
@@ -180,7 +180,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 
    
     override async save(clear?: boolean | undefined): Promise<void> {
-        console.debug('save', {clear, 'file.ext': this.file?.extension});
+        //console.debug('save', {clear, 'file.ext': this.file?.extension});
         this.isSavingInProgress = true;
         try{
             
