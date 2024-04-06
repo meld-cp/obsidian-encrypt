@@ -5,7 +5,6 @@ import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature'
 import { SessionPasswordService } from './services/SessionPasswordService';
 import { EditViewEnum } from './features/feature-whole-note-encrypt/EncryptedFileContentView';
 import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInplaceEncrypt';
-import FeatureWholeNoteEncrypt from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
 import FeatureConvertNote from './features/feature-convert-note/FeatureConvertNote';
 import FeatureWholeNoteEncryptV2 from './features/feature-whole-note-encrypt-v2/FeatureWholeNoteEncryptV2';
 
@@ -21,7 +20,6 @@ export default class MeldEncrypt extends Plugin {
 		await this.loadSettings();
 
 		this.enabledFeatures.push(
-			//new FeatureWholeNoteEncrypt(),
 			new FeatureWholeNoteEncryptV2(),
 			new FeatureConvertNote(),
 			new FeatureInplaceEncrypt(),
@@ -58,6 +56,7 @@ export default class MeldEncrypt extends Plugin {
 		this.enabledFeatures.forEach(async f => {
 			f.onunload();
 		});
+		super.onunload();
 	}
 
 	async loadSettings() {
