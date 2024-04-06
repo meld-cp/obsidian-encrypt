@@ -1,5 +1,5 @@
-import { IFeatureInplaceEncryptSettings } from "../features/feature-inplace-encrypt/IFeatureInplaceEncryptSettings";
-import { IFeatureWholeNoteEncryptSettings } from "../features/feature-whole-note-encrypt/IFeatureWholeNoteEncryptSettings";
+import { IFeatureInplaceEncryptSettings } from "src/features/feature-inplace-encrypt/IFeatureInplaceEncryptSettings";
+import { IFeatureWholeNoteEncryptSettings } from "src/features/feature-whole-note-encrypt/IFeatureWholeNoteEncryptSettings";
 
 export interface IMeldEncryptPluginSettings {
 	confirmPassword: boolean;

@@ -3,10 +3,9 @@ import MeldEncryptSettingsTab from './settings/MeldEncryptSettingsTab';
 import { IMeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings';
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature';
 import { SessionPasswordService } from './services/SessionPasswordService';
-import { EditViewEnum } from './features/feature-whole-note-encrypt/EncryptedFileContentView';
 import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInplaceEncrypt';
 import FeatureConvertNote from './features/feature-convert-note/FeatureConvertNote';
-import FeatureWholeNoteEncryptV2 from './features/feature-whole-note-encrypt-v2/FeatureWholeNoteEncryptV2';
+import FeatureWholeNoteEncryptV2 from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
 
 export default class MeldEncrypt extends Plugin {
 
@@ -68,7 +67,6 @@ export default class MeldEncrypt extends Plugin {
 			rememberPasswordLevel: SessionPasswordService.LevelVault,
 
 			featureWholeNoteEncrypt: {
-				defaultView: EditViewEnum.source.toString()
 			},
 			
 			featureInplaceEncrypt:{

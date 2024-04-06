@@ -8,7 +8,7 @@ import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
 import { Utils } from "src/services/Utils";
 import "src/services/Constants";
 import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "src/services/Constants";
-import { EncryptedMarkdownView } from "../feature-whole-note-encrypt-v2/EncryptedMarkdownView";
+import { EncryptedMarkdownView } from "../feature-whole-note-encrypt/EncryptedMarkdownView";
 
 export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	
