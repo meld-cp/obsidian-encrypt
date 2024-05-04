@@ -1,5 +1,5 @@
 import { Decryptable } from "./Decryptable";
-import { _HINT, _PREFIXES, _PREFIX_A, _PREFIX_A_VISIBLE, _PREFIX_B, _PREFIX_B_VISIBLE, _PREFIX_OBSOLETE, _SUFFIXES } from "./FeatureInplaceConstants";
+import { _HINT, _PREFIXES, _PREFIX_A, _PREFIX_A_VISIBLE, _PREFIX_B, _PREFIX_B_VISIBLE, _PREFIX_OBSOLETE, _PREFIX_OBSOLETE_VISIBLE, _SUFFIXES } from "./FeatureInplaceConstants";
 
 export class FeatureInplaceTextAnalysis{
 	processedText:string;
@@ -35,7 +35,7 @@ export class FeatureInplaceTextAnalysis{
 		this.hasEncryptedPrefix = this.prefix.length > 0;
 		this.hasEncryptedSuffix = this.suffix.length > 0;
 
-		this.hasObsoleteEncryptedPrefix = this.prefix === _PREFIX_OBSOLETE;
+		this.hasObsoleteEncryptedPrefix = this.prefix === _PREFIX_OBSOLETE || this.prefix === _PREFIX_OBSOLETE_VISIBLE;
 
 		this.containsEncryptedMarkers = [..._PREFIXES, ..._SUFFIXES].some( (marker) => text.includes(marker ));
 
