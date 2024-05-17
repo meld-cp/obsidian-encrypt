@@ -8,5 +8,5 @@ node_modules
 # build
 dist
 *.map
-test-vault
+Obsidian Encrypt - test-vault
 
