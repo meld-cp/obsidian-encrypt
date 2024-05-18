@@ -197,9 +197,9 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		
 		let didDetach = false;
 
-		this.plugin.app.workspace.iterateAllLeaves( l=> {
+		this.plugin.app.workspace.iterateAllLeaves( l => {
 			if ( l.view instanceof TextFileView && l.view.file == file ){
-				//console.debug('closeUpdateRememberPasswordThenReopen: Detaching', {file, content});
+				//console.debug('closeUpdateRememberPasswordThenReopen: Detaching', l, this.plugin.app.workspace.getLayout());
 				if ( l.view instanceof EncryptedMarkdownView ){
 					l.view.detachSafely();
 				}else{
@@ -215,8 +215,8 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			await this.plugin.app.vault.modify( file, content );
 			SessionPasswordService.putByFile( pw, file );
 		}finally{
-			if(didDetach){
-				await this.plugin.app.workspace.getLeaf().openFile(file);
+			if( didDetach ){
+				await this.plugin.app.workspace.getLeaf( true ).openFile(file);
 			}
 		}
 	}
