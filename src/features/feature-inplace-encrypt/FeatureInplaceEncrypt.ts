@@ -29,14 +29,14 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 		plugin.addCommand({
 			id: 'meld-encrypt',
-			name: 'Encrypt/Decrypt',
-			icon: 'lock',
+			name: 'Encrypt/Decrypt In-place',
+			icon: 'file-lock',
 			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, false )
 		});
 		
 		this.plugin.addRibbonIcon(
 			'file-lock',
-			'Encrypt/Decrypt',
+			'Encrypt/Decrypt In-place',
 			(_) => {
 				const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView == null ){
@@ -50,7 +50,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		plugin.addCommand({
 			id: 'meld-encrypt-in-place',
 			name: 'Encrypt/Decrypt In-place',
-			icon: 'lock',
+			icon: 'file-lock',
 			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, true )
 		});
 		

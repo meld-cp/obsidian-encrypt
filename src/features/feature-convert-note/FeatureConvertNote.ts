@@ -20,12 +20,12 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		this.plugin.addCommand({
 			id: 'meld-encrypt-convert-to-or-from-encrypted-note',
 			name: 'Convert to or from an Encrypted note',
-			icon: 'file-lock',
+			icon: 'file-lock-2',
 			checkCallback: (checking) => this.processCommandConvertActiveNote( checking ),
 		});
 
 		this.plugin.addRibbonIcon(
-			'file-lock',
+			'file-lock-2',
 			'Convert to or from an Encrypted note',
 			(_) => this.processCommandConvertActiveNote( false )
 		);
@@ -38,7 +38,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 						menu.addItem( (item) => {
 							item
 								.setTitle('Encrypt note')
-								.setIcon('file-lock')
+								.setIcon('file-lock-2')
 								.onClick( () => this.processCommandEncryptNote( file ) );
 							}
 						);
