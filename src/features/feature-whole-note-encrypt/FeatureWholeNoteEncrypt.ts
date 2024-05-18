@@ -49,16 +49,23 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 		this.statusIndicator.setText('🔐');
 
 		// editor context menu
-		this.plugin.registerEvent( this.plugin.app.workspace.on('editor-menu', (menu, editor, info) => {
-			if( info.file == null || !ENCRYPTED_FILE_EXTENSIONS.includes( info.file.extension ) ){
+		this.plugin.registerEvent( this.plugin.app.workspace.on('editor-menu', (menu, editor, view) => {
+			if( view.file == null || !ENCRYPTED_FILE_EXTENSIONS.includes( view.file.extension ) ){
 				return;
 			}
-			if (info instanceof EncryptedMarkdownView){
+			if (view instanceof EncryptedMarkdownView){
 				menu.addItem( (item) => {
 					item
 						.setTitle('Change Password')
+						.setIcon('key-round')
+						.onClick( async () => await view.changePassword() );
+					}
+				);
+				menu.addItem( (item) => {
+					item
+						.setTitle('Lock & Close')
 						.setIcon('lock')
-						.onClick( async () => await info.changePassword() );
+						.onClick( () => this.lockAndClose(view) );
 					}
 				);
 			}
@@ -80,8 +87,15 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			menu.addItem( (item) => {
 				item
 					.setTitle('Change Password')
-					.setIcon('lock')
+					.setIcon('key-round')
 					.onClick( async () => await view.changePassword() );
+				}
+			);
+			menu.addItem( (item) => {
+				item
+					.setTitle('Lock & Close')
+					.setIcon('lock')
+					.onClick( () => this.lockAndClose(view)  );
 				}
 			);
 		}))
@@ -136,6 +150,13 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			} )
         )
 
+	}
+
+	private lockAndClose( view: EncryptedMarkdownView ) : void {
+		view.detachSafely();
+		if ( view.file != null ){
+			SessionPasswordService.clearForFile( view.file );
+		}
 	}
 
 	private getDefaultFileFolder() : TFolder {
