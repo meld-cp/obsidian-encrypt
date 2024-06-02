@@ -47,8 +47,15 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 				rememberPasswordLevelSetting.settingEl.hide();
 				return;
 			}
-			
-			pwTimeoutSetting.settingEl.show();
+
+			if ( this.settings.rememberPasswordLevel != SessionPasswordService.LevelExternalFile ){
+				pwTimeoutSetting.settingEl.show();
+				extFilePathsSetting.settingEl.hide();
+			}else{
+				pwTimeoutSetting.settingEl.hide();
+				extFilePathsSetting.settingEl.show();
+			}
+
 			rememberPasswordLevelSetting.settingEl.show();
 
 			const rememberPasswordTimeout = this.settings.rememberPasswordTimeout;
@@ -77,6 +84,27 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 			})
 		;
 
+		const rememberPasswordLevelSetting = new Setting(containerEl)
+			.setName('Remember passwords by:')
+			.setDesc( this.buildRememberPasswordDescription() )
+			.addDropdown( cb =>{
+				cb
+				.addOption( SessionPasswordService.LevelVault, 'Vault')
+				.addOption( SessionPasswordService.LevelParentPath, 'Folder')
+				.addOption( SessionPasswordService.LevelFilename, 'File')
+				.addOption( SessionPasswordService.LevelExternalFile, 'External File')
+					.setValue( this.settings.rememberPasswordLevel )
+					.onChange( async value => {
+						this.settings.rememberPasswordLevel = value;
+						await this.plugin.saveSettings();
+						SessionPasswordService.setLevel( this.settings.rememberPasswordLevel );
+						updateRememberPasswordSettingsUi();
+					})
+				;
+			})
+		;
+
+		
 		const pwTimeoutSetting = new Setting(containerEl)
 			.setDesc('The number of minutes to remember passwords.')
 			.addSlider( slider => {
@@ -94,25 +122,23 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 			})
 		;
 
-		const rememberPasswordLevelSetting = new Setting(containerEl)
-			.setName('Remember passwords by:')
-			.setDesc( this.buildRememberPasswordDescription() )
-			.addDropdown( cb =>{
-				cb
-					.addOption( SessionPasswordService.LevelVault, 'Vault')
-					.addOption( SessionPasswordService.LevelParentPath, 'Folder')
-					.addOption( SessionPasswordService.LevelFilename, 'File')
-					.setValue( this.settings.rememberPasswordLevel )
+		const extFilePathsSetting = new Setting(containerEl)
+			.setName( 'External File Paths' )
+			.setDesc( 'When needed the password is read from one of these filepaths.' )
+			.addTextArea( text => {
+				text
+					.setValue( this.settings.rememberPasswordExternalFilePaths.join( '\n' ) )
 					.onChange( async value => {
-						this.settings.rememberPasswordLevel = value;
+						this.settings.rememberPasswordExternalFilePaths = value.split( '\n' );
 						await this.plugin.saveSettings();
-						SessionPasswordService.setLevel( this.settings.rememberPasswordLevel );
-						updateRememberPasswordSettingsUi();
 					})
 				;
+				text.inputEl.style.width = '100%';
+				text.inputEl.rows = 4;
 			})
 		;
-		
+		extFilePathsSetting.controlEl.style.width = '80%';
+
 		updateRememberPasswordSettingsUi();
 
 		// build feature settings
@@ -126,18 +152,23 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		const f = new DocumentFragment();
 
 		const tbody = f.createEl( 'table' ).createTBody();
+
 		
 		let tr = tbody.createEl( 'tr' );
-		tr.createEl( 'th', { text: 'Vault:', attr: { 'align': 'left'} });
-		tr.createEl( 'td', { text: 'typically, you\'ll use the same password every time.' });
+		tr.createEl( 'th', { text: 'Vault:', attr: { 'align': 'right'} });
+		tr.createEl( 'td', { text: 'Typically, you\'ll use the same password every time.' });
 		
 		tr = tbody.createEl( 'tr' );
-		tr.createEl( 'th', { text: 'Folder:', attr: { 'align': 'left'} });
-		tr.createEl( 'td', { text: 'typically, you\'ll use the same password for each note within a folder.' });
-
+		tr.createEl( 'th', { text: 'Folder:', attr: { 'align': 'right'} });
+		tr.createEl( 'td', { text: 'Typically, you\'ll use the same password for each note within a folder.' });
+		
 		tr = tbody.createEl( 'tr' );
-		tr.createEl( 'th', { text: 'File:', attr: { 'align': 'left'} });
-		tr.createEl( 'td', { text: 'typically, each note will have a unique password.' });
+		tr.createEl( 'th', { text: 'File:', attr: { 'align': 'right'} });
+		tr.createEl( 'td', { text: 'Typically, each note will have a unique password.' });
+		
+		tr = tbody.createEl( 'tr' );
+		tr.createEl( 'th', { text: 'External File:', attr: { 'align': 'right', 'style': 'width:12em;'} });
+		tr.createEl( 'td', { text: 'When needed the password/key is read from one of these filepaths.' });
 
 		return f;
 	}
