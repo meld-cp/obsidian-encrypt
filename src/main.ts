@@ -65,6 +65,7 @@ export default class MeldEncrypt extends Plugin {
 			rememberPassword: true,
 			rememberPasswordTimeout: 30,
 			rememberPasswordLevel: SessionPasswordService.LevelVault,
+			rememberPasswordExternalFilePaths: [],
 
 			featureWholeNoteEncrypt: {
 			},
@@ -88,6 +89,7 @@ export default class MeldEncrypt extends Plugin {
 			: this.settings.rememberPasswordTimeout
 		);
 		SessionPasswordService.setLevel( this.settings.rememberPasswordLevel );
+		SessionPasswordService.setExternalFilePaths( this.settings.rememberPasswordExternalFilePaths );
 	}
 
 	async saveSettings() {

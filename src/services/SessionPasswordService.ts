@@ -1,6 +1,7 @@
 import { TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache";
 import { Utils } from "./Utils";
+import {readFileSync, existsSync} from 'fs';
 
 export interface IPasswordAndHint{
 	password: string;
@@ -21,14 +22,22 @@ export class SessionPasswordService{
 	public static LevelFilename = 'filename';
 	public static LevelParentPath = 'parentPath';
 	public static LevelVault = 'vault';
+	public static LevelExternalFile = 'externalFile';
 	private static allLevels = [
 		SessionPasswordService.LevelFilename,
 		SessionPasswordService.LevelParentPath,
 		SessionPasswordService.LevelVault,
+		SessionPasswordService.LevelExternalFile
 	];
 	private static level = SessionPasswordService.LevelVault;
 
-	public static setActive( isActive: boolean) {
+	private static externalFilePaths : string[] = [];
+
+	public static setExternalFilePaths( filePaths: string[]) {
+		SessionPasswordService.externalFilePaths = filePaths;
+	}
+
+	public static setActive( isActive: boolean ) {
 		SessionPasswordService.isActive = isActive;
 		if (!SessionPasswordService.isActive){
 			this.clear();
@@ -45,14 +54,17 @@ export class SessionPasswordService{
 	}
 
 	public static setLevel( level: string ) {
+		console.debug( 'SessionPasswordService.setLevel', { level, allLevels: this.allLevels } );
 		if ( SessionPasswordService.level == level ){
 			return;
 		}
 		if ( SessionPasswordService.allLevels.contains(level) ){
 			SessionPasswordService.level = level;
+			return;
 		}
 		SessionPasswordService.level = SessionPasswordService.LevelFilename;
 		this.clear();
+		console.debug( 'SessionPasswordService.level', { level: SessionPasswordService.level } );
 	}
 
 	public static updateExpiryTime() : void {
@@ -72,8 +84,7 @@ export class SessionPasswordService{
 		}
 
 		const key = SessionPasswordService.getFileCacheKey( file );
-		this.cache.put( key, pw );
-
+		this.putByKey( key, pw );
 
 		SessionPasswordService.updateExpiryTime();
 	}
@@ -86,19 +97,7 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 
 		const key = SessionPasswordService.getFileCacheKey( file );
-		return this.cache.get( key, SessionPasswordService.blankPasswordAndHint );
-	}
-
-	public static getByFileOrNull( file:TFile  ) : IPasswordAndHint | null {
-		if (!SessionPasswordService.isActive){
-			return null;
-		}
-		this.clearIfExpired();
-		SessionPasswordService.updateExpiryTime();
-
-		const key = SessionPasswordService.getFileCacheKey( file );
-		
-		return this.cache.getOrNull( key );
+		return this.getByKey( key, SessionPasswordService.blankPasswordAndHint );
 	}
 
 	public static putByPath( pw: IPasswordAndHint, path:string ): void {
@@ -108,7 +107,7 @@ export class SessionPasswordService{
 
 		const key = SessionPasswordService.getPathCacheKey( path );
 
-		this.cache.put( key, pw );
+		this.putByKey( key, pw );
 
 		SessionPasswordService.updateExpiryTime();
 	}
@@ -121,47 +120,42 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 
 		const key = SessionPasswordService.getPathCacheKey( path );
-		return this.cache.get( key, SessionPasswordService.blankPasswordAndHint );
+		return this.getByKey( key, SessionPasswordService.blankPasswordAndHint );
 	}
 
 	private static getPathCacheKey( path : string ) : string {
-		//console.debug('getPathCacheKey', {path});
-
-		const parentPath = path.split('/').slice(0,-1).join('/');
-
-		switch (SessionPasswordService.level) {
-			case SessionPasswordService.LevelVault: {
-				//console.debug('getPathCacheKey: $vault');
-				return '$vault';
-			}
-
-			case SessionPasswordService.LevelParentPath: {
-				//console.debug('getPathCacheKey: ', parentPath);
-				return parentPath;
-			}
 		
-			default:
-				//console.debug('getPathCacheKey: ', path);
-				return path;
+		if (
+			SessionPasswordService.level ==  SessionPasswordService.LevelExternalFile
+			|| SessionPasswordService.level == SessionPasswordService.LevelVault
+		){
+			return '$' + SessionPasswordService.level;
 		}
+
+		if (SessionPasswordService.level == SessionPasswordService.LevelParentPath){
+			const parentPath = path.split('/').slice(0,-1).join('/');
+			return parentPath;
+		}
+
+		return path;
 	}
 
 	private static getFileCacheKey( file : TFile ) : string {
-		//console.debug('getFileCacheKey', {file});
-		switch (SessionPasswordService.level) {
-			case SessionPasswordService.LevelVault: {
-				//console.debug('getFileCacheKey: $vault');
-				return '$vault';
-			}
-			case SessionPasswordService.LevelParentPath: {
-				//console.debug('getFileCacheKey:', file.parent.path);
-				return file.parent!.path;
-			}
-			default:
-				const fileExExt = Utils.getFilePathExcludingExtension( file );
-				//console.debug('getFileCacheKey:', fileExExt);
-				return fileExExt;
+		
+		if (
+			SessionPasswordService.level ==  SessionPasswordService.LevelExternalFile
+			|| SessionPasswordService.level == SessionPasswordService.LevelVault
+		){
+			return '$' + SessionPasswordService.level;
 		}
+
+		if (SessionPasswordService.level == SessionPasswordService.LevelParentPath){
+			return file.parent!.path;
+		}
+
+		const fileExExt = Utils.getFilePathExcludingExtension( file );
+		return fileExExt;
+
 	}
 
 	private static clearIfExpired() : void{
@@ -179,16 +173,53 @@ export class SessionPasswordService{
 		this.cache.removeKey( key );
 	}
 
-	public static clearForPath( path: string ) : void {
-		const key = SessionPasswordService.getPathCacheKey( path );
-		this.cache.removeKey( key );
-	}
-
 	public static clear(): number {
 		const count = this.cache.getKeys().length;
 		this.cache.clear();
 		return count;
 	}
 
+	private static putByKey( key: string, pw: IPasswordAndHint ) : void {
+		if (SessionPasswordService.level == SessionPasswordService.LevelExternalFile){
+			// not supported
+			console.debug( 'SessionPasswordService.putByKey is not supported for level ExternalFile' );
+			return;
+		}
+		this.cache.put( key, pw );
+	}
+
+	public static getByKey( key: string, defaultValue: IPasswordAndHint ): IPasswordAndHint {
+		console.debug( 'SessionPasswordService.getByKey', {
+			'level': SessionPasswordService.level,
+			key,
+			defaultValue,
+			'externalFilePaths': this.externalFilePaths
+		} );
+		if ( SessionPasswordService.level == SessionPasswordService.LevelExternalFile ){
+			// get from external file, return contents of first path that exists
+
+			for (let i = 0; i < this.externalFilePaths.length; i++) {
+				const filepath = this.externalFilePaths[i];
+				console.debug( 'SessionPasswordService.getByKey, checking path:', { filepath } );
+				try {
+					if ( !existsSync( filepath ) ) {
+						console.debug( 'SessionPasswordService.getByKey, path does not exist:', { filepath } );
+						continue;
+					}
+					const data = readFileSync(filepath, 'utf8');
+					console.debug( 'SessionPasswordService.getByKey', { data } );
+					return {
+						password: data,
+						hint: '',
+					}
+				} catch (err) {
+					console.error(err);
+				}
+			}
+			console.debug( 'SessionPasswordService.getByKey returning defaultValue' )
+			return defaultValue;
+		}
+		return this.cache.get( key, defaultValue );
+	}
 }
 
