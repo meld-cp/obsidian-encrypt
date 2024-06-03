@@ -1,4 +1,4 @@
-import { TFile, request, requestUrl } from "obsidian";
+import { DataAdapter, TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache";
 import { Utils } from "./Utils";
 
@@ -8,6 +8,8 @@ export interface IPasswordAndHint{
 }
 
 export class SessionPasswordService{
+
+	private static vaultFileAdapter: DataAdapter | null = null;
 
 	private static isActive = true;
 
@@ -31,6 +33,10 @@ export class SessionPasswordService{
 	private static level = SessionPasswordService.LevelVault;
 
 	private static externalFilePaths : string[] = [];
+
+	static init( vaultFileAdapter: DataAdapter ) {
+		SessionPasswordService.vaultFileAdapter = vaultFileAdapter;	
+	}
 
 	public static setExternalFilePaths( filePaths: string[]) {
 		SessionPasswordService.externalFilePaths = filePaths;
@@ -219,7 +225,7 @@ export class SessionPasswordService{
 						hint: '',
 					}
 				} catch (err) {
-					console.error(err);
+					console.error(err, {relFilePath});
 				}
 			}
 			return defaultValue;
@@ -228,8 +234,10 @@ export class SessionPasswordService{
 	}
 
 	private static async fetchFileContents( vaultRelativePath : string ) : Promise<string> {
-		//TODO: don't use global app
-		const resUrl = app.vault.adapter.getResourcePath( vaultRelativePath );
+		if (SessionPasswordService.vaultFileAdapter == null){
+			throw new Error('SessionPasswordService.vaultFileAdapter == null');
+		}
+		const resUrl = SessionPasswordService.vaultFileAdapter.getResourcePath( vaultRelativePath );
 		const res = await fetch ( resUrl  );
 		return await res.text();
 	}

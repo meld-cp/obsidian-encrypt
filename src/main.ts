@@ -15,6 +15,8 @@ export default class MeldEncrypt extends Plugin {
 
 	async onload() {
 		
+		SessionPasswordService.init(this.app.vault.adapter);
+
 		// Settings
 		await this.loadSettings();
 
