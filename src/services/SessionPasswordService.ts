@@ -1,4 +1,4 @@
-import { DataAdapter, TFile } from "obsidian";
+import { DataAdapter, Notice, TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache";
 import { Utils } from "./Utils";
 
@@ -215,7 +215,7 @@ export class SessionPasswordService{
 	public static async getByKeyAsync( key: string, defaultValue: IPasswordAndHint ): Promise<IPasswordAndHint> {
 		if ( SessionPasswordService.level == SessionPasswordService.LevelExternalFile ){
 			// get from external file, return contents of first path that exists
-			
+	
 			for (let i = 0; i < this.externalFilePaths.length; i++) {
 				const relFilePath = this.externalFilePaths[i];
 				try {
@@ -228,6 +228,7 @@ export class SessionPasswordService{
 					console.error(err, {relFilePath});
 				}
 			}
+			new Notice('External password file not found', 10000);
 			return defaultValue;
 		}
 		return this.cache.get( key, defaultValue );
@@ -251,6 +252,10 @@ export class SessionPasswordService{
 		}
 		const resUrl = SessionPasswordService.vaultFileAdapter.getResourcePath( vaultRelativePath );
 		const res = await fetch ( resUrl  );
-		return await res.text();
+		const contents = await res.text();
+		if (contents.length == 0){
+			throw new Error('File contents empty');
+		}
+		return contents;
 	}
 }
