@@ -1,7 +1,6 @@
-import { TFile } from "obsidian";
+import { TFile, request, requestUrl } from "obsidian";
 import { MemoryCache } from "./MemoryCache";
 import { Utils } from "./Utils";
-import {readFileSync, existsSync} from 'fs';
 
 export interface IPasswordAndHint{
 	password: string;
@@ -53,6 +52,10 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 	}
 
+	public static getLevel() : string {
+		return SessionPasswordService.level;
+	}
+
 	public static setLevel( level: string ) {
 		console.debug( 'SessionPasswordService.setLevel', { level, allLevels: this.allLevels } );
 		if ( SessionPasswordService.level == level ){
@@ -89,7 +92,7 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 	}
 
-	public static getByFile( file:TFile  ) : IPasswordAndHint {
+	public static async getByFile( file:TFile  ) : Promise<IPasswordAndHint> {
 		if (!SessionPasswordService.isActive){
 			return SessionPasswordService.blankPasswordAndHint;
 		}
@@ -97,7 +100,7 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 
 		const key = SessionPasswordService.getFileCacheKey( file );
-		return this.getByKey( key, SessionPasswordService.blankPasswordAndHint );
+		return await this.getByKeyAsync( key, SessionPasswordService.blankPasswordAndHint );
 	}
 
 	public static putByPath( pw: IPasswordAndHint, path:string ): void {
@@ -121,6 +124,17 @@ export class SessionPasswordService{
 
 		const key = SessionPasswordService.getPathCacheKey( path );
 		return this.getByKey( key, SessionPasswordService.blankPasswordAndHint );
+	}
+
+	public static async getByPathAsync( path: string ) : Promise<IPasswordAndHint> {
+		if (!SessionPasswordService.isActive){
+			return SessionPasswordService.blankPasswordAndHint;
+		}
+		this.clearIfExpired();
+		SessionPasswordService.updateExpiryTime();
+
+		const key = SessionPasswordService.getPathCacheKey( path );
+		return await this.getByKeyAsync( key, SessionPasswordService.blankPasswordAndHint );
 	}
 
 	private static getPathCacheKey( path : string ) : string {
@@ -182,44 +196,41 @@ export class SessionPasswordService{
 	private static putByKey( key: string, pw: IPasswordAndHint ) : void {
 		if (SessionPasswordService.level == SessionPasswordService.LevelExternalFile){
 			// not supported
-			console.debug( 'SessionPasswordService.putByKey is not supported for level ExternalFile' );
 			return;
 		}
 		this.cache.put( key, pw );
 	}
 
-	public static getByKey( key: string, defaultValue: IPasswordAndHint ): IPasswordAndHint {
-		console.debug( 'SessionPasswordService.getByKey', {
-			'level': SessionPasswordService.level,
-			key,
-			defaultValue,
-			'externalFilePaths': this.externalFilePaths
-		} );
+	private static getByKey( key: string, defaultValue: IPasswordAndHint ): IPasswordAndHint {
+		console.debug( 'SessionPasswordService.getByKey', { 'level': SessionPasswordService.level, key, defaultValue } );
+		return this.cache.get( key, defaultValue );
+	}
+
+	public static async getByKeyAsync( key: string, defaultValue: IPasswordAndHint ): Promise<IPasswordAndHint> {
 		if ( SessionPasswordService.level == SessionPasswordService.LevelExternalFile ){
 			// get from external file, return contents of first path that exists
-
+			
 			for (let i = 0; i < this.externalFilePaths.length; i++) {
-				const filepath = this.externalFilePaths[i];
-				console.debug( 'SessionPasswordService.getByKey, checking path:', { filepath } );
+				const relFilePath = this.externalFilePaths[i];
 				try {
-					if ( !existsSync( filepath ) ) {
-						console.debug( 'SessionPasswordService.getByKey, path does not exist:', { filepath } );
-						continue;
-					}
-					const data = readFileSync(filepath, 'utf8');
-					console.debug( 'SessionPasswordService.getByKey', { data } );
+					const contents = await this.fetchFileContents(relFilePath);
 					return {
-						password: data,
+						password: contents,
 						hint: '',
 					}
 				} catch (err) {
 					console.error(err);
 				}
 			}
-			console.debug( 'SessionPasswordService.getByKey returning defaultValue' )
 			return defaultValue;
 		}
 		return this.cache.get( key, defaultValue );
 	}
-}
 
+	private static async fetchFileContents( vaultRelativePath : string ) : Promise<string> {
+		//TODO: don't use global app
+		const resUrl = app.vault.adapter.getResourcePath( vaultRelativePath );
+		const res = await fetch ( resUrl  );
+		return await res.text();
+	}
+}

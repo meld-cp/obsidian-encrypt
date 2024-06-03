@@ -174,20 +174,29 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 		const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
 		const newFilepath = normalizePath( parentFolder.path + "/" + newFilename );
 		
-		// prompt for password
-		const pwm = new PluginPasswordModal(
-			this.plugin.app,
-			'Please provide a password for encryption',
-			true,
-			true,
-			SessionPasswordService.getByPath( newFilepath )
-		);
+		let pwh : IPasswordAndHint | undefined;
 		
-		let pwh : IPasswordAndHint;
-		try{
-			pwh = await pwm.openAsync();
-		}catch(e){
-			return; // cancelled
+		if ( SessionPasswordService.getLevel() == SessionPasswordService.LevelExternalFile ){
+			// if using external file for password, try and get the password
+			pwh = await SessionPasswordService.getByPathAsync( newFilepath );
+		}
+
+		// if the password is unknown, prompt for it
+		if ( !pwh ){
+			// prompt for password
+			const pwm = new PluginPasswordModal(
+				this.plugin.app,
+				'Please provide a password for encryption',
+				true,
+				true,
+				await SessionPasswordService.getByPathAsync( newFilepath )
+			);
+			
+			try{
+				pwh = await pwm.openAsync();
+			}catch(e){
+				return; // cancelled
+			}	
 		}
 
 		// create the new file

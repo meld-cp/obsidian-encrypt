@@ -220,7 +220,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	}
 
 	private async showDecryptedTextIfPasswordKnown( filePath: string, decryptable: Decryptable ) : Promise<boolean> {
-		const bestGuessPasswordAndHint = SessionPasswordService.getByPath( filePath );
+		const bestGuessPasswordAndHint = await SessionPasswordService.getByPathAsync(filePath);
 		if ( bestGuessPasswordAndHint.password == null ){
 			return false;
 		}

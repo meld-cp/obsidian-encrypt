@@ -40,7 +40,7 @@ export class EncryptedMarkdownView extends MarkdownView {
         const fileContents = await this.app.vault.read( file );
         this.encryptedData = JsonFileEncoding.decode( fileContents );
 
-        this.passwordAndHint = SessionPasswordService.getByFile( file );
+        this.passwordAndHint = await SessionPasswordService.getByFile( file );
         this.passwordAndHint.hint = this.encryptedData.hint;
 
         // try to decrypt the file content
@@ -245,7 +245,7 @@ export class EncryptedMarkdownView extends MarkdownView {
             `Change password for "${this.file.basename}"`,
             true,
             true,
-            SessionPasswordService.getByFile( this.file )
+            await SessionPasswordService.getByFile( this.file )
         );
             
         try{
