@@ -232,6 +232,18 @@ export class SessionPasswordService{
 		}
 		return this.cache.get( key, defaultValue );
 	}
+	
+	public static async canFetchContents( vaultRelativePath: string ) : Promise<boolean> {
+		if ( SessionPasswordService.vaultFileAdapter == null ){
+			return false;
+		}
+		try {
+			const _ = await this.fetchFileContents(vaultRelativePath);
+			return true;
+		} catch (err) {
+			return false;
+		}
+	}
 
 	private static async fetchFileContents( vaultRelativePath : string ) : Promise<string> {
 		if (SessionPasswordService.vaultFileAdapter == null){

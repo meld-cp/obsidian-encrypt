@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import { IMeldEncryptPluginFeature } from "src/features/IMeldEncryptPluginFeature";
 import { SessionPasswordService } from "src/services/SessionPasswordService";
 import MeldEncrypt from "../main";
@@ -125,7 +125,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 
 		const extFilePathsSetting = new Setting(containerEl)
 			.setName( 'External File Paths' )
-			.setDesc( 'When needed the password is read from one of these filepaths.' )
+			.setDesc( 'When needed the password is read from one of these filepaths. Paths must be relative to vault root' )
 			.addTextArea( text => {
 				text
 					.setValue( this.settings.rememberPasswordExternalFilePaths.join( '\n' ) )
@@ -138,6 +138,22 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 				//TODO: use style.css
 				text.inputEl.style.width = '100%';
 				text.inputEl.rows = 4;
+			})
+			.addButton( btn => {
+				btn
+					.setButtonText( 'Check File Paths' )
+					.onClick( async () => {
+						const filePaths = this.settings.rememberPasswordExternalFilePaths;
+						for( const filePath of filePaths ){
+							if (await SessionPasswordService.canFetchContents( filePath ) ){
+								new Notice( `✔️ ${filePath}` );
+							}else{
+								new Notice( `❌ ${filePath}` );
+							}
+							
+						}
+					})
+				;
 			})
 		;
 		//TODO: use style.css
