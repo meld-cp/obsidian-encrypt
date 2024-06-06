@@ -130,18 +130,20 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 				text
 					.setValue( this.settings.rememberPasswordExternalFilePaths.join( '\n' ) )
 					.onChange( async value => {
-						this.settings.rememberPasswordExternalFilePaths = value.split( '\n' );
+						this.settings.rememberPasswordExternalFilePaths = value.trim().split( '\n' );
 						await this.plugin.saveSettings();
 						SessionPasswordService.setExternalFilePaths( this.settings.rememberPasswordExternalFilePaths );
 					})
 				;
-				//TODO: use style.css
+				text.inputEl.placeholder = 'Enter one relative path per line';
+				text.inputEl.style.whiteSpace = 'pre';
 				text.inputEl.style.width = '100%';
 				text.inputEl.rows = 4;
 			})
 			.addButton( btn => {
 				btn
-					.setButtonText( 'Check File Paths' )
+					.setIcon( 'check' )
+					.setTooltip( 'Check Paths' )
 					.onClick( async () => {
 						const filePaths = this.settings.rememberPasswordExternalFilePaths;
 						for( const filePath of filePaths ){
@@ -156,7 +158,6 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 				;
 			})
 		;
-		//TODO: use style.css
 		extFilePathsSetting.controlEl.style.width = '80%';
 
 		updateRememberPasswordSettingsUi();
