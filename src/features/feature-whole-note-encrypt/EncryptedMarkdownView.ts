@@ -132,7 +132,7 @@ export class EncryptedMarkdownView extends MarkdownView {
             // return the encrypted data which should have just been updated in the save method
             return JsonFileEncoding.encode( this.encryptedData );
         }
-
+        
         // not saving, so return the unencrypted view data
         return this.getUnencryptedViewData();
     }
@@ -157,7 +157,7 @@ export class EncryptedMarkdownView extends MarkdownView {
         }
 
         if ( JsonFileEncoding.isEncoded(data) ){
-            console.debug( 'View is being set with already encoded data, trying to decode' )
+            console.debug( 'View is being set with already encoded data, trying to decode', {data} );
             if (this.passwordAndHint == null){
                 console.error('passwordAndHint == null');
                 return;
@@ -182,7 +182,11 @@ export class EncryptedMarkdownView extends MarkdownView {
 
    
     override async save(clear?: boolean | undefined): Promise<void> {
-        //console.debug('save', {clear, 'file.ext': this.file?.extension});
+        if ( this.isSavingInProgress ) {
+            console.debug('Saving was prevented because another save is in progress, Obsidian will try again later if the content changed.');
+            return;
+        }
+
         this.isSavingInProgress = true;
         try{
             

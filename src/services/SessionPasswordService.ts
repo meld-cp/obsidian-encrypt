@@ -63,7 +63,7 @@ export class SessionPasswordService{
 	}
 
 	public static setLevel( level: string ) {
-		console.debug( 'SessionPasswordService.setLevel', { level, allLevels: this.allLevels } );
+		//console.debug( 'SessionPasswordService.setLevel', { level, allLevels: this.allLevels } );
 		if ( SessionPasswordService.level == level ){
 			return;
 		}
@@ -73,7 +73,7 @@ export class SessionPasswordService{
 		}
 		SessionPasswordService.level = SessionPasswordService.LevelFilename;
 		this.clear();
-		console.debug( 'SessionPasswordService.level', { level: SessionPasswordService.level } );
+		//console.debug( 'SessionPasswordService.level', { level: SessionPasswordService.level } );
 	}
 
 	public static updateExpiryTime() : void {
