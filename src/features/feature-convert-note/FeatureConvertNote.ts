@@ -124,19 +124,24 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			throw new Error( 'Unable to encrypt file' );
 		}
 
-		const defaultPw = await SessionPasswordService.getByFile( file );
-		
-		const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt Note', true, true, defaultPw );
 		try{
-			const pw = await pm.openAsync();
 
-			const encryptedFileContent = await this.encryptFile(file, pw);
+			// try to get password from session password service
+			let password = await SessionPasswordService.getByFile( file );
+
+			if ( password.password == '' ){
+				// ask for password
+				const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt Note', true, true, password );
+				password = await pm.openAsync();
+			}
+
+			const encryptedFileContent = await this.encryptFile(file, password);
 
 			await this.closeUpdateRememberPasswordThenReopen(
 				file,
 				ENCRYPTED_FILE_EXTENSION_DEFAULT,
 				encryptedFileContent,
-				pw
+				password
 			);
 			
 			new Notice( '🔐 Note was encrypted 🔐' );
