@@ -7,6 +7,14 @@ Thank you for your support 😊
 
 Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+## v2.4.0
+- Rewrite the encrypted note editor to be based off the Obsidian note editor. Fixes [#142](https://github.com/meld-cp/obsidian-encrypt/issues/142), [#145](https://github.com/meld-cp/obsidian-encrypt/issues/145), [#148](https://github.com/meld-cp/obsidian-encrypt/issues/148), [#152](https://github.com/meld-cp/obsidian-encrypt/issues/152), [#153](https://github.com/meld-cp/obsidian-encrypt/issues/153), [#154](https://github.com/meld-cp/obsidian-encrypt/issues/154), [#159](https://github.com/meld-cp/obsidian-encrypt/issues/159)
+- Build a standalone CLI script (mdenc) to work with encrypted notes independently to Obsidian. See [#105](https://github.com/meld-cp/obsidian-encrypt/issues/105).
+- Icon changes for consistency
+- Add 'External File' option to store passwords in external files. See [#162](https://github.com/meld-cp/obsidian-encrypt/issues/162)
+
+
+
 ## v2.3.7
 - Add a setting to remember session passwords by vault ([#146](https://github.com/meld-cp/obsidian-encrypt/issues/146), [#149](https://github.com/meld-cp/obsidian-encrypt/issues/149))
 - Add a command to clear session password cache
