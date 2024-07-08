@@ -91,7 +91,7 @@ export class FeatureInplaceTextAnalysis{
 		}else{
 			result.base64CipherText = content;
 		}
-		
+		result.showInReadingView = !this.prefix.includes("%%");
 		return result;
 
 	}

@@ -9,4 +9,5 @@ node_modules
 dist
 *.map
 Obsidian Encrypt - test-vault
+test-vault
 

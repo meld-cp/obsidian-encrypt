@@ -3,6 +3,7 @@ import { App, Modal, Notice, Setting, TextAreaComponent } from 'obsidian';
 export default class DecryptModal extends Modal {
 	text: string;
 	decryptInPlace = false;
+	save = false;
 	
 	canDecryptInPlace = true;
 
@@ -28,13 +29,23 @@ export default class DecryptModal extends Modal {
 				cTextArea = cb;
 				cb.setValue(this.text);
 				cb.inputEl.setSelectionRange(0,0)
-				cb.inputEl.readOnly = true;
 				cb.inputEl.rows = 10;
 			})
 		;
 		sText.settingEl.querySelector('.setting-item-info')?.remove();
 
 		const sActions = new Setting(contentEl);
+
+		sActions
+			.addButton(cb => {
+				cb
+					.setButtonText('Save')
+					.onClick( evt =>{
+						this.save = true;
+						this.text = cTextArea.getValue();
+						this.close();
+					});
+			});
 
 		sActions
 			.addButton( cb =>{
@@ -53,6 +64,7 @@ export default class DecryptModal extends Modal {
 				.setButtonText('Decrypt in-place')
 				.onClick( evt =>{
 					this.decryptInPlace = true;
+					this.text = cTextArea.getValue();
 					this.close();
 				});
 			});
