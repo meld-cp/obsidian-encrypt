@@ -31,7 +31,7 @@ export class OfflineDecrypt {
 		// Trying non-marked inplace feature decryption
 		for (let ver = 10; ver >= 0; ver--) {
 			console.info( 'Trying non-marked inplace feature decryption', 'ver', ver );
-			const decryptable : Decryptable = {version: ver, base64CipherText: content, hint: ''};
+			const decryptable : Decryptable = { version: ver, base64CipherText: content, hint: '', showInReadingView: false };
 			const ch = CryptoHelperFactory.BuildFromDecryptableOrNull(decryptable)
 			const result = await ch?.decryptFromBase64( decryptable.base64CipherText, password );
 			if ( result != null ){
