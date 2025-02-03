@@ -12,6 +12,7 @@ import { Decryptable } from "./Decryptable";
 import { FeatureInplaceTextAnalysis } from "./featureInplaceTextAnalysis";
 import { _HINT, _PREFIXES, _PREFIX_ENCODE_DEFAULT, _PREFIX_ENCODE_DEFAULT_VISIBLE, _SUFFIXES, _SUFFIX_NO_COMMENT, _SUFFIX_WITH_COMMENT } from "./FeatureInplaceConstants";
 
+const MAX_LOOKBACK = 2000;
 
 export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	plugin:MeldEncrypt;
@@ -28,7 +29,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		);
 
 		plugin.addCommand({
-			id: 'meld-encrypt',
+			id: 'meld-encrypt-in-place',
 			name: 'Encrypt/Decrypt In-place',
 			icon: 'file-lock',
 			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, false )
@@ -46,13 +47,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			}
 		);
 
-		plugin.addCommand({
-			id: 'meld-encrypt-in-place',
-			name: 'Encrypt/Decrypt In-place',
-			icon: 'file-lock',
-			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, true )
-		});
-		
 	}
 
 	onunload(){
@@ -292,8 +286,8 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			if ( !editor.somethingSelected() ){
 				// nothing selected, first assume user wants to decrypt, expand to start and end markers...
 				// but if no markers found then prompt to encrypt text
-				const foundStartPos = this.getClosestPrefixCursorPos( editor );
-				const foundEndPos = this.getClosestSuffixCursorPos(editor);
+				const foundStartPos = this.getClosestPrefixCursorPos( editor, MAX_LOOKBACK );
+				const foundEndPos = this.getClosestSuffixCursorPos(editor, MAX_LOOKBACK );
 
 				if (
 					foundStartPos == null
@@ -397,7 +391,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		return false;
 	}
 
-	private getClosestPrefixCursorPos(editor: Editor): EditorPosition | null{
+	private getClosestPrefixCursorPos(editor: Editor, maxLookback: number ): EditorPosition | null{
 		
 		const maxLengthPrefix = _PREFIXES.reduce((prev,cur, i) => {
 			if (i== 0) return cur;
@@ -406,7 +400,9 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		} );
 		const initOffset = editor.posToOffset( editor.getCursor("from") ) + maxLengthPrefix.length;
 
-		for (let offset = initOffset; offset >= 0; offset--) {
+		const minOffset = Math.max(initOffset - maxLookback, 0);
+
+		for (let offset = initOffset; offset >= minOffset; offset--) {
 			const offsetPos = editor.offsetToPos(offset);
 			for (const prefix of _PREFIXES) {
 				const prefixStartOffset = offset - prefix.length;
@@ -424,7 +420,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	}
 
-	private getClosestSuffixCursorPos(editor: Editor): EditorPosition | null{
+	private getClosestSuffixCursorPos(editor: Editor, maxLookForward: number): EditorPosition | null{
 		const maxLengthPrefix = _PREFIXES.reduce((prev,cur, i) => {
 			if (i== 0) return cur;
 			if ( cur.length > prev.length ) return cur;
@@ -434,7 +430,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		const initOffset = editor.posToOffset( editor.getCursor("from") ) - maxLengthPrefix.length + 1;
 		const lastLineNum = editor.lastLine();
 
-		const maxOffset = editor.posToOffset( {line:lastLineNum, ch:editor.getLine(lastLineNum).length} );
+		const maxOffset = Math.min( initOffset + maxLookForward, editor.posToOffset( {line:lastLineNum, ch:editor.getLine(lastLineNum).length} ) );
 
 		for (let offset = initOffset; offset <= maxOffset; offset++) {
 			const offsetPos = editor.offsetToPos(offset);
