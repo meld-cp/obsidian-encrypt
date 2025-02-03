@@ -12,7 +12,8 @@ Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-e
 - Build a standalone CLI script (mdenc) to work with encrypted notes independently to Obsidian. See [#105](https://github.com/meld-cp/obsidian-encrypt/issues/105).
 - Icon changes for consistency
 - Add 'External File' option to store passwords in external files. See [#162](https://github.com/meld-cp/obsidian-encrypt/issues/162)
-
+- Add In place editing by @naturecodevoid See [#166](https://github.com/meld-cp/obsidian-encrypt/issues/166).
+- Fix for [#183](https://github.com/meld-cp/obsidian-encrypt/issues/183)
 
 
 ## v2.3.7
