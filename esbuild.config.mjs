@@ -12,7 +12,7 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = (process.argv[2] === 'production');
 
-esbuild.build({
+const ctx = await esbuild.context({
 	banner: {
 		js: banner,
 	},
@@ -34,7 +34,6 @@ esbuild.build({
 		'@lezer/lr',
 		...builtins],
 	format: 'cjs',
-	watch: !prod,
 	target: 'es2018',
 	logLevel: "info",
 	sourcemap: prod ? false : 'inline',
@@ -51,4 +50,13 @@ esbuild.build({
 			dest: prod ? './dist/manifest.json' : './Obsidian Encrypt - test-vault/.obsidian/plugins/meld-encrypt/manifest.json',
 		}),
 	]
-}).catch(() => process.exit(1));
+});
+
+if (prod) {
+	console.log('Building production bundle...');
+	await ctx.rebuild();
+	process.exit(0);
+}else{
+	console.log('Building development bundle...');
+	await ctx.watch();
+}
