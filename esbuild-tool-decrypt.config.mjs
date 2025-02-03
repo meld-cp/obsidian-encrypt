@@ -8,7 +8,6 @@ esbuild.build({
 	entryPoints: ['src/tools/offline-decrypt.ts'],
 	bundle: true,
 	format: 'iife',
-	watch: !prod,
 	target: 'es2018',
 	logLevel: "info",
 	sourcemap: prod ? false : 'inline',

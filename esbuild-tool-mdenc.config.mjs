@@ -3,7 +3,6 @@ import process from "process";
 
 const prod = ( process.argv.includes('production') || process.argv.includes('prod') );
 const dev = ( process.argv.includes('dev') );
-const watch = ( process.argv.includes('watch') );
 
 if (prod) {
 
@@ -12,7 +11,6 @@ if (prod) {
 		platform: 'node',
 		bundle: true,
 		format: 'esm',
-		watch: watch,
 		target: 'node16',
 		logLevel: "info",
 		sourcemap: false,
@@ -32,7 +30,6 @@ if (dev || !prod) {
 		platform: 'node',
 		bundle: true,
 		format: 'esm',
-		watch: watch,
 		target: 'node16',
 		logLevel: "info",
 		sourcemap: 'inline',
