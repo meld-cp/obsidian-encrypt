@@ -33,14 +33,13 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			icon: 'file-lock',
 			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, false )
 		});
-		
+
 		this.plugin.addRibbonIcon(
 			'file-lock',
 			'Encrypt/Decrypt In-place',
 			(_) => {
 				const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView == null ){
-					//console.debug('no active view found');
 					return;
 				}
 				return this.processEncryptDecryptCommand(false, activeView.editor, false);
@@ -114,7 +113,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	private async processEncryptedCodeBlockProcessor(el: HTMLElement, ctx: MarkdownPostProcessorContext){
 		const replacementNodes = this.replaceMarkersRecursive(el);
-		//console.debug( 'processEncryptedCodeBlockProcessor', { el, replacementNodes } );
 		el.replaceWith( ...replacementNodes );
 		// bind events
 		const elIndicators = el.querySelectorAll('.meld-encrypt-inline-reading-marker');
@@ -273,6 +271,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		editor: Editor,
 		decryptInPlace: boolean
 	): boolean {
+
 		if ( checking && UiHelper.isSettingsModalOpen() ){
 			// Settings is open, ensures this command can show up in other
 			// plugins which list commands e.g. customizable-sidebar
@@ -353,7 +352,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		let defaultHint = '';
 		if ( this.pluginSettings.rememberPassword ){
 			const bestGuessPasswordAndHint = SessionPasswordService.getByPath( activeFile.path );
-			//console.debug({bestGuessPasswordAndHint});
 
 			defaultPassword = bestGuessPasswordAndHint.password;
 			defaultHint = bestGuessPasswordAndHint.hint;
@@ -415,7 +413,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				const prefixStartPos = editor.offsetToPos(prefixStartOffset);
 			
 				const testText = editor.getRange( prefixStartPos, offsetPos );
-				//console.debug({testText});
+
 				if (testText == prefix){
 					return editor.offsetToPos(prefixStartOffset);
 				}
@@ -465,7 +463,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		allowEncryption = true
 	) : boolean {
 		const selectionAnalysis = new FeatureInplaceTextAnalysis( selectionText );
-		//console.debug(selectionAnalysis);
 
 		if (selectionAnalysis.isEmpty) {
 			if (!checking){
@@ -502,7 +499,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		let defaultHint = selectionAnalysis.decryptable?.hint;
 		if ( this.pluginSettings.rememberPassword ){
 			const bestGuessPasswordAndHint = SessionPasswordService.getByPath( activeFile.path );
-			//console.debug({bestGuessPasswordAndHint});
 
 			defaultPassword = bestGuessPasswordAndHint.password;
 			defaultHint = defaultHint ?? bestGuessPasswordAndHint.hint;

@@ -204,7 +204,6 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 		this.plugin.app.workspace.iterateAllLeaves( l => {
 			if ( l.view instanceof TextFileView && l.view.file == file ){
-				//console.debug('closeUpdateRememberPasswordThenReopen: Detaching', l, this.plugin.app.workspace.getLayout());
 				if ( l.view instanceof EncryptedMarkdownView ){
 					l.view.detachSafely();
 				}else{
