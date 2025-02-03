@@ -1,48 +1,33 @@
-import { normalizePath, Notice, TFolder, Setting, moment } from "obsidian";
-import { EditViewEnum, EncryptedFileContentView, VIEW_TYPE_ENCRYPTED_FILE_CONTENT } from "./EncryptedFileContentView";
+import MeldEncrypt from "src/main";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
-import MeldEncrypt from "../../main";
-import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
-import { IFeatureWholeNoteEncryptSettings } from "./IFeatureWholeNoteEncryptSettings";
-import "src/services/Constants";
+import { EncryptedMarkdownView } from "./EncryptedMarkdownView";
+import { MarkdownView, TFolder, normalizePath, moment, TFile } from "obsidian";
+import PluginPasswordModal from "src/PluginPasswordModal";
+import { IPasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
+import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
 import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "src/services/Constants";
 
-export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeature {
+export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeature {
 
-	plugin:MeldEncrypt;
-	settings: IFeatureWholeNoteEncryptSettings;
+	plugin: MeldEncrypt;
 
-	async onload( plugin: MeldEncrypt, settings:IMeldEncryptPluginSettings ) {
+	private statusIndicator: HTMLElement;
+
+	async onload( plugin: MeldEncrypt ) {
 		this.plugin = plugin;
-		this.settings = settings.featureWholeNoteEncrypt;
+		//this.settings = settings.featureWholeNoteEncrypt;
 		
-		this.plugin.addRibbonIcon( 'file-lock-2', 'New encrypted note', (ev)=>{
-			this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() );
+		this.plugin.addRibbonIcon( 'file-lock-2', 'New encrypted note', async (ev)=>{
+			await this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() );
 		});
 
-		this.plugin.registerView(
-			VIEW_TYPE_ENCRYPTED_FILE_CONTENT,
-			(leaf) => new EncryptedFileContentView(leaf, this.settings )
-		);
-			
-		this.plugin.registerExtensions(
-			ENCRYPTED_FILE_EXTENSIONS,
-			VIEW_TYPE_ENCRYPTED_FILE_CONTENT
-		);
-			
 		this.plugin.addCommand({
 			id: 'meld-encrypt-create-new-note',
 			name: 'Create new encrypted note',
 			icon: 'file-lock-2',
-			callback: () => this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() ),
+			callback: async () => await this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() ),
 		});
 
-		this.plugin.addCommand({
-			id: 'meld-encrypt-toggle-reading-view',
-			name: 'Toggle Reading View',
-			icon: 'edit',
-			callback: () => this.processToggleReadingViewCommand(),
-		});
 		
 		this.plugin.registerEvent(
 			this.plugin.app.workspace.on( 'file-menu', (menu, file) => {
@@ -57,15 +42,121 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 				}
 			})
 		);
+
+		// configure status indicator
+		this.statusIndicator = this.plugin.addStatusBarItem();
+		this.statusIndicator.hide();
+		this.statusIndicator.setText('🔐');
+
+		// editor context menu
+		this.plugin.registerEvent( this.plugin.app.workspace.on('editor-menu', (menu, editor, view) => {
+			if( view.file == null || !ENCRYPTED_FILE_EXTENSIONS.includes( view.file.extension ) ){
+				return;
+			}
+			if (view instanceof EncryptedMarkdownView){
+				menu.addItem( (item) => {
+					item
+						.setTitle('Change Password')
+						.setIcon('key-round')
+						.onClick( async () => await view.changePassword() );
+					}
+				);
+				menu.addItem( (item) => {
+					item
+						.setTitle('Lock & Close')
+						.setIcon('lock')
+						.onClick( () => this.lockAndClose(view) );
+					}
+				);
+			}
+		}));
+
+		this.plugin.registerEvent( this.plugin.app.workspace.on('file-menu', (menu, file) => {
+			if ( !(file instanceof TFile) ){
+				return
+			}
+			if( !ENCRYPTED_FILE_EXTENSIONS.includes( file.extension ) ){
+				return;
+			}
+
+			const view = this.plugin.app.workspace.getActiveViewOfType( EncryptedMarkdownView );
+			if (view == null || view.file != file){
+				return;
+			}
+
+			menu.addItem( (item) => {
+				item
+					.setTitle('Change Password')
+					.setIcon('key-round')
+					.onClick( async () => await view.changePassword() );
+				}
+			);
+			menu.addItem( (item) => {
+				item
+					.setTitle('Lock & Close')
+					.setIcon('lock')
+					.onClick( () => this.lockAndClose(view)  );
+				}
+			);
+		}))
+
+
+		// register view
+		this.plugin.registerView( EncryptedMarkdownView.VIEW_TYPE, (leaf) => new EncryptedMarkdownView(leaf) );
+		this.plugin.registerExtensions( ENCRYPTED_FILE_EXTENSIONS, EncryptedMarkdownView.VIEW_TYPE );
+
+		// show status indicator for encrypted files, hide for others
+		this.plugin.registerEvent( this.plugin.app.workspace.on('layout-change', () => {
+			const view = this.plugin.app.workspace.getActiveViewOfType(EncryptedMarkdownView);
+			if (view == null){
+				this.statusIndicator.hide();
+				return;
+			}
+			this.statusIndicator.show();
+		}));
+
+		// make sure the view is the right type
+		this.plugin.registerEvent(
+
+            this.plugin.app.workspace.on('active-leaf-change', async (leaf) => {
+				if ( leaf == null ){
+					return;
+				}
+				
+				if ( leaf.view instanceof EncryptedMarkdownView ){
+					// correct view already active
+					return;
+				}
+
+				if ( leaf.view instanceof MarkdownView ){
+
+					const file = leaf.view.file;
+					if ( file == null ){
+						return;
+					}
+					
+					if ( ENCRYPTED_FILE_EXTENSIONS.includes( file.extension ) ){
+						// file is encrypted but has the wrong view type
+						const viewState = leaf.getViewState();
+						viewState.type = EncryptedMarkdownView.VIEW_TYPE;
+						
+						await leaf.setViewState( viewState );
+
+						return;
+					}
+
+				}
+
+			} )
+        )
+
 	}
 
-	onunload() {
-		this.plugin.app.workspace.detachLeavesOfType(VIEW_TYPE_ENCRYPTED_FILE_CONTENT);
-	}
-
-	private processToggleReadingViewCommand() {
-		const view = this.plugin.app.workspace.getActiveViewOfType( EncryptedFileContentView );
-		view?.toggleReadingView();
+	private lockAndClose( view: EncryptedMarkdownView ) : void {
+		view.detachSafely();
+		if ( view.file != null ){
+			SessionPasswordService.clearForFile( view.file );
+		}
 	}
 
 	private getDefaultFileFolder() : TFolder {
@@ -78,53 +169,56 @@ export default class FeatureWholeNoteEncrypt implements IMeldEncryptPluginFeatur
 		}
 	}
 
-	private processCreateNewEncryptedNoteCommand( parentFolder: TFolder ) {
-		try{
-			const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
-			
-			const newFilepath = normalizePath( parentFolder.path + "/" + newFilename );
-			
-			this.plugin.app.vault.create(newFilepath,'').then( async f => {
-				const leaf = this.plugin.app.workspace.getLeaf( true );
-				await leaf.openFile( f );
-			}).catch( reason =>{
-				new Notice(reason, 10000);
-			});
-
-		}catch(e){
-			console.error(e);
-			new Notice(e, 10000);
+	private async processCreateNewEncryptedNoteCommand( parentFolder: TFolder ) : Promise<void> {
+		
+		const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
+		const newFilepath = normalizePath( parentFolder.path + "/" + newFilename );
+		
+		let pwh : IPasswordAndHint | undefined;
+		
+		if ( SessionPasswordService.getLevel() == SessionPasswordService.LevelExternalFile ){
+			// if using external file for password, try and get the password
+			pwh = await SessionPasswordService.getByPathAsync( newFilepath );
 		}
+
+		// if the password is unknown, prompt for it
+		if ( !pwh ){
+			// prompt for password
+			const pwm = new PluginPasswordModal(
+				this.plugin.app,
+				'Please provide a password for encryption',
+				true,
+				true,
+				await SessionPasswordService.getByPathAsync( newFilepath )
+			);
+			
+			try{
+				pwh = await pwm.openAsync();
+			}catch(e){
+				return; // cancelled
+			}	
+		}
+
+		// create the new file
+		const fileData = await FileDataHelper.encrypt( pwh.password, pwh.hint, '' )
+		const fileContents = JsonFileEncoding.encode( fileData );
+		const file = await this.plugin.app.vault.create( newFilepath, fileContents );
+		
+		// cache the password
+		SessionPasswordService.putByFile( pwh, file );
+
+		// open the file
+		const leaf = this.plugin.app.workspace.getLeaf( true );
+		await leaf.openFile( file );
 
 	}
 
-	buildSettingsUi(
-		containerEl: HTMLElement,
-		saveSettingCallback : () => Promise<void>
-	): void {
+	onunload() {
+		this.plugin.app.workspace.detachLeavesOfType(EncryptedMarkdownView.VIEW_TYPE);
+	}
 
-		new Setting(containerEl)
-			.setHeading()
-			.setName('Whole note encryption')
-		;
-
-		new Setting(containerEl)
-			.setName('Default view for new tabs')
-			.setDesc('The default view that a new encrypted note tab gets opened in')
-			.addDropdown( cb =>{
-				cb
-					.addOption( `${EditViewEnum.source}`, 'Source view' )
-					.addOption( `${EditViewEnum.reading}`, 'Reading view' )
-					.setValue( `${this.settings.defaultView ?? EditViewEnum.source}` )
-				
-					.onChange( async value => {
-						this.settings.defaultView = value;
-						await saveSettingCallback();
-					})
-				;
-			})
-		;
-
+	buildSettingsUi(containerEl: HTMLElement, saveSettingCallback: () => Promise<void>): void {
+		//throw new Error("Method not implemented.");
 	}
 
 }

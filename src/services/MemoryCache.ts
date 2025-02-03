@@ -11,6 +11,11 @@ export class MemoryCache<T> {
 		//console.debug('MemoryCache.get', {key, defaultValue});
 		return this.values.get(key) ?? defaultValue;
 	}
+	
+	public getOrNull(key: string): T | null {
+		//console.debug('MemoryCache.getOrNull', {key});
+		return this.values.get(key) ?? null;
+	}
 
 	public getFirst(keys: string[], defaultValue: T): T {
 		//console.debug('MemoryCache.getFirst', {keys, defaultValue});

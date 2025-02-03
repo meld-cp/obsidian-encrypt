@@ -1,5 +1,5 @@
 import { Decryptable } from "./Decryptable";
-import { _HINT, _PREFIXES, _PREFIX_A, _PREFIX_A_VISIBLE, _PREFIX_B, _PREFIX_B_VISIBLE, _PREFIX_OBSOLETE, _SUFFIXES } from "./FeatureInplaceConstants";
+import { _HINT, _PREFIXES, _PREFIX_A, _PREFIX_A_VISIBLE, _PREFIX_B, _PREFIX_B_VISIBLE, _PREFIX_OBSOLETE, _PREFIX_OBSOLETE_VISIBLE, _SUFFIXES } from "./FeatureInplaceConstants";
 
 export class FeatureInplaceTextAnalysis{
 	processedText:string;
@@ -21,7 +21,6 @@ export class FeatureInplaceTextAnalysis{
 	}
 
 	private process( text: string ) : void{
-		//console.debug('SelectionAnalysis.process', {text});
 		
 		this.processedText = text;
 
@@ -30,12 +29,10 @@ export class FeatureInplaceTextAnalysis{
 		this.prefix = _PREFIXES.find( (prefix) => text.startsWith(prefix) ) ?? '';
 		this.suffix = _SUFFIXES.find( (suffix) => text.endsWith(suffix) ) ?? '';
 		
-		//console.debug( {prefix:this.prefix, suffix:this.suffix} );
-		
 		this.hasEncryptedPrefix = this.prefix.length > 0;
 		this.hasEncryptedSuffix = this.suffix.length > 0;
 
-		this.hasObsoleteEncryptedPrefix = this.prefix === _PREFIX_OBSOLETE;
+		this.hasObsoleteEncryptedPrefix = this.prefix === _PREFIX_OBSOLETE || this.prefix === _PREFIX_OBSOLETE_VISIBLE;
 
 		this.containsEncryptedMarkers = [..._PREFIXES, ..._SUFFIXES].some( (marker) => text.includes(marker ));
 
@@ -44,7 +41,7 @@ export class FeatureInplaceTextAnalysis{
 		
 		if (this.canDecrypt){
 			const decryptable = this.parseDecryptableContent(text);
-			//console.debug( {decryptable} );
+
 			if ( decryptable != null ){
 				this.decryptable = decryptable;
 			}else{
@@ -73,7 +70,6 @@ export class FeatureInplaceTextAnalysis{
 
 		// remove markers from start and end	
 		const content = text.substring(this.prefix.length, text.length - this.suffix.length);
-		//console.debug({content});
 
 		if ( [..._PREFIXES, ..._SUFFIXES].some( (marker) => content.includes( marker )) ){
 			// content, itself has markers

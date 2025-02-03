@@ -8,6 +8,7 @@ import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
 import { Utils } from "src/services/Utils";
 import "src/services/Constants";
 import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "src/services/Constants";
+import { EncryptedMarkdownView } from "../feature-whole-note-encrypt/EncryptedMarkdownView";
 
 export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	
@@ -19,12 +20,12 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		this.plugin.addCommand({
 			id: 'meld-encrypt-convert-to-or-from-encrypted-note',
 			name: 'Convert to or from an Encrypted note',
-			icon: 'file-lock',
+			icon: 'file-lock-2',
 			checkCallback: (checking) => this.processCommandConvertActiveNote( checking ),
 		});
 
 		this.plugin.addRibbonIcon(
-			'file-lock',
+			'file-lock-2',
 			'Convert to or from an Encrypted note',
 			(_) => this.processCommandConvertActiveNote( false )
 		);
@@ -37,7 +38,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 						menu.addItem( (item) => {
 							item
 								.setTitle('Encrypt note')
-								.setIcon('file-lock')
+								.setIcon('file-lock-2')
 								.onClick( () => this.processCommandEncryptNote( file ) );
 							}
 						);
@@ -123,19 +124,24 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			throw new Error( 'Unable to encrypt file' );
 		}
 
-		const defaultPw = SessionPasswordService.getByFile( file );
-		
-		const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt Note', true, true, defaultPw );
 		try{
-			const pw = await pm.openAsync();
 
-			const encryptedFileContent = await this.encryptFile(file, pw);
+			// try to get password from session password service
+			let password = await SessionPasswordService.getByFile( file );
+
+			if ( password.password == '' ){
+				// ask for password
+				const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt Note', true, true, password );
+				password = await pm.openAsync();
+			}
+
+			const encryptedFileContent = await this.encryptFile(file, password);
 
 			await this.closeUpdateRememberPasswordThenReopen(
 				file,
 				ENCRYPTED_FILE_EXTENSION_DEFAULT,
 				encryptedFileContent,
-				pw
+				password
 			);
 			
 			new Notice( '🔐 Note was encrypted 🔐' );
@@ -152,7 +158,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			throw new Error( 'Unable to decrypt file' );
 		}
 
-		let passwordAndHint = SessionPasswordService.getByFile( file );
+		let passwordAndHint = await SessionPasswordService.getByFile( file );
 		if ( passwordAndHint.password != '' ){
 			// try to decrypt using saved password
 			const decryptedContent = await this.decryptFile( file, passwordAndHint.password );
@@ -196,9 +202,13 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		
 		let didDetach = false;
 
-		this.plugin.app.workspace.iterateAllLeaves( l=> {
+		this.plugin.app.workspace.iterateAllLeaves( l => {
 			if ( l.view instanceof TextFileView && l.view.file == file ){
-				l.detach();
+				if ( l.view instanceof EncryptedMarkdownView ){
+					l.view.detachSafely();
+				}else{
+					l.detach();
+				}
 				didDetach = true;
 			}
 		});
@@ -209,15 +219,15 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			await this.plugin.app.vault.modify( file, content );
 			SessionPasswordService.putByFile( pw, file );
 		}finally{
-			if(didDetach){
-				await this.plugin.app.workspace.getLeaf().openFile(file);
+			if( didDetach ){
+				await this.plugin.app.workspace.getLeaf( true ).openFile(file);
 			}
 		}
 	}
 
 	private async encryptFile(file: TFile, passwordAndHint:IPasswordAndHint ) : Promise<string> {
 		const content = await this.plugin.app.vault.read( file );
-		const encryptedData = await FileDataHelper.encode( passwordAndHint.password, passwordAndHint.hint, content );
+		const encryptedData = await FileDataHelper.encrypt( passwordAndHint.password, passwordAndHint.hint, content );
 		return JsonFileEncoding.encode( encryptedData );
 	}
 

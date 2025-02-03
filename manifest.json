@@ -1,7 +1,7 @@
 {
 	"id": "meld-encrypt",
 	"name": "Meld Encrypt",
-	"version": "2.3.7",
+	"version": "2.4.0",
 	"minAppVersion": "1.0.3",
 	"description": "Hide secrets in your vault",
 	"author": "meld-cp",

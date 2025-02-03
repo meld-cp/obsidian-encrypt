@@ -4,9 +4,8 @@ import { IMeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature';
 import { SessionPasswordService } from './services/SessionPasswordService';
 import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInplaceEncrypt';
-import FeatureWholeNoteEncrypt from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
-import { EditViewEnum } from './features/feature-whole-note-encrypt/EncryptedFileContentView';
 import FeatureConvertNote from './features/feature-convert-note/FeatureConvertNote';
+import FeatureWholeNoteEncryptV2 from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt';
 
 export default class MeldEncrypt extends Plugin {
 
@@ -16,11 +15,13 @@ export default class MeldEncrypt extends Plugin {
 
 	async onload() {
 		
+		SessionPasswordService.init(this.app.vault.adapter);
+
 		// Settings
 		await this.loadSettings();
 
 		this.enabledFeatures.push(
-			new FeatureWholeNoteEncrypt(),
+			new FeatureWholeNoteEncryptV2(),
 			new FeatureConvertNote(),
 			new FeatureInplaceEncrypt(),
 		);
@@ -38,7 +39,7 @@ export default class MeldEncrypt extends Plugin {
 		this.addCommand({
 			id: 'meld-encrypt-clear-password-cache',
 			name: 'Clear Session Password Cache',
-			icon: 'file-lock',
+			icon: 'shield-ellipsis',
 			callback: () => {
 				const itemsCleared = SessionPasswordService.clear();
 				new Notice( `Items cleared: ${itemsCleared}` );
@@ -52,10 +53,11 @@ export default class MeldEncrypt extends Plugin {
 
 	}
 	
-	onunload() {
+	override onunload() {
 		this.enabledFeatures.forEach(async f => {
 			f.onunload();
 		});
+		super.onunload();
 	}
 
 	async loadSettings() {
@@ -65,9 +67,9 @@ export default class MeldEncrypt extends Plugin {
 			rememberPassword: true,
 			rememberPasswordTimeout: 30,
 			rememberPasswordLevel: SessionPasswordService.LevelVault,
+			rememberPasswordExternalFilePaths: [],
 
 			featureWholeNoteEncrypt: {
-				defaultView: EditViewEnum.source.toString()
 			},
 			
 			featureInplaceEncrypt:{
@@ -89,6 +91,7 @@ export default class MeldEncrypt extends Plugin {
 			: this.settings.rememberPasswordTimeout
 		);
 		SessionPasswordService.setLevel( this.settings.rememberPasswordLevel );
+		SessionPasswordService.setExternalFilePaths( this.settings.rememberPasswordExternalFilePaths );
 	}
 
 	async saveSettings() {

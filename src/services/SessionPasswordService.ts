@@ -1,4 +1,4 @@
-import { TFile } from "obsidian";
+import { DataAdapter, Notice, TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache";
 import { Utils } from "./Utils";
 
@@ -9,9 +9,11 @@ export interface IPasswordAndHint{
 
 export class SessionPasswordService{
 
+	private static vaultFileAdapter: DataAdapter | null = null;
+
 	private static isActive = true;
 
-	private static blankPasswordAndHint : IPasswordAndHint = { password:'', hint:'' };
+	public static blankPasswordAndHint : IPasswordAndHint = { password:'', hint:'' };
 
 	private static cache = new MemoryCache<IPasswordAndHint>();
 	
@@ -21,14 +23,26 @@ export class SessionPasswordService{
 	public static LevelFilename = 'filename';
 	public static LevelParentPath = 'parentPath';
 	public static LevelVault = 'vault';
+	public static LevelExternalFile = 'externalFile';
 	private static allLevels = [
 		SessionPasswordService.LevelFilename,
 		SessionPasswordService.LevelParentPath,
 		SessionPasswordService.LevelVault,
+		SessionPasswordService.LevelExternalFile
 	];
 	private static level = SessionPasswordService.LevelVault;
 
-	public static setActive( isActive: boolean) {
+	private static externalFilePaths : string[] = [];
+
+	static init( vaultFileAdapter: DataAdapter ) {
+		SessionPasswordService.vaultFileAdapter = vaultFileAdapter;	
+	}
+
+	public static setExternalFilePaths( filePaths: string[]) {
+		SessionPasswordService.externalFilePaths = filePaths;
+	}
+
+	public static setActive( isActive: boolean ) {
 		SessionPasswordService.isActive = isActive;
 		if (!SessionPasswordService.isActive){
 			this.clear();
@@ -44,15 +58,22 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 	}
 
+	public static getLevel() : string {
+		return SessionPasswordService.level;
+	}
+
 	public static setLevel( level: string ) {
+		//console.debug( 'SessionPasswordService.setLevel', { level, allLevels: this.allLevels } );
 		if ( SessionPasswordService.level == level ){
 			return;
 		}
 		if ( SessionPasswordService.allLevels.contains(level) ){
 			SessionPasswordService.level = level;
+			return;
 		}
 		SessionPasswordService.level = SessionPasswordService.LevelFilename;
 		this.clear();
+		//console.debug( 'SessionPasswordService.level', { level: SessionPasswordService.level } );
 	}
 
 	public static updateExpiryTime() : void {
@@ -72,13 +93,12 @@ export class SessionPasswordService{
 		}
 
 		const key = SessionPasswordService.getFileCacheKey( file );
-		this.cache.put( key, pw );
-
+		this.putByKey( key, pw );
 
 		SessionPasswordService.updateExpiryTime();
 	}
 
-	public static getByFile( file:TFile  ) : IPasswordAndHint {
+	public static async getByFile( file:TFile  ) : Promise<IPasswordAndHint> {
 		if (!SessionPasswordService.isActive){
 			return SessionPasswordService.blankPasswordAndHint;
 		}
@@ -86,7 +106,7 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 
 		const key = SessionPasswordService.getFileCacheKey( file );
-		return this.cache.get( key, SessionPasswordService.blankPasswordAndHint );
+		return await this.getByKeyAsync( key, SessionPasswordService.blankPasswordAndHint );
 	}
 
 	public static putByPath( pw: IPasswordAndHint, path:string ): void {
@@ -96,7 +116,7 @@ export class SessionPasswordService{
 
 		const key = SessionPasswordService.getPathCacheKey( path );
 
-		this.cache.put( key, pw );
+		this.putByKey( key, pw );
 
 		SessionPasswordService.updateExpiryTime();
 	}
@@ -109,47 +129,53 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 
 		const key = SessionPasswordService.getPathCacheKey( path );
-		return this.cache.get( key, SessionPasswordService.blankPasswordAndHint );
+		return this.getByKey( key, SessionPasswordService.blankPasswordAndHint );
+	}
+
+	public static async getByPathAsync( path: string ) : Promise<IPasswordAndHint> {
+		if (!SessionPasswordService.isActive){
+			return SessionPasswordService.blankPasswordAndHint;
+		}
+		this.clearIfExpired();
+		SessionPasswordService.updateExpiryTime();
+
+		const key = SessionPasswordService.getPathCacheKey( path );
+		return await this.getByKeyAsync( key, SessionPasswordService.blankPasswordAndHint );
 	}
 
 	private static getPathCacheKey( path : string ) : string {
-		//console.debug('getPathCacheKey', {path});
-
-		const parentPath = path.split('/').slice(0,-1).join('/');
-
-		switch (SessionPasswordService.level) {
-			case SessionPasswordService.LevelVault: {
-				//console.debug('getPathCacheKey: $vault');
-				return '$vault';
-			}
-
-			case SessionPasswordService.LevelParentPath: {
-				//console.debug('getPathCacheKey: ', parentPath);
-				return parentPath;
-			}
 		
-			default:
-				//console.debug('getPathCacheKey: ', path);
-				return path;
+		if (
+			SessionPasswordService.level ==  SessionPasswordService.LevelExternalFile
+			|| SessionPasswordService.level == SessionPasswordService.LevelVault
+		){
+			return '$' + SessionPasswordService.level;
 		}
+
+		if (SessionPasswordService.level == SessionPasswordService.LevelParentPath){
+			const parentPath = path.split('/').slice(0,-1).join('/');
+			return parentPath;
+		}
+
+		return path;
 	}
 
 	private static getFileCacheKey( file : TFile ) : string {
-		//console.debug('getFileCacheKey', {file});
-		switch (SessionPasswordService.level) {
-			case SessionPasswordService.LevelVault: {
-				//console.debug('getFileCacheKey: $vault');
-				return '$vault';
-			}
-			case SessionPasswordService.LevelParentPath: {
-				//console.debug('getFileCacheKey:', file.parent.path);
-				return file.parent.path;
-			}
-			default:
-				const fileExExt = Utils.getFilePathExcludingExtension( file );
-				//console.debug('getFileCacheKey:', fileExExt);
-				return fileExExt;
+		
+		if (
+			SessionPasswordService.level ==  SessionPasswordService.LevelExternalFile
+			|| SessionPasswordService.level == SessionPasswordService.LevelVault
+		){
+			return '$' + SessionPasswordService.level;
 		}
+
+		if (SessionPasswordService.level == SessionPasswordService.LevelParentPath){
+			return file.parent!.path;
+		}
+
+		const fileExExt = Utils.getFilePathExcludingExtension( file );
+		return fileExExt;
+
 	}
 
 	private static clearIfExpired() : void{
@@ -167,16 +193,69 @@ export class SessionPasswordService{
 		this.cache.removeKey( key );
 	}
 
-	public static clearForPath( path: string ) : void {
-		const key = SessionPasswordService.getPathCacheKey( path );
-		this.cache.removeKey( key );
-	}
-
 	public static clear(): number {
 		const count = this.cache.getKeys().length;
 		this.cache.clear();
 		return count;
 	}
 
-}
+	private static putByKey( key: string, pw: IPasswordAndHint ) : void {
+		if (SessionPasswordService.level == SessionPasswordService.LevelExternalFile){
+			// not supported
+			return;
+		}
+		this.cache.put( key, pw );
+	}
 
+	private static getByKey( key: string, defaultValue: IPasswordAndHint ): IPasswordAndHint {
+		console.debug( 'SessionPasswordService.getByKey', { 'level': SessionPasswordService.level, key, defaultValue } );
+		return this.cache.get( key, defaultValue );
+	}
+
+	public static async getByKeyAsync( key: string, defaultValue: IPasswordAndHint ): Promise<IPasswordAndHint> {
+		if ( SessionPasswordService.level == SessionPasswordService.LevelExternalFile ){
+			// get from external file, return contents of first path that exists
+	
+			for (let i = 0; i < this.externalFilePaths.length; i++) {
+				const relFilePath = this.externalFilePaths[i];
+				try {
+					const contents = await this.fetchFileContents(relFilePath);
+					return {
+						password: contents,
+						hint: '',
+					}
+				} catch (err) {
+					console.error(err, {relFilePath});
+				}
+			}
+			new Notice('External password file not found', 10000);
+			return defaultValue;
+		}
+		return this.cache.get( key, defaultValue );
+	}
+	
+	public static async canFetchContents( vaultRelativePath: string ) : Promise<boolean> {
+		if ( SessionPasswordService.vaultFileAdapter == null ){
+			return false;
+		}
+		try {
+			const _ = await this.fetchFileContents(vaultRelativePath);
+			return true;
+		} catch (err) {
+			return false;
+		}
+	}
+
+	private static async fetchFileContents( vaultRelativePath : string ) : Promise<string> {
+		if (SessionPasswordService.vaultFileAdapter == null){
+			throw new Error('SessionPasswordService.vaultFileAdapter == null');
+		}
+		const resUrl = SessionPasswordService.vaultFileAdapter.getResourcePath( vaultRelativePath );
+		const res = await fetch ( resUrl  );
+		const contents = await res.text();
+		if (contents.length == 0){
+			throw new Error('File contents empty');
+		}
+		return contents;
+	}
+}

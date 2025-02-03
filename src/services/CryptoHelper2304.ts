@@ -104,27 +104,27 @@ export class CryptoHelper2304 implements ICryptoHelper {
 		password: string
 	): Promise<string|null> {
 		try {
-
+			
 			let offset: number;
 			let nextOffset : number|undefined;
-
+			
 			// extract iv
 			offset = 0;
 			nextOffset = offset + this.vectorSize;
 			const vector = encryptedBytes.slice(offset, nextOffset);
-
+			
 			// extract salt
 			offset = nextOffset;
 			nextOffset = offset + this.saltSize;
 			const salt = encryptedBytes.slice(offset, nextOffset);
-
+			
 			// extract encrypted text
 			offset = nextOffset;
 			nextOffset = undefined;
 			const encryptedTextBytes = encryptedBytes.slice(offset);
-
+			
 			const key = await this.deriveKey(password, salt);
-
+			
 			// decrypt into bytes
 			const decryptedBytes = await crypto.subtle.decrypt(
 				/*algorithm*/ {
@@ -134,12 +134,12 @@ export class CryptoHelper2304 implements ICryptoHelper {
 				/*key*/ key,
 				/*data*/ encryptedTextBytes
 			);
-
+			
 			// convert bytes to text
 			const utf8Decoder	= new TextDecoder();
 			const decryptedText = utf8Decoder.decode(decryptedBytes);
 			return decryptedText;
-
+			
 		} catch (e) {
 			//console.error(e);
 			return null;
