@@ -6,6 +6,7 @@ interface IBuildPasswordSettingParams {
 	autoFocus?: boolean;
 	placeholder?: string;
 	initialValue?:string;
+	tabIndex?:number|undefined;
 	onChangeCallback?: (value:string) => any;
 	onEnterCallback?: (value:string) => any;
 }
@@ -27,6 +28,7 @@ export class UiHelper{
 			autoFocus = false,
 			placeholder = '',
 			initialValue = '',
+			tabIndex,
 			onChangeCallback,
 			onEnterCallback,
 		}: IBuildPasswordSettingParams
@@ -35,6 +37,7 @@ export class UiHelper{
 			.setName(name)
 			.setDesc(desc)
 			.addButton( cb=>{
+				cb.buttonEl.tabIndex = -1;
 				cb
 					.setIcon( 'reading-glasses' )
 					.onClick( evt =>{
@@ -47,6 +50,7 @@ export class UiHelper{
 				;
 			})
 			.addText( tc => {
+				tc.inputEl.tabIndex = tabIndex ?? tc.inputEl.tabIndex;
 				tc.setPlaceholder(placeholder);
 				tc.setValue(initialValue);
 				tc.inputEl.type = 'password';
