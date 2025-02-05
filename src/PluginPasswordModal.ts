@@ -46,6 +46,7 @@ export default class PluginPasswordModal extends Modal {
 
 		UiHelper.buildPasswordSetting({
 			container: contentEl,
+			tabIndex: 0,
 			name: 'Password:',
 			placeholder: this.isEncrypting ? '' : `Hint: ${hint}`,
 			initialValue: password,
@@ -85,6 +86,7 @@ export default class PluginPasswordModal extends Modal {
 		const sConfirmPassword = UiHelper.buildPasswordSetting({
 			container : contentEl,
 			name: 'Confirm Password:',
+			tabIndex: 1,
 			autoFocus: password != '',
 			onChangeCallback: (value) => {
 				confirmPass = value;
@@ -119,6 +121,7 @@ export default class PluginPasswordModal extends Modal {
 			.addText( tc=>{
 				//tcHint = tc;
 				tc.inputEl.placeholder = `Password Hint`;
+				tc.inputEl.tabIndex = 2;
 				tc.setValue(hint);
 				tc.onChange( v=> hint = v );
 				tc.inputEl.on('keypress', '*', (ev, target) => {
@@ -142,6 +145,7 @@ export default class PluginPasswordModal extends Modal {
 		/* END Hint text row */
 
 		new Setting(contentEl).addButton( cb=>{
+			cb.buttonEl.tabIndex = 99;
 			cb
 				.setButtonText('Confirm')
 				.onClick( evt =>{
