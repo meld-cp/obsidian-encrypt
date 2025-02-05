@@ -7,8 +7,10 @@ import { CryptoHelperObsolete } from "./CryptoHelperObsolete";
 
 export class CryptoHelperFactory{
 
+	public static cryptoHelper2304_v2 = new CryptoHelper2304( 16, 16, 210000 );
+
 	public static BuildDefault(): ICryptoHelper{
-		return new CryptoHelper2304( 16, 16, 210000 );
+		return this.cryptoHelper2304_v2;
 	}
 
 	public static BuildFromFileDataOrThrow( data: FileData ) : ICryptoHelper {
@@ -26,7 +28,7 @@ export class CryptoHelperFactory{
 
 		// note				v2.0	CryptoHelper2304
 		if ( data.version == '2.0' ){
-			return new CryptoHelper2304( 16, 16, 210000  );
+			return this.cryptoHelper2304_v2;
 		}
 
 		return null;
@@ -60,7 +62,7 @@ export class CryptoHelperFactory{
 		}
 
 		if ( decryptable.version == 2 ){
-			return new CryptoHelper2304( 16, 16, 210000 );
+			return this.cryptoHelper2304_v2;
 		}
 
 		return null;
