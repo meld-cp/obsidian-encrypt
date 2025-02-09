@@ -12,8 +12,6 @@ import { Decryptable } from "./Decryptable";
 import { FeatureInplaceTextAnalysis } from "./featureInplaceTextAnalysis";
 import { _HINT, _PREFIXES, _PREFIX_ENCODE_DEFAULT, _PREFIX_ENCODE_DEFAULT_VISIBLE, _SUFFIXES, _SUFFIX_NO_COMMENT, _SUFFIX_WITH_COMMENT } from "./FeatureInplaceConstants";
 
-const MAX_LOOKBACK = 2000;
-
 export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	plugin:MeldEncrypt;
 	pluginSettings: IMeldEncryptPluginSettings;
@@ -247,6 +245,25 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		;
 
 		new Setting(containerEl)
+			.setName('Search limit for markers')
+			.setDesc('How far to look for markers when encrypting/decrypting.')
+			.addText( text => {
+				text
+					.setValue(this.featureSettings.markerSearchLimit?.toString() ?? '10000' )
+					.onChange( async value => {
+						const num = parseInt(value);
+						if ( !isNaN(num) ){
+							this.featureSettings.markerSearchLimit = num;
+							await saveSettingCallback();
+						}
+					})
+				;
+				text.inputEl.type = 'number';
+				text.inputEl.min = '1000';
+				text.inputEl.max = '9999999';
+			})
+
+		new Setting(containerEl)
 			.setName('By default, show encrypted marker when reading')
 			.setDesc('When encrypting inline text, should the default be to have a visible marker in Reading view?')
 			.addToggle( toggle =>{
@@ -286,8 +303,8 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			if ( !editor.somethingSelected() ){
 				// nothing selected, first assume user wants to decrypt, expand to start and end markers...
 				// but if no markers found then prompt to encrypt text
-				const foundStartPos = this.getClosestPrefixCursorPos( editor, MAX_LOOKBACK );
-				const foundEndPos = this.getClosestSuffixCursorPos(editor, MAX_LOOKBACK );
+				const foundStartPos = this.getClosestPrefixCursorPos( editor );
+				const foundEndPos = this.getClosestSuffixCursorPos( editor );
 
 				if (
 					foundStartPos == null
@@ -391,8 +408,10 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		return false;
 	}
 
-	private getClosestPrefixCursorPos(editor: Editor, maxLookback: number ): EditorPosition | null{
+	private getClosestPrefixCursorPos(editor: Editor ): EditorPosition | null{
 		
+		const maxLookback = this.featureSettings.markerSearchLimit;
+
 		const maxLengthPrefix = _PREFIXES.reduce((prev,cur, i) => {
 			if (i== 0) return cur;
 			if ( cur.length > prev.length ) return cur;
@@ -420,7 +439,9 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	}
 
-	private getClosestSuffixCursorPos(editor: Editor, maxLookForward: number): EditorPosition | null{
+	private getClosestSuffixCursorPos( editor: Editor ): EditorPosition | null{
+		const maxLookForward = this.featureSettings.markerSearchLimit;
+
 		const maxLengthPrefix = _PREFIXES.reduce((prev,cur, i) => {
 			if (i== 0) return cur;
 			if ( cur.length > prev.length ) return cur;
