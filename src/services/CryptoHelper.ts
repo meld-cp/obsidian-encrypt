@@ -1,8 +1,8 @@
 const vectorSize	= 16;
 const utf8Encoder	= new TextEncoder();
 const utf8Decoder	= new TextDecoder();
-const iterations	= 1000;
-const salt			= utf8Encoder.encode('XHWnDAT6ehMVY2zD');
+const iterations	= 600000;
+const salt			= utf8Encoder.encode(navigator.userAgent);
 
 export class CryptoHelper {
 
