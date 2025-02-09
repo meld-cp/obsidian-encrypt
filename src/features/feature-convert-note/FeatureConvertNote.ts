@@ -3,7 +3,7 @@ import { IMeldEncryptPluginSettings } from "src/settings/MeldEncryptPluginSettin
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import { Notice, TFile, TextFileView } from "obsidian";
 import PluginPasswordModal from "src/PluginPasswordModal";
-import { IPasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
+import { PasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
 import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
 import { Utils } from "src/services/Utils";
 import "src/services/Constants";
@@ -198,7 +198,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		}
 	}
 
-	private async closeUpdateRememberPasswordThenReopen( file:TFile, newFileExtension: string, content: string, pw:IPasswordAndHint ) {
+	private async closeUpdateRememberPasswordThenReopen( file:TFile, newFileExtension: string, content: string, pw:PasswordAndHint ) {
 		
 		let didDetach = false;
 
@@ -225,7 +225,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		}
 	}
 
-	private async encryptFile(file: TFile, passwordAndHint:IPasswordAndHint ) : Promise<string> {
+	private async encryptFile(file: TFile, passwordAndHint:PasswordAndHint ) : Promise<string> {
 		const content = await this.plugin.app.vault.read( file );
 		const encryptedData = await FileDataHelper.encrypt( passwordAndHint.password, passwordAndHint.hint, content );
 		return JsonFileEncoding.encode( encryptedData );

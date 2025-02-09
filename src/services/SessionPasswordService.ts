@@ -2,7 +2,7 @@ import { DataAdapter, Notice, TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache";
 import { Utils } from "./Utils";
 
-export interface IPasswordAndHint{
+export type PasswordAndHint = {
 	password: string;
 	hint: string;
 }
@@ -13,9 +13,9 @@ export class SessionPasswordService{
 
 	private static isActive = true;
 
-	public static blankPasswordAndHint : IPasswordAndHint = { password:'', hint:'' };
+	public static blankPasswordAndHint : PasswordAndHint = { password:'', hint:'' };
 
-	private static cache = new MemoryCache<IPasswordAndHint>();
+	private static cache = new MemoryCache<PasswordAndHint>();
 	
 	private static baseMinutesToExpire = 0;
 	private static expiryTime : number | null = null;
@@ -87,7 +87,7 @@ export class SessionPasswordService{
 		}
 	}
 
-	public static putByFile( pw: IPasswordAndHint, file:TFile ): void {
+	public static putByFile( pw: PasswordAndHint, file:TFile ): void {
 		if (!SessionPasswordService.isActive){
 			return;
 		}
@@ -98,7 +98,7 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 	}
 
-	public static async getByFile( file:TFile  ) : Promise<IPasswordAndHint> {
+	public static async getByFile( file:TFile  ) : Promise<PasswordAndHint> {
 		if (!SessionPasswordService.isActive){
 			return SessionPasswordService.blankPasswordAndHint;
 		}
@@ -109,7 +109,7 @@ export class SessionPasswordService{
 		return await this.getByKeyAsync( key, SessionPasswordService.blankPasswordAndHint );
 	}
 
-	public static putByPath( pw: IPasswordAndHint, path:string ): void {
+	public static putByPath( pw: PasswordAndHint, path:string ): void {
 		if (!SessionPasswordService.isActive){
 			return;
 		}
@@ -121,7 +121,7 @@ export class SessionPasswordService{
 		SessionPasswordService.updateExpiryTime();
 	}
 
-	public static getByPath( path: string ) : IPasswordAndHint {
+	public static getByPath( path: string ) : PasswordAndHint {
 		if (!SessionPasswordService.isActive){
 			return SessionPasswordService.blankPasswordAndHint;
 		}
@@ -132,7 +132,7 @@ export class SessionPasswordService{
 		return this.getByKey( key, SessionPasswordService.blankPasswordAndHint );
 	}
 
-	public static async getByPathAsync( path: string ) : Promise<IPasswordAndHint> {
+	public static async getByPathAsync( path: string ) : Promise<PasswordAndHint> {
 		if (!SessionPasswordService.isActive){
 			return SessionPasswordService.blankPasswordAndHint;
 		}
@@ -199,7 +199,7 @@ export class SessionPasswordService{
 		return count;
 	}
 
-	private static putByKey( key: string, pw: IPasswordAndHint ) : void {
+	private static putByKey( key: string, pw: PasswordAndHint ) : void {
 		if (SessionPasswordService.level == SessionPasswordService.LevelExternalFile){
 			// not supported
 			return;
@@ -207,12 +207,12 @@ export class SessionPasswordService{
 		this.cache.put( key, pw );
 	}
 
-	private static getByKey( key: string, defaultValue: IPasswordAndHint ): IPasswordAndHint {
+	private static getByKey( key: string, defaultValue: PasswordAndHint ): PasswordAndHint {
 		console.debug( 'SessionPasswordService.getByKey', { 'level': SessionPasswordService.level, key, defaultValue } );
 		return this.cache.get( key, defaultValue );
 	}
 
-	public static async getByKeyAsync( key: string, defaultValue: IPasswordAndHint ): Promise<IPasswordAndHint> {
+	public static async getByKeyAsync( key: string, defaultValue: PasswordAndHint ): Promise<PasswordAndHint> {
 		if ( SessionPasswordService.level == SessionPasswordService.LevelExternalFile ){
 			// get from external file, return contents of first path that exists
 	

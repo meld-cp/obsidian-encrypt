@@ -1,6 +1,6 @@
 import { MarkdownView, Notice, TFile, ViewStateResult } from "obsidian";
 import { FileData, FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper";
-import { IPasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService";
+import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService";
 import PluginPasswordModal from "../../PluginPasswordModal";
 import { ENCRYPTED_FILE_EXTENSIONS } from "src/services/Constants";
 
@@ -8,7 +8,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 
     static VIEW_TYPE = 'meld-encrypted-view';
 
-    passwordAndHint : IPasswordAndHint | null = null;
+    passwordAndHint : PasswordAndHint | null = null;
     encryptedData : FileData | null = null;
     cachedUnencryptedData : string = '';
     dataWasChangedSinceLastSave = false;
