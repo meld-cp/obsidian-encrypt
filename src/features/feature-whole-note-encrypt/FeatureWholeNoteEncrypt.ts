@@ -3,7 +3,7 @@ import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
 import { EncryptedMarkdownView } from "./EncryptedMarkdownView";
 import { MarkdownView, TFolder, normalizePath, moment, TFile } from "obsidian";
 import PluginPasswordModal from "src/PluginPasswordModal";
-import { IPasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
+import { PasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
 import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
 import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "src/services/Constants";
 
@@ -174,7 +174,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 		const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
 		const newFilepath = normalizePath( parentFolder.path + "/" + newFilename );
 		
-		let pwh : IPasswordAndHint | undefined;
+		let pwh : PasswordAndHint | undefined;
 		
 		if ( SessionPasswordService.getLevel() == SessionPasswordService.LevelExternalFile ){
 			// if using external file for password, try and get the password
