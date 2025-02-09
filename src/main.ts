@@ -74,6 +74,7 @@ export default class MeldEncrypt extends Plugin {
 			
 			featureInplaceEncrypt:{
 				expandToWholeLines: false,
+				markerSearchLimit: 10000,
 				showMarkerWhenReadingDefault: true
 			}
 		}
