@@ -7,6 +7,13 @@ Thank you for your support 😊
 
 Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
+## v2.4.1
+- Fix tab order, [#173](https://github.com/meld-cp/obsidian-encrypt/issues?q=is%3Aissue%20173)
+- Fix switching view modes may lose content (feat-whole-note), [#187](https://github.com/meld-cp/obsidian-encrypt/issues/187)
+- Fix decrypt not working for large text (feat-in-place), [#188](https://github.com/meld-cp/obsidian-encrypt/issues/188), added new settings to adjust scan range per user requirements.
+- Fix missing view actions (feat-whole-note), [#192](https://github.com/meld-cp/obsidian-encrypt/issues/192)
+
+
 ## v2.4.0
 - Rewrite the encrypted note editor to be based off the Obsidian note editor. Fixes [#142](https://github.com/meld-cp/obsidian-encrypt/issues/142), [#145](https://github.com/meld-cp/obsidian-encrypt/issues/145), [#148](https://github.com/meld-cp/obsidian-encrypt/issues/148), [#152](https://github.com/meld-cp/obsidian-encrypt/issues/152), [#153](https://github.com/meld-cp/obsidian-encrypt/issues/153), [#154](https://github.com/meld-cp/obsidian-encrypt/issues/154), [#159](https://github.com/meld-cp/obsidian-encrypt/issues/159)
 - Build a standalone CLI script (mdenc) to work with encrypted notes independently to Obsidian. See [#105](https://github.com/meld-cp/obsidian-encrypt/issues/105).

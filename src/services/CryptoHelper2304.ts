@@ -13,6 +13,7 @@ export class CryptoHelper2304 implements ICryptoHelper {
 	}
 
 	private async deriveKey( password:string, salt:Uint8Array ) :Promise<CryptoKey> {
+		// console.trace('CryptoHelper2304.deriveKey');
 		//See: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto
 		const utf8Encoder	= new TextEncoder();
 		const buffer     = utf8Encoder.encode(password);
@@ -23,23 +24,29 @@ export class CryptoHelper2304 implements ICryptoHelper {
 			/*extractable*/ false,
 			/*keyUsages*/ ['deriveKey']
 		);
-		const privateKey = await crypto.subtle.deriveKey(
-			/*algorithm*/ {
-				name: 'PBKDF2',
-				hash: 'SHA-512',
-				salt,
-				iterations: this.iterations,
-			},
-			/*baseKey*/ key,
-			/*derivedKeyAlgorithm*/ {
-				name: 'AES-GCM',
-				length: 256
-			},
-			/*extractable*/ false,
-			/*keyUsages*/ ['encrypt', 'decrypt']
-		);
 		
-		return privateKey;
+		//console.time('CryptoHelper2304.deriveKey');
+		try{
+			const privateKey = await crypto.subtle.deriveKey(
+				/*algorithm*/ {
+					name: 'PBKDF2',
+					hash: 'SHA-512',
+					salt,
+					iterations: this.iterations,
+				},
+				/*baseKey*/ key,
+				/*derivedKeyAlgorithm*/ {
+					name: 'AES-GCM',
+					length: 256
+				},
+				/*extractable*/ false,
+				/*keyUsages*/ ['encrypt', 'decrypt']
+			);
+			
+			return privateKey;
+		}finally{
+			//console.timeEnd('CryptoHelper2304.deriveKey');
+		}
 	}
 
 	private async encryptToBytes( text: string, password: string ): Promise<Uint8Array> {

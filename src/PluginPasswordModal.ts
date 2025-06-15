@@ -1,26 +1,26 @@
 import { App, Modal, Setting, TextComponent } from 'obsidian';
 import { UiHelper } from 'src/services/UiHelper';
-import { IPasswordAndHint } from './services/SessionPasswordService';
+import { PasswordAndHint } from './services/SessionPasswordService';
 
 export default class PluginPasswordModal extends Modal {
 	
 	// input
 	private title: string;
-	private defaultPassword: IPasswordAndHint | null;
+	private defaultPassword: PasswordAndHint | null;
 	//private defaultHint?: string | null = null;
 	private confirmPassword: boolean;
 	private isEncrypting: boolean;
 
 	// output
 	public resultConfirmed = false;
-	public resultPassword: IPasswordAndHint;
+	public resultPassword: PasswordAndHint;
 
 	constructor(
 		app: App,
 		title: string,
 		isEncrypting:boolean,
 		confirmPassword: boolean,
-		defaultPassword: IPasswordAndHint | null,
+		defaultPassword: PasswordAndHint | null,
 	) {
 		super(app);
 		this.title = title;
@@ -46,6 +46,7 @@ export default class PluginPasswordModal extends Modal {
 
 		UiHelper.buildPasswordSetting({
 			container: contentEl,
+			tabIndex: 0,
 			name: 'Password:',
 			placeholder: this.isEncrypting ? '' : `Hint: ${hint}`,
 			initialValue: password,
@@ -85,6 +86,7 @@ export default class PluginPasswordModal extends Modal {
 		const sConfirmPassword = UiHelper.buildPasswordSetting({
 			container : contentEl,
 			name: 'Confirm Password:',
+			tabIndex: 1,
 			autoFocus: password != '',
 			onChangeCallback: (value) => {
 				confirmPass = value;
@@ -119,6 +121,7 @@ export default class PluginPasswordModal extends Modal {
 			.addText( tc=>{
 				//tcHint = tc;
 				tc.inputEl.placeholder = `Password Hint`;
+				tc.inputEl.tabIndex = 2;
 				tc.setValue(hint);
 				tc.onChange( v=> hint = v );
 				tc.inputEl.on('keypress', '*', (ev, target) => {
@@ -142,6 +145,7 @@ export default class PluginPasswordModal extends Modal {
 		/* END Hint text row */
 
 		new Setting(contentEl).addButton( cb=>{
+			cb.buttonEl.tabIndex = 99;
 			cb
 				.setButtonText('Confirm')
 				.onClick( evt =>{
@@ -173,8 +177,8 @@ export default class PluginPasswordModal extends Modal {
 
 	}
 
-	open2Async(): Promise<IPasswordAndHint|null> {
-		return new Promise<IPasswordAndHint|null>( (resolve, reject) =>{
+	open2Async(): Promise<PasswordAndHint|null> {
+		return new Promise<PasswordAndHint|null>( (resolve, reject) =>{
 
 			this.onClose = () =>{
 				if (this.resultConfirmed == true){
@@ -189,8 +193,8 @@ export default class PluginPasswordModal extends Modal {
 		} );
 	}
 
-	openAsync(): Promise<IPasswordAndHint> {
-		return new Promise<IPasswordAndHint>( (resolve, reject) =>{
+	openAsync(): Promise<PasswordAndHint> {
+		return new Promise<PasswordAndHint>( (resolve, reject) =>{
 
 			this.onClose = () =>{
 				if (this.resultConfirmed == true){
