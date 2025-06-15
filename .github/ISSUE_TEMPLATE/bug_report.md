@@ -24,7 +24,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Desktop (please complete the following information):**
- - OS: [e.g. iOS]
+ - OS: [e.g. MacOS, Win11 etc]
  - Plugin Version [e.g. 2.4.0]
 
 **Smartphone (please complete the following information):**
