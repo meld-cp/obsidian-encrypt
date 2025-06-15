@@ -96,6 +96,18 @@ export class EncryptedMarkdownView extends MarkdownView {
 				this.isSavingEnabled = true; // allow saving after the file is loaded with a password
 			}
 
+			this.addAction(
+				'key-round',
+				'Change password',
+				() => this.changePassword(),
+			)
+
+			this.addAction(
+				'lock',
+				'Lock & Close',
+				() => this.lockAndClose(),
+			)
+
 		}finally{
 			//console.debug('onLoadFile done');
 			this.setViewBusy( false );
@@ -296,6 +308,13 @@ export class EncryptedMarkdownView extends MarkdownView {
 			this.setViewBusy( false );
 		}
 		
+	}
+
+	lockAndClose() {
+		this.detachSafely();
+		if ( this.file != null ){
+			SessionPasswordService.clearForFile( this.file );
+		}
 	}
 
 	async changePassword(): Promise<void> {

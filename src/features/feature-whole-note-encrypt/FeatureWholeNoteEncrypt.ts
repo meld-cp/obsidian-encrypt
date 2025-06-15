@@ -65,7 +65,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 					item
 						.setTitle('Lock & Close')
 						.setIcon('lock')
-						.onClick( () => this.lockAndClose(view) );
+						.onClick( () => view.lockAndClose() );
 					}
 				);
 			}
@@ -95,7 +95,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 				item
 					.setTitle('Lock & Close')
 					.setIcon('lock')
-					.onClick( () => this.lockAndClose(view)  );
+					.onClick( () => view.lockAndClose() );
 				}
 			);
 		}))
@@ -148,15 +148,8 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 				}
 
 			} )
-        )
+		);
 
-	}
-
-	private lockAndClose( view: EncryptedMarkdownView ) : void {
-		view.detachSafely();
-		if ( view.file != null ){
-			SessionPasswordService.clearForFile( view.file );
-		}
 	}
 
 	private getDefaultFileFolder() : TFolder {
