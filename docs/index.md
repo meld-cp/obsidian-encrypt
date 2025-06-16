@@ -19,4 +19,4 @@ Encrypted notes are never decrypted to disk giving you peace-of-mind that the de
 
 ## Prerequisites 
 
-(a short note about Obsidian installation)
+A short note about installing Obsidian.
