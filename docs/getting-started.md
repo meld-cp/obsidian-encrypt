@@ -6,4 +6,4 @@ nav_order: 2
 
 # Getting Started 
 
-A step-by-step installation instruction with screenshots 
+Step-by-step installation instructions with screenshots.
