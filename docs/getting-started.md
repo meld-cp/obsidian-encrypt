@@ -42,4 +42,3 @@ To install the plugin:
 6. Click **Enable** to activate the **Meld Encrypt**.
 
     [![Step5](../docs/assets/doc_inst_5.png)](../docs/assets/doc_inst_5.png)
-  
