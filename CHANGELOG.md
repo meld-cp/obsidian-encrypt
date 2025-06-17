@@ -9,7 +9,7 @@ Thank you for your support 😊
 Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
 ## v2.5.2
-- Fixed Vvew moves offscreen when editing whole notes on android, [#205](https://github.com/meld-cp/obsidian-encrypt/issues/205)
+- Fixed View moves offscreen when editing whole notes on android, [#205](https://github.com/meld-cp/obsidian-encrypt/issues/205)
 
 ## v2.4.1
 - Fix tab order, [#173](https://github.com/meld-cp/obsidian-encrypt/issues?q=is%3Aissue%20173)
