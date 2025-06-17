@@ -23,7 +23,7 @@ To install the plugin:
 
 1. Click the **Settings** icon in the bottom-left corner of Obsidian.
 
-    [![Step1](../images/doc_inst_1.png)](../images/doc_inst_1.png)
+    [![Step1](../images/docinst1.png)](../images/docinst1.png)
 
 2. Select **Community plugins** and click **Turn on community plugins**.
 
