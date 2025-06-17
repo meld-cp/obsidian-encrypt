@@ -12,6 +12,11 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = (process.argv[2] === 'production');
 
+const distDir = prod
+	? `./dist/${process.env.npm_package_name}-${process.env.npm_package_version}/${process.env.npm_package_name}`
+	: './Obsidian Encrypt - test-vault/.obsidian/plugins/meld-encrypt'
+;
+
 const ctx = await esbuild.context({
 	banner: {
 		js: banner,
@@ -39,15 +44,15 @@ const ctx = await esbuild.context({
 	sourcemap: prod ? false : 'inline',
 	treeShaking: true,
 	minify: prod,
-	outfile: prod ? './dist/main.js' : './Obsidian Encrypt - test-vault/.obsidian/plugins/meld-encrypt/main.js',
+	outfile: `${distDir}/main.js`,
 	plugins:[
 		copyStaticFiles({
 			src: './src/styles.css',
-			dest: prod ? './dist/styles.css' : './Obsidian Encrypt - test-vault/.obsidian/plugins/meld-encrypt/styles.css',
+			dest: `${distDir}/styles.css`,
 		}),
 		copyStaticFiles({
 			src: './manifest.json',
-			dest: prod ? './dist/manifest.json' : './Obsidian Encrypt - test-vault/.obsidian/plugins/meld-encrypt/manifest.json',
+			dest: `${distDir}/manifest.json`,
 		}),
 	]
 });
