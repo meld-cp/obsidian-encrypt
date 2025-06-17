@@ -1,6 +1,6 @@
 {
-	"name": "obsidian-sample-plugin",
-	"version": "2.4.1",
+	"name": "meld-encrypt",
+	"version": "2.4.2",
 	"description": "Hide secrets in your vault",
 	"main": "main.js",
 	"scripts": {
