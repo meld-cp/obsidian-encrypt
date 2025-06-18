@@ -14,7 +14,7 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 
 ### To Create a New Encrypted Note
 
-#### Option 1: Use the Command Palette
+**Option 1: Use the Command Palette**
 
 1. Open the **Command pallete**.
 2. Scroll until you find **Create new encrypted note** and click it.
@@ -23,7 +23,7 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 5. Write your note in the text window. 
 6. Click **Lock & Close** when done. 
 
-#### Option 2: Use the Ribbon Icon
+**Option 2: Use the Ribbon Icon**
 
 1. Click the **Ribbon** icon. 
 2. Enter and confirm a password. You can add an optional password hint. 
@@ -47,19 +47,19 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 
 ### To Encrypt or Decrypt an Existing Note
 
-#### Option 1: The Right-Click Menu
+**Option 1: The Right-Click Menu**
 
 1. Click the **Files** icon. 
 2. Select and right-click the file with your encrypted note.
 3. Select **Encrypt note** or **Decrypt note**.
 
-#### Option 2: The Ribbon Icon
+**Option 2: The Ribbon Icon**
 
 1. Click the **Files** icon. 
 2. Select the file with your encrypted note. 
 3. Click the **Ribbon** icon named *Convert to or from an Encrypted note* to encrypt or decrypt the file.
 
-#### Option 3: The Command Palette
+**Option 3: The Command Palette**
 
 1. Open the **Command pallete**.
 2. Scroll until you find **Convert to or from an Encrypted note** and click it.

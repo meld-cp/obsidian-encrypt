@@ -39,6 +39,6 @@ To install the plugin:
 
     <img alt="Step 4" src="https://raw.githubusercontent.com/kalarp/obsidian-encrypt/main/docs/assets/doc_inst_4.png"/> 
 
-6. Click **Enable** to activate the **Meld Encrypt**.
+6. Click **Enable** to activate the plugin.
 
     <img alt="Step 5" src="https://raw.githubusercontent.com/kalarp/obsidian-encrypt/main/docs/assets/doc_inst_5.png"/> 
