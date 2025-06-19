@@ -6,7 +6,7 @@ nav_order: 1
 
 # Obsidian Encrypt
 
-## Create encrypted notes within your [Obsidian.md](https://obsidian.md/) vault.
+## Create Encrypted Notes Within Your [Obsidian.md](https://obsidian.md/) Vault.
 
 Obsidian Encrypt is a community plugin that lets you encrypt and decrypt your notes in Obsidian. You can choose to encrypt an entire note or just selected text within a note.
 
