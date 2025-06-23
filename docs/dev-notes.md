@@ -1,37 +1,43 @@
 ---
 title: Development Notes
 layout: default
-nav_order: 7
+nav_order: 5
 ---
 
-# Development notes
+# Development Notes
 
-## Releasing new releases
+## Releasing New Versions
 
-- Update `version` in `package.json`
-- Run `npm run version` to update `manifest.json` & `versions.json`
-	- `manifest.json`: holds the new version number and the minimum Obsidian version required for your latest release.
-	- `versions.json`: holds the history of version numbers and their minimum Obsidian version, so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `meld-encrypt-<ver>.zip`, `manifest.json`, `main.js`, `styles.css` as binary attachments.
-- Publish the release.
+To release a new version:
 
-## Adding your plugin to the community plugin list
+1. Update `version` in `package.json`.
+2. Run `npm run version` to update `manifest.json` & `versions.json`.
+  	* `manifest.json`: holds the new version number and the minimum Obsidian version required for your latest release.
+	* `versions.json`: holds the history of version numbers and their minimum Obsidian version, so older versions of Obsidian can download an older version of your plugin that's compatible.
+3. Create new GitHub release using your new version number as the **Tag version**. Use the exact version number, and don't include a prefix `v`. See the following example: https://github.com/obsidianmd/obsidian-sample-plugin/releases.
+4. Upload the files `meld-encrypt-<ver>.zip`, `manifest.json`, `main.js`, and `styles.css` as binary attachments.
+5. Publish the release.
 
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+## Adding Your Plugin to the Community Plugin List
 
-## How to use
+To add your plugin to the community plugib list: 
 
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
+1. Publish an initial version.
+2. Make sure you have a `README.md` file in the root of your repository.
+3. Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
 
-## Manually installing the plugin
+## How to Use
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+1. Clone this repository.
+2. Run `npm i` or `yarn` to install dependencies.
+3. Run `npm run dev` to start the compiler in watch mode.
+
+## Manually Installing the Plugin
+
+Copy the files `main.js`, `styles.css`, and `manifest.json` to your vault at `VaultFolder/.obsidian/plugins/your-plugin-id/`, replacing `your-plugin-id` with the actual ID of your plugin.
+
+If the `your-plugin-id` folder does not exist, create it before copying the files.
 
 ## API Documentation
 
-See https://github.com/obsidianmd/obsidian-api
+For detailed API Documentation, see the [Obsidian API repository](https://github.com/obsidianmd/obsidian-api).
