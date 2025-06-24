@@ -106,7 +106,7 @@ This feature lets you encrypt a selected text within your note.
 4. Open the **Command palette**.
 5. Type or scroll to **Encrypt/Decrypt In-place**, then select it. 
 6. Enter the correct password. 
-   > Note: Your previously used password is filled in by default (You can change this in the plugin settings).
+   > Note: Your previously used password is filled in by default (you can change this in the plugin settings).
 7. Your decrypted text appears in a dialog window. You can save it, copy the text, or click **Decrypt in-place** to decrypt the text directly in the note.
 
 **Option 2: Use the Encrypt/Decrypt In-place icon**
@@ -116,7 +116,7 @@ This feature lets you encrypt a selected text within your note.
 3. Place your cursor anywhere on the encrypted text.
 4. Click the **Encrypt/Decrypt In-place** icon.
 5. Enter the correct password. 
-   > Note: Your previously used password is filled in by default (You can change this in the plugin settings).
+   > Note: Your previously used password is filled in by default (you can change this in the plugin settings).
 6. Your decrypted text appears in a dialog window. You can save it, copy the text, or click **Decrypt in-place** to decrypt the text directly in the note.
 
 

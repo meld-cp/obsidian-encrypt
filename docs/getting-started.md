@@ -12,10 +12,12 @@ You need to have Obsidian installed on your system.
 
 ### Installing Obsidian (Windows)
 
-1. Go to the [**Obsidian website**](https://obsidian.md/). 
-2. Click **Get Obsidian for Windows**.
-3. Download the installer and run it. 
-4. Follow the on-screen instructions to complete installation.
+To install Obsidian on Windows:
+
+1. Go to the [**Obsidian download website**](https://obsidian.md/download).
+2. Click **Download for Windows**.
+3. Run the downloaded installer.
+4. Follow the on-screen instructions to complete the installation.
 
 ## Installing the Obsidian Encrypt Plugin
 
