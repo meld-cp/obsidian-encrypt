@@ -29,18 +29,18 @@ To install the plugin:
 
 2. Select **Community plugins** and click **Turn on community plugins**.
 
-    <img alt="Step 2" src="https://raw.githubusercontent.com/kalarp/obsidian-encrypt/main/docs/assets/doc_inst_2.png"/> 
+    ![Step2](assets/doc_inst_2.png)
 
 3. Click the **Browse** button. 
 
-    <img alt="Step 3" src="https://raw.githubusercontent.com/kalarp/obsidian-encrypt/main/docs/assets/doc_inst_3.png"/> 
+    ![Step3](assets/doc_inst_3.png)
 
-4. Type **Meld Encrypt** in the search box. 
+4. Type **Meld Encrypt** in the search box.
  
 5. Select **Meld Encrypt** and click **Install**.
 
-    <img alt="Step 4" src="https://raw.githubusercontent.com/kalarp/obsidian-encrypt/main/docs/assets/doc_inst_4.png"/> 
+    ![Step5](assets/doc_inst_4.png)
 
 6. Click **Enable** to activate the plugin.
 
-    <img alt="Step 5" src="https://raw.githubusercontent.com/kalarp/obsidian-encrypt/main/docs/assets/doc_inst_5.png"/> 
+    ![Step6](assets/doc_inst_5.png)
