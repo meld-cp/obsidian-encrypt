@@ -14,7 +14,7 @@ To release a new version:
 2. Run `npm run version` to update `manifest.json` & `versions.json`.
   	* `manifest.json`: holds the new version number and the minimum Obsidian version required for your latest release.
 	* `versions.json`: holds the history of version numbers and their minimum Obsidian version, so older versions of Obsidian can download an older version of your plugin that's compatible.
-3. Create new GitHub release using your new version number as the **Tag version**. Use the exact version number, and don't include a prefix `v`. See the following example: https://github.com/obsidianmd/obsidian-sample-plugin/releases.
+3. Create new GitHub release using your new version number as the **Tag version**. Use the exact version number, and don't include a prefix `v`. See the following example: [obsidian-sample-plugin](https://github.com/obsidianmd/obsidian-sample-plugin/releases).
 4. Upload the files `meld-encrypt-<ver>.zip`, `manifest.json`, `main.js`, and `styles.css` as binary attachments.
 5. Publish the release.
 
@@ -24,7 +24,7 @@ To add your plugin to the community plugib list:
 
 1. Publish an initial version.
 2. Make sure you have a `README.md` file in the root of your repository.
-3. Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+3. Make a pull request at [obsidian-releases](https://github.com/obsidianmd/obsidian-releases) to add your plugin.
 
 ## How to Use
 
