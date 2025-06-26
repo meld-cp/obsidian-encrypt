@@ -62,7 +62,7 @@ const ctx = await esbuild.context({
 });
 
 if (prod) {
-	console.log('Building production bundle...');
+	console.log(`Building production bundle ${packageName} v${versionString} ...`);
 	const result = await ctx.rebuild();
 	if ( result.errors.length == 0 ){
 		console.log( `Zip it up to dist/${packageName}-${versionString}.zip` );
