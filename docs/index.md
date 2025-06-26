@@ -17,9 +17,11 @@ Encrypted notes are never decrypted to disk giving you peace-of-mind that the de
 > - No known audits have been undertaken for the soundness of encryption methods being used.  Unwanted decryption by a 3rd party may be possible if they have access to your files.
 > - Bugs could be introduced to the software at anytime. You are responsible for having backups of your notes.
 
-Like the project? Feel free to buy me a coffee!
+Do you find this plugin useful? You can support further development by buying me a coffee:
 
 <a href="https://www.buymeacoffee.com/cleon" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
+Thank you for your support 😊
 
 Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
