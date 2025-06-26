@@ -47,7 +47,6 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 
 ### To Encrypt or Decrypt an Existing Note
 
-
 **Option 1: Use the Right-Click Menu**
 
 1. Go to **Files** by clicking the **Files** icon. 
@@ -92,7 +91,7 @@ This feature lets you encrypt a selected text within your note.
 
     > Note: A partial selection will be expanded to include the whole line if the **Expand selection to whole line** setting is enabled.
 
-4. Click the **Encrypt/Decrypt In-place icon**.
+4. Click the **Encrypt/Decrypt In-place** icon.
 5. Enter and confirm a password. You can add an optional password hint.
 6. Click **Confirm**.
 
