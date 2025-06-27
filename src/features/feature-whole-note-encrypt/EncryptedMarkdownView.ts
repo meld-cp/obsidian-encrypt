@@ -29,6 +29,23 @@ export class EncryptedMarkdownView extends MarkdownView {
 		return ENCRYPTED_FILE_EXTENSIONS.includes( extension );
 	}
 
+	protected override async onOpen(): Promise<void> {
+		await super.onOpen();
+
+		// add view actions
+		this.addAction(
+			'key-round',
+			'Change password',
+			() => this.changePassword(),
+		)
+
+		this.addAction(
+			'lock',
+			'Lock & Close',
+			() => this.lockAndClose(),
+		)
+	}
+
 	override async onLoadFile(file: TFile): Promise<void> {
 		//console.debug('onLoadFile', {file});
 		this.setViewBusy( true );
@@ -95,18 +112,6 @@ export class EncryptedMarkdownView extends MarkdownView {
 				this.isLoadingFileInProgress = false;
 				this.isSavingEnabled = true; // allow saving after the file is loaded with a password
 			}
-
-			this.addAction(
-				'key-round',
-				'Change password',
-				() => this.changePassword(),
-			)
-
-			this.addAction(
-				'lock',
-				'Lock & Close',
-				() => this.lockAndClose(),
-			)
 
 		}finally{
 			//console.debug('onLoadFile done');
