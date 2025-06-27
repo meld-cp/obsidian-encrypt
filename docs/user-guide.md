@@ -18,6 +18,7 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 
 1. Open the **Command pallete** by clicking the **Open command pallete** icon ![command_pallete](assets/cmd_pal_ico.png).
 2. Type or scroll to **Create new encrypted note**, then select it.
+   ![create_new](assets/cre_new_enc.png)
 3. Enter and confirm a password. You can add an optional password hint. 
 4. Click **Confirm**.
 5. Write your note in the text window. 
@@ -63,6 +64,7 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 
 1. Open the **Command pallete** by clicking the **Open command pallete** icon ![command_pallete](assets/cmd_pal_ico.png).
 2. Type or scroll to **Convert to or from an Encrypted Note**, then select it.
+   ![convert](assets/convert.png)
 
 ## In-place Encryption
 
