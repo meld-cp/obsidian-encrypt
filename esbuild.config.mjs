@@ -2,6 +2,7 @@ import esbuild from "esbuild";
 import process from "process";
 import builtins from 'builtin-modules';
 import copyStaticFiles from 'esbuild-copy-static-files';
+import { spawnSync } from 'child_process';
 
 const banner =
 `/*
@@ -12,9 +13,12 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = (process.argv[2] === 'production');
 
+const packageName = process.env.npm_package_name || 'meld-encrypt';
+const versionString = process.env.npm_package_version || '0.0.0';
+
 const distDir = prod
-	? `./dist/${process.env.npm_package_name}-${process.env.npm_package_version}/${process.env.npm_package_name}`
-	: './Obsidian Encrypt - test-vault/.obsidian/plugins/meld-encrypt'
+	? `./dist/${packageName}-${versionString}/${packageName}`
+	: `./Obsidian Encrypt - test-vault/.obsidian/plugins/${packageName}`
 ;
 
 const ctx = await esbuild.context({
@@ -58,8 +62,22 @@ const ctx = await esbuild.context({
 });
 
 if (prod) {
-	console.log('Building production bundle...');
-	await ctx.rebuild();
+	console.log(`Building production bundle ${packageName} v${versionString} ...`);
+	const result = await ctx.rebuild();
+	if ( result.errors.length == 0 ){
+		console.log( `Zip it up to dist/${packageName}-${versionString}.zip` );
+		spawnSync(
+			'tar', [
+				'-cav',
+				'-f', `./dist/${packageName}-${versionString}.zip`,
+				'-C', `./dist/${packageName}-${versionString}`,
+				packageName
+			],
+			{
+				stdio: 'inherit'
+			}
+		);
+	}
 	process.exit(0);
 }else{
 	console.log('Building development bundle...');
