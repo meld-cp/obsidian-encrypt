@@ -23,9 +23,7 @@ To install Obsidian on Windows:
 
 To install the plugin:
 
-1. Click the **Settings** icon in the bottom-left corner of Obsidian.
-
-    ![Step1](assets/doc_inst_1.png)
+1. Open **Settings** by clicking the **Settings** icon ![settings](assets/set_ico.png) in the toolbar. 
 
 2. Select **Community plugins** and click **Turn on community plugins**.
 

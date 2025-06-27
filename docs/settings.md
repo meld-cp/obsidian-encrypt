@@ -8,7 +8,7 @@ nav_order: 4
 
 To customize the plugin, follow these steps: 
 
- 1. Open **Settings** by clicking the **Settings** icon in the toolbar. 
+ 1. Open **Settings** by clicking the **Settings** icon ![settings](assets/set_ico.png) in the toolbar. 
  2. Select **Meld Encrypt** from the list on the left. 
    
 The following tables list the available settings and their descriptions:
