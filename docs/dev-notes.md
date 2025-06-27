@@ -11,6 +11,7 @@ nav_order: 5
 To release a new version:
 
 1. Update `version` in `package.json`.
+   
 2. Run `npm run version` to update `manifest.json` & `versions.json`.
   	* `manifest.json`: holds the new version number and the minimum Obsidian version required for your latest release.
 	* `versions.json`: holds the history of version numbers and their minimum Obsidian version, so older versions of Obsidian can download an older version of your plugin that's compatible.
@@ -23,12 +24,14 @@ To release a new version:
 To add your plugin to the community plugib list: 
 
 1. Publish an initial version.
+
 2. Make sure you have a `README.md` file in the root of your repository.
 3. Make a pull request at [obsidian-releases](https://github.com/obsidianmd/obsidian-releases) to add your plugin.
 
 ## How to Use
 
 1. Clone this repository.
+
 2. Run `npm i` or `yarn` to install dependencies.
 3. Run `npm run dev` to start the compiler in watch mode.
 
