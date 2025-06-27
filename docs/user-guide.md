@@ -18,7 +18,9 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 
 1. Open the **Command pallete** by clicking the **Open command pallete** icon ![command_pallete](assets/cmd_pal_ico.png).
 2. Type or scroll to **Create new encrypted note**, then select it.
+   
    ![create_new](assets/cre_new_enc.png)
+
 3. Enter and confirm a password. You can add an optional password hint. 
 4. Click **Confirm**.
 5. Write your note in the text window. 
@@ -64,6 +66,7 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 
 1. Open the **Command pallete** by clicking the **Open command pallete** icon ![command_pallete](assets/cmd_pal_ico.png).
 2. Type or scroll to **Convert to or from an Encrypted Note**, then select it.
+
    ![convert](assets/convert.png)
 
 ## In-place Encryption
@@ -82,7 +85,9 @@ This feature lets you encrypt a selected text within your note.
 
 4. Open the **Command pallete** by clicking the **Open command pallete** icon ![command_pallete](assets/cmd_pal_ico.png).
 5. Type or scroll to **Encrypt/Decrypt In-place**, then select it. 
+   
    ![encrypt_inplace](assets/enc_inplace.png)
+
 6. Enter and confirm a password. You can add an optional password hint.
 7. Click **Confirm**.
 
@@ -105,13 +110,18 @@ This feature lets you encrypt a selected text within your note.
 1. Go to **Files** by clicking the **Files** icon ![files](assets/fil_ico.png). 
 2. Select the note with the encrypted text. 
 3. Place your cursor anywhere on the encrypted text.
+   
    ![encrypted_text](assets/enc_text.png)
+
 4. Open the **Command pallete** by clicking the **Open command pallete** icon ![command_pallete](assets/cmd_pal_ico.png).
 5. Type or scroll to **Encrypt/Decrypt In-place**, then select it. 
+   
    ![encrypt_inplace](assets/enc_inplace.png)
+
 6. Enter the correct password. 
    > Note: Your previously used password is filled in by default (you can change this in the plugin settings).
 7. Your decrypted text appears in a dialog window. You can save it, copy the text, or click **Decrypt in-place** to decrypt the text directly in the note.
+   
    ![dialog_window](assets/dia_win.png)
 
 **Option 2: Use the Encrypt/Decrypt In-place icon**
@@ -119,11 +129,14 @@ This feature lets you encrypt a selected text within your note.
 1. Go to **Files** by clicking the **Files** icon ![files](assets/fil_ico.png). 
 2. Select the note with the encrypted text. 
 3. Place your cursor anywhere on the encrypted text.
+   
    ![encrypted_text](assets/enc_text.png)
+
 4. Click the **Encrypt/Decrypt In-place** icon ![encrypt_inplace](assets/enc_inp_ico.png).
 5. Enter the correct password. 
    > Note: Your previously used password is filled in by default (you can change this in the plugin settings).
 6. Your decrypted text appears in a dialog window. You can save it, copy the text, or click **Decrypt in-place** to decrypt the text directly in the note.
+   
    ![dialog_window](assets/dia_win.png)
    
 
