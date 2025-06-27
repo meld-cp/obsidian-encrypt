@@ -31,16 +31,16 @@ To install the plugin:
 
     ![Step2](assets/doc_inst_2.png)
 
-3. Click the **Browse** button. 
-
-    ![Step3](assets/doc_inst_3.png)
+3. Click the **Browse** button.
+   
+   ![Step3](assets/doc_inst_3.png)
 
 4. Type **Meld Encrypt** in the search box.
  
 5. Select **Meld Encrypt** and click **Install**.
-
+   
     ![Step5](assets/doc_inst_4.png)
 
 6. Click **Enable** to activate the plugin.
-
+   
     ![Step6](assets/doc_inst_5.png)
