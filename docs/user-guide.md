@@ -109,6 +109,7 @@ This feature lets you encrypt a selected text within your note.
    > Note: Your previously used password is filled in by default (you can change this in the plugin settings).
 7. Your decrypted text appears in a dialog window. You can save it, copy the text, or click **Decrypt in-place** to decrypt the text directly in the note.
    ![dialog_window](assets/dia_win.png)
+   
 **Option 2: Use the Encrypt/Decrypt In-place icon**
 
 1. Go to **Files** by clicking the **Files** icon ![files](assets/fil_ico.png). 
