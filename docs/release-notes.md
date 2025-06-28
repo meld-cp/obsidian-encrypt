@@ -6,6 +6,22 @@ nav_order: 6
 
 # Release Notes
 
+## v2.5.3
+
+### Improvements
+
+* Updated libs.
+
+### Bug Fixes
+
+* ixed an issue where toolbar icons were duplicated: [#207](https://github.com/meld-cp/obsidian-encrypt/issues/207).
+
+## v2.5.2
+
+### Bug Fixes
+
+* Fixed an issue where the note view would move offscreen when editing whole notes on Android: [#205](https://github.com/meld-cp/obsidian-encrypt/issues/205).
+
 ## v2.4.1
 
 ### Improvements

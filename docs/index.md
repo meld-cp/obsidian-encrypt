@@ -12,10 +12,10 @@ Obsidian Encrypt is a community plugin that lets you encrypt and decrypt your no
 
 Encrypted notes are never decrypted to disk giving you peace-of-mind that the decrypted contents haven't been sync'd or backed up to external systems.
 
-> ⚠️ WARNING - Use at your own risk ⚠️
-> - Your passwords are never stored anywhere. If you forget your passwords you can't decrypt your notes.
-> - No known audits have been undertaken for the soundness of encryption methods being used.  Unwanted decryption by a third party may be possible if they have access to your files.
-> - Bugs could be introduced to the software at anytime. You are responsible for having backups of your notes.
+> ⚠️ WARNING - Use at Your Own Risk ⚠️
+> - Your passwords are never stored. If you forget your password, your notes cannot be decrypted..
+> - The encryption methods used have not been independently audited. Unauthorized access may be possible if someone gains access to your files.
+> - Bugs may be introduced at any time. You are solely responsible for maintaining backups of your notes.
 
 Do you find this plugin useful? You can support further development by buying me a coffee:
 

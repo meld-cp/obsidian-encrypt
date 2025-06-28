@@ -37,6 +37,7 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 1. Go to **Files** by clicking the **Files** icon ![files](assets/fil_ico.png). 
 2. Select the file with your encrypted note. 
 3. Enter the correct password. 
+4. Click **Confirm**.
 
 ### To Change an Encrypted Note's Password and Hint
 
@@ -45,6 +46,7 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 3. Enter the correct password. 
 4. Click the **Change password** icon ![change_password](assets/cha_pas_ico.png) from the tab menu or select the **Change Password** option from the context menu (to open the context menu click the **More options** icon![more_options](assets/mor_opt_ico.png)). 
 5. Enter and confirm a new password and an optional password hint.
+6. Click **Confirm**.
 
 ### To Encrypt or Decrypt an Existing Note
 
@@ -77,7 +79,7 @@ This feature lets you encrypt a selected text within your note.
 1. Go to **Files** by clicking the **Files** icon ![files](assets/fil_ico.png). 
 2. Create a new note by clicking the **New note** icon ![new_note](assets/new_not_ico.png) or select an existing one.
 3. Select a text to encrypt. 
-    > Note: A partial selection will be expanded to include the whole line if the **Expand selection to whole line** setting is enabled.
+    > Note: A partial selection will be expanded to include the whole line if the **Expand selection to whole line** setting is enabled (see the [Settings](settings.md) section).
 4. Open the **Command pallete** by clicking the **Open command pallete** icon ![command_pallete](assets/cmd_pal_ico.png).
 5. Type or scroll to **Encrypt/Decrypt In-place**, then select it. 
    ![encrypt_inplace](assets/enc_inplace.png)
