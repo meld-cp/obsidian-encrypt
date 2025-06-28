@@ -14,7 +14,7 @@ nav_order: 6
 
 ### Bug Fixes
 
-* ixed an issue where toolbar icons were duplicated: [#207](https://github.com/meld-cp/obsidian-encrypt/issues/207).
+* Fixed an issue where toolbar icons were duplicated: [#207](https://github.com/meld-cp/obsidian-encrypt/issues/207).
 
 ## v2.5.2
 
