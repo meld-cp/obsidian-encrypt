@@ -1,5 +1,5 @@
-import { Decryptable } from "./Decryptable";
-import { _HINT, _PREFIXES, _PREFIX_A, _PREFIX_A_VISIBLE, _PREFIX_B, _PREFIX_B_VISIBLE, _PREFIX_OBSOLETE, _PREFIX_OBSOLETE_VISIBLE, _SUFFIXES } from "./FeatureInplaceConstants";
+import { Decryptable } from "./Decryptable.ts";
+import { _HINT, _PREFIXES, _PREFIX_A, _PREFIX_A_VISIBLE, _PREFIX_B, _PREFIX_B_VISIBLE, _PREFIX_OBSOLETE, _PREFIX_OBSOLETE_VISIBLE, _SUFFIXES } from "./FeatureInplaceConstants.ts";
 
 export class FeatureInplaceTextAnalysis{
 	processedText:string;

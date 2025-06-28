@@ -1,8 +1,8 @@
 import { MarkdownView, Notice, TFile, ViewStateResult } from "obsidian";
-import { FileData, FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper";
-import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService";
-import PluginPasswordModal from "../../PluginPasswordModal";
-import { ENCRYPTED_FILE_EXTENSIONS } from "src/services/Constants";
+import { FileData, FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.ts";
+import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
+import PluginPasswordModal from "../../PluginPasswordModal.ts";
+import { ENCRYPTED_FILE_EXTENSIONS } from "../../services/Constants.ts";
 
 export class EncryptedMarkdownView extends MarkdownView {
 

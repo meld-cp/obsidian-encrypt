@@ -1,8 +1,8 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
-import { IMeldEncryptPluginFeature } from "src/features/IMeldEncryptPluginFeature";
-import { SessionPasswordService } from "src/services/SessionPasswordService";
-import MeldEncrypt from "../main";
-import { IMeldEncryptPluginSettings } from "./MeldEncryptPluginSettings";
+import { IMeldEncryptPluginFeature } from "../features/IMeldEncryptPluginFeature.ts";
+import { SessionPasswordService } from "../services/SessionPasswordService.ts";
+import MeldEncrypt from "../main.ts";
+import { IMeldEncryptPluginSettings } from "./MeldEncryptPluginSettings.ts";
 
 export default class MeldEncryptSettingsTab extends PluginSettingTab {
 	plugin: MeldEncrypt;

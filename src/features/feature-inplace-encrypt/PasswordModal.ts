@@ -1,5 +1,5 @@
 import { App, Modal, Setting, TextComponent } from 'obsidian';
-import { UiHelper } from 'src/services/UiHelper';
+import { UiHelper } from '../../services/UiHelper.ts';
 
 export default class PasswordModal extends Modal {
 	

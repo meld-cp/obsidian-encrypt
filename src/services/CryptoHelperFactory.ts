@@ -1,9 +1,9 @@
-import { FileData } from "./FileDataHelper";
-import { Decryptable } from "src/features/feature-inplace-encrypt/Decryptable";
-import { CryptoHelper } from "./CryptoHelper";
-import { ICryptoHelper } from "./ICryptoHelper";
-import { CryptoHelper2304 } from "./CryptoHelper2304";
-import { CryptoHelperObsolete } from "./CryptoHelperObsolete";
+import { FileData } from "./FileDataHelper.ts";
+import { Decryptable } from "../features/feature-inplace-encrypt/Decryptable.ts";
+import { CryptoHelper } from "./CryptoHelper.ts";
+import { ICryptoHelper } from "./ICryptoHelper.ts";
+import { CryptoHelper2304 } from "./CryptoHelper2304.ts";
+import { CryptoHelperObsolete } from "./CryptoHelperObsolete.ts";
 
 export class CryptoHelperFactory{
 

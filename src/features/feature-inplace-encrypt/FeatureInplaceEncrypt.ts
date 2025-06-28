@@ -1,16 +1,16 @@
 import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext, MarkdownView } from "obsidian";
-import DecryptModal from "./DecryptModal";
-import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
-import MeldEncrypt from "../../main";
-import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
-import { IFeatureInplaceEncryptSettings } from "./IFeatureInplaceEncryptSettings";
-import PasswordModal from "./PasswordModal";
-import { UiHelper } from "../../services/UiHelper";
-import { SessionPasswordService } from "src/services/SessionPasswordService";
-import { CryptoHelperFactory } from "src/services/CryptoHelperFactory";
-import { Decryptable } from "./Decryptable";
-import { FeatureInplaceTextAnalysis } from "./featureInplaceTextAnalysis";
-import { _HINT, _PREFIXES, _PREFIX_ENCODE_DEFAULT, _PREFIX_ENCODE_DEFAULT_VISIBLE, _SUFFIXES, _SUFFIX_NO_COMMENT, _SUFFIX_WITH_COMMENT } from "./FeatureInplaceConstants";
+import DecryptModal from "./DecryptModal.ts";
+import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature.ts";
+import MeldEncrypt from "../../main.ts";
+import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings.ts";
+import { IFeatureInplaceEncryptSettings } from "./IFeatureInplaceEncryptSettings.ts";
+import PasswordModal from "./PasswordModal.ts";
+import { UiHelper } from "../../services/UiHelper.ts";
+import { SessionPasswordService } from "../../services/SessionPasswordService.ts";
+import { CryptoHelperFactory } from "../../services/CryptoHelperFactory.ts";
+import { Decryptable } from "./Decryptable.ts";
+import { FeatureInplaceTextAnalysis } from "./featureInplaceTextAnalysis.ts";
+import { _HINT, _PREFIXES, _PREFIX_ENCODE_DEFAULT, _PREFIX_ENCODE_DEFAULT_VISIBLE, _SUFFIXES, _SUFFIX_NO_COMMENT, _SUFFIX_WITH_COMMENT } from "./FeatureInplaceConstants.ts";
 
 export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	plugin:MeldEncrypt;
