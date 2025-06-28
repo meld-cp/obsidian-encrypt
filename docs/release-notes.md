@@ -131,11 +131,11 @@ nav_order: 6
 
 ### Improvements
 
-* Follow **readable line length** and **show inline title** settings in encrypted notes
+* Follow **readable line length** and **show inline title** settings in encrypted notes.
 * Updated layout and styling.
 
 ### New Features
-* Added spell checking when editing notes.
+* Added spell check support when editing notes.
 
 ## v2.1.2
 
