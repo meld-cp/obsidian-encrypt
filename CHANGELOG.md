@@ -8,12 +8,18 @@ Thank you for your support 😊
 
 Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
-## v2.5.3
+
+## (Upcomming) v2.4.4
+- Fixed Can't decrypt inplace notes [#206](https://github.com/meld-cp/obsidian-encrypt/issues/206)
+- Added guards to check we aren't encrypting selections containing already encrypted text in inplace notes
+
+
+## v2.4.3
 - Fixed too many view actions being created, [#207](https://github.com/meld-cp/obsidian-encrypt/issues/207)
 - Updated libs
 
 
-## v2.5.2
+## v2.4.2
 - Fixed view moves offscreen when editing whole notes on android, [#205](https://github.com/meld-cp/obsidian-encrypt/issues/205)
 
 
