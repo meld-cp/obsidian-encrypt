@@ -9,7 +9,7 @@ Thank you for your support 😊
 Report any bugs or feature requests [here](https://github.com/meld-cp/obsidian-encrypt/issues).
 
 
-## (Upcoming) v2.4.4
+## v2.4.4
 - Fixed Can't decrypt inplace notes [#206](https://github.com/meld-cp/obsidian-encrypt/issues/206)
 - Added guards to check we aren't encrypting selections containing already encrypted text in inplace notes
 
