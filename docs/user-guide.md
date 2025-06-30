@@ -13,8 +13,7 @@ Obsidian Encrypt offers two encryption modes:
 
 * **In-Place Encryption** mode encrypts only selected parts of text within an existing note, allowing you to protect sensitive sections while keeping the rest readable.
 
-The following sections will guide you through how to use each mode:
-
+The following sections will guide you through how to use each mode.
 
 
    
