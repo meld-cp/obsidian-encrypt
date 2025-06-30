@@ -1,3 +1,9 @@
+---
+title: Development Notes
+layout: default
+nav_exclude: true
+---
+
 # Development Notes
 
 ## Releasing New Versions
