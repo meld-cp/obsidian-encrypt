@@ -1,4 +1,5 @@
 
+export const ENCRYPTED_ICON = '🔐';
 export const _PREFIX_B = '%%🔐β ';
 export const _PREFIX_B_VISIBLE = '🔐β ';
 

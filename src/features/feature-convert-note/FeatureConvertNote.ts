@@ -1,14 +1,13 @@
-import MeldEncrypt from "src/main";
-import { IMeldEncryptPluginSettings } from "src/settings/MeldEncryptPluginSettings";
-import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
+import MeldEncrypt from "../../main.ts";
+import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings.ts";
+import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature.ts";
 import { Notice, TFile, TextFileView } from "obsidian";
-import PluginPasswordModal from "src/PluginPasswordModal";
-import { PasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
-import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
-import { Utils } from "src/services/Utils";
-import "src/services/Constants";
-import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "src/services/Constants";
-import { EncryptedMarkdownView } from "../feature-whole-note-encrypt/EncryptedMarkdownView";
+import PluginPasswordModal from "../../PluginPasswordModal.ts";
+import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
+import { FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.ts";
+import { Utils } from "../../services/Utils.ts";
+import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "../../services/Constants.ts";
+import { EncryptedMarkdownView } from "../feature-whole-note-encrypt/EncryptedMarkdownView.ts";
 
 export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	

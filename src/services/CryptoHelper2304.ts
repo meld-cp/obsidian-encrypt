@@ -1,4 +1,4 @@
-import { ICryptoHelper } from "./ICryptoHelper";
+import { ICryptoHelper } from "./ICryptoHelper.ts";
 
 export class CryptoHelper2304 implements ICryptoHelper {
 	public vectorSize: number;

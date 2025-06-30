@@ -1,11 +1,11 @@
-import MeldEncrypt from "src/main";
-import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
-import { EncryptedMarkdownView } from "./EncryptedMarkdownView";
+import MeldEncrypt from "../../main.ts";
+import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature.ts";
+import { EncryptedMarkdownView } from "./EncryptedMarkdownView.ts";
 import { MarkdownView, TFolder, normalizePath, moment, TFile } from "obsidian";
-import PluginPasswordModal from "src/PluginPasswordModal";
-import { PasswordAndHint, SessionPasswordService } from "src/services/SessionPasswordService";
-import { FileDataHelper, JsonFileEncoding } from "src/services/FileDataHelper";
-import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "src/services/Constants";
+import PluginPasswordModal from "../../PluginPasswordModal.ts";
+import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
+import { FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.ts";
+import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "../../services/Constants.ts";
 
 export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeature {
 

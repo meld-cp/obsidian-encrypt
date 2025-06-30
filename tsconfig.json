@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,  // Required when using allowImportingTsExtensions
     "baseUrl": ".",
     "inlineSourceMap": true,
     "inlineSources": true,

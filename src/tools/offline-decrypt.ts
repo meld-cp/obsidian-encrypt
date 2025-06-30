@@ -1,7 +1,7 @@
-import { Decryptable } from "src/features/feature-inplace-encrypt/Decryptable";
-import { FeatureInplaceTextAnalysis } from "src/features/feature-inplace-encrypt/featureInplaceTextAnalysis";
-import { CryptoHelperFactory } from "src/services/CryptoHelperFactory";
-import { JsonFileEncoding } from "src/services/FileDataHelper";
+import { Decryptable } from "../features/feature-inplace-encrypt/Decryptable.ts";
+import { FeatureInplaceTextAnalysis } from "../features/feature-inplace-encrypt/featureInplaceTextAnalysis.ts";
+import { CryptoHelperFactory } from "../services/CryptoHelperFactory.ts";
+import { JsonFileEncoding } from "../services/FileDataHelper.ts";
 
 export class OfflineDecrypt {
 

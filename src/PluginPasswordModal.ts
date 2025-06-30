@@ -1,6 +1,6 @@
 import { App, Modal, Setting, TextComponent } from 'obsidian';
-import { UiHelper } from 'src/services/UiHelper';
-import { PasswordAndHint } from './services/SessionPasswordService';
+import { UiHelper } from './services/UiHelper.ts';
+import { PasswordAndHint } from './services/SessionPasswordService.ts';
 
 export default class PluginPasswordModal extends Modal {
 	

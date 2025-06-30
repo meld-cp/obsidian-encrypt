@@ -1,12 +1,12 @@
 import * as yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import * as fs from 'fs';
-import * as path from 'path';
-import { CryptoHelperFactory } from 'src/services/CryptoHelperFactory';
-import { JsonFileEncoding } from "src/services/FileDataHelper";
-import * as Constants from 'src/services/Constants';
-import * as InPlaceConstants from 'src/features/feature-inplace-encrypt/FeatureInplaceConstants';
-import { FeatureInplaceTextAnalysis } from 'src/features/feature-inplace-encrypt/featureInplaceTextAnalysis';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { CryptoHelperFactory } from '../services/CryptoHelperFactory.ts';
+import { JsonFileEncoding } from "../services/FileDataHelper.ts";
+import * as Constants from '../services/Constants.ts';
+import * as InPlaceConstants from '../features/feature-inplace-encrypt/FeatureInplaceConstants.ts';
+import { FeatureInplaceTextAnalysis } from '../features/feature-inplace-encrypt/featureInplaceTextAnalysis.ts';
 
 interface Listing {
     featureType: 'InPlace' | 'WholeNote';
@@ -518,6 +518,7 @@ const optListingFormat : yargs.Options = {
 
 
 yargs.default(hideBin(process.argv))
+    .scriptName('mdenc')
     .usage( 'Usage: $0 [command] [options]' )
 
     .command( 'list', 'list all encrypted artifacts within the current directory', (yargs) => yargs.option( {

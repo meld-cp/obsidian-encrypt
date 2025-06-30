@@ -1,6 +1,6 @@
 import { DataAdapter, Notice, TFile } from "obsidian";
-import { MemoryCache } from "./MemoryCache";
-import { Utils } from "./Utils";
+import { MemoryCache } from "./MemoryCache.ts";
+import { Utils } from "./Utils.ts";
 
 export type PasswordAndHint = {
 	password: string;

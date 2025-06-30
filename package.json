@@ -1,6 +1,6 @@
 {
 	"name": "meld-encrypt",
-	"version": "2.4.3",
+	"version": "2.4.4",
 	"description": "Hide secrets in your vault",
 	"main": "main.js",
 	"scripts": {
@@ -16,7 +16,7 @@
 	"author": "",
 	"license": "MIT",
 	"devDependencies": {
-		"@types/node": "24.0.4",
+		"@types/node": "24.0.7",
 		"@types/yargs": "17.0.33",
 		"@typescript-eslint/eslint-plugin": "8.35.0",
 		"@typescript-eslint/parser": "8.35.0",

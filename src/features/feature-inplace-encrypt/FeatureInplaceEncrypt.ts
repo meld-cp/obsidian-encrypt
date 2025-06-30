@@ -1,16 +1,21 @@
 import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext, MarkdownView } from "obsidian";
-import DecryptModal from "./DecryptModal";
-import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature";
-import MeldEncrypt from "../../main";
-import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings";
-import { IFeatureInplaceEncryptSettings } from "./IFeatureInplaceEncryptSettings";
-import PasswordModal from "./PasswordModal";
-import { UiHelper } from "../../services/UiHelper";
-import { SessionPasswordService } from "src/services/SessionPasswordService";
-import { CryptoHelperFactory } from "src/services/CryptoHelperFactory";
-import { Decryptable } from "./Decryptable";
-import { FeatureInplaceTextAnalysis } from "./featureInplaceTextAnalysis";
-import { _HINT, _PREFIXES, _PREFIX_ENCODE_DEFAULT, _PREFIX_ENCODE_DEFAULT_VISIBLE, _SUFFIXES, _SUFFIX_NO_COMMENT, _SUFFIX_WITH_COMMENT } from "./FeatureInplaceConstants";
+import DecryptModal from "./DecryptModal.ts";
+import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature.ts";
+import MeldEncrypt from "../../main.ts";
+import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings.ts";
+import { IFeatureInplaceEncryptSettings } from "./IFeatureInplaceEncryptSettings.ts";
+import PasswordModal from "./PasswordModal.ts";
+import { UiHelper } from "../../services/UiHelper.ts";
+import { SessionPasswordService } from "../../services/SessionPasswordService.ts";
+import { CryptoHelperFactory } from "../../services/CryptoHelperFactory.ts";
+import { Decryptable } from "./Decryptable.ts";
+import { FeatureInplaceTextAnalysis } from "./featureInplaceTextAnalysis.ts";
+import { ENCRYPTED_ICON, _HINT, _PREFIXES, _PREFIX_ENCODE_DEFAULT, _PREFIX_ENCODE_DEFAULT_VISIBLE, _SUFFIXES, _SUFFIX_NO_COMMENT, _SUFFIX_WITH_COMMENT } from "./FeatureInplaceConstants.ts";
+
+enum EncryptOrDecryptMode{
+	Encrypt = 'encrypt',
+	Decrypt = 'decrypt'
+}
 
 export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	plugin:MeldEncrypt;
@@ -27,21 +32,40 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		);
 
 		plugin.addCommand({
-			id: 'meld-encrypt-in-place',
-			name: 'Encrypt/Decrypt In-place',
-			icon: 'file-lock',
-			editorCheckCallback: (checking, editor, view) => this.processEncryptDecryptCommand( checking, editor, false )
+			id: 'meld-encrypt-in-place-encrypt',
+			name: 'Encrypt Selection',
+			icon: 'lock-keyhole',
+			editorCheckCallback: (checking, editor, view) => this.processEncryptCommand( checking, editor )
+		});
+
+		plugin.addCommand({
+			id: 'meld-encrypt-in-place-decrypt',
+			name: 'Decrypt Selection',
+			icon: 'lock-keyhole-open',
+			editorCheckCallback: (checking, editor, view) => this.processDecryptCommand( checking, editor )
 		});
 
 		this.plugin.addRibbonIcon(
-			'file-lock',
-			'Encrypt/Decrypt In-place',
+			'lock-keyhole',
+			'Encrypt Selection',
 			(_) => {
 				const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView == null ){
 					return;
 				}
-				return this.processEncryptDecryptCommand(false, activeView.editor, false);
+				return this.processEncryptCommand(false, activeView.editor);
+			}
+		);
+
+		this.plugin.addRibbonIcon(
+			'lock-keyhole-open',
+			'Decrypt Selection',
+			(_) => {
+				const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView == null ){
+					return;
+				}
+				return this.processDecryptCommand(false, activeView.editor);
 			}
 		);
 
@@ -277,10 +301,84 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		;
 	}
 
-	private processEncryptDecryptCommand(
+	private processEncryptCommand(
 		checking: boolean,
-		editor: Editor,
-		decryptInPlace: boolean
+		editor: Editor
+	): boolean {
+		if ( checking && UiHelper.isSettingsModalOpen() ){
+			// Settings is open, ensures this command can show up in other
+			// plugins which list commands e.g. customizable-sidebar
+			return true;
+		}
+
+		let startPos = editor.getCursor('from');
+		let endPos = editor.getCursor('to');
+
+		if (this.featureSettings.expandToWholeLines){
+			const startLine = startPos.line;
+			startPos = { line: startLine, ch: 0 }; // want the start of the first line
+
+			const endLine = endPos.line;
+			const endLineText = editor.getLine(endLine);
+			endPos = { line: endLine, ch: endLineText.length }; // want the end of last line
+			editor.setSelection(startPos, endPos);
+		}
+
+		// check we are not within encrypted text or have selected encrypted text
+
+		const foundStartMarkerPos = this.getClosestPrefixCursorPos( editor );
+		const foundEndMarkerPos = this.getClosestSuffixCursorPos( editor );
+
+		if ( foundStartMarkerPos != null && foundEndMarkerPos != null && foundStartMarkerPos.line === foundEndMarkerPos.line ){
+
+			// start pos checks
+			// check if the start position is within the encrypted text
+			if ( startPos.line === foundStartMarkerPos.line && startPos.ch >= foundStartMarkerPos.ch && startPos.ch < foundEndMarkerPos.ch ){
+				// the start position is within the encrypted text, so we do not encrypt
+				return false;
+			}
+
+			// end pos checks
+			// check if the end position is within the encrypted text
+			if ( endPos.line === foundEndMarkerPos.line && endPos.ch >= foundStartMarkerPos.ch && endPos.ch < foundEndMarkerPos.ch ){
+				// the end position is within the encrypted text, so we do not encrypt
+				return false;
+			}
+			
+		}
+			
+		// get selection to encrypt
+		const selectionText = editor.getRange(startPos, endPos);
+
+		// check have not selected encrypted text or part of it
+		if ( selectionText.includes( ENCRYPTED_ICON ) ){
+			return false; // do not encrypt within encrypted text
+		}
+		
+		// Encrypt selected text
+		if ( selectionText.length === 0 ){
+			// prompt to encrypt text
+			// selection is empty, prompt for text to encrypt
+			return checking || this.promptForTextToEncrypt(
+				checking,
+				editor,
+				startPos
+			);
+		}
+
+		return this.processSelection(
+			checking,
+			editor,
+			selectionText,
+			startPos,
+			endPos,
+			EncryptOrDecryptMode.Encrypt
+		);
+	}
+
+	private processDecryptCommand(
+		checking: boolean,
+		editor: Editor
 	): boolean {
 
 		if ( checking && UiHelper.isSettingsModalOpen() ){
@@ -312,12 +410,10 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 					|| ( startPos.line < foundStartPos.line )
 					|| ( endPos.line > foundEndPos.line )
 				){
-					// selection is empty, prompt for text to encrypt
-					return this.promptForTextToEncrypt(
-						checking,
-						editor,
-						startPos
-					);
+					if( !checking ){
+						new Notice('Please select text to decrypt or place cursor on encrypted text.');
+					}
+					return false;
 				}
 
 				startPos = foundStartPos;
@@ -334,7 +430,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			selectionText,
 			startPos,
 			endPos,
-			decryptInPlace
+			EncryptOrDecryptMode.Decrypt
 		);
 	}
 
@@ -476,26 +572,28 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		selectionText: string,
 		finalSelectionStart: CodeMirror.Position,
 		finalSelectionEnd: CodeMirror.Position,
-		decryptInPlace: boolean,
-		allowEncryption = true
+		mode:EncryptOrDecryptMode
 	) : boolean {
 		const selectionAnalysis = new FeatureInplaceTextAnalysis( selectionText );
 
 		if (selectionAnalysis.isEmpty) {
 			if (!checking){
-				new Notice('Nothing to Encrypt.');
+				new Notice(`Nothing to ${mode == EncryptOrDecryptMode.Encrypt ? "Encrypt" : "Decrypt"}.`);
 			}
 			return false;
 		}
 
-		if (!selectionAnalysis.canDecrypt && !selectionAnalysis.canEncrypt) {
+		if ( mode == EncryptOrDecryptMode.Encrypt && !selectionAnalysis.canEncrypt ) {
 			if (!checking){
-				new Notice('Unable to Encrypt or Decrypt that.');
+				new Notice('Unable to Encrypt that.');
 			}
 			return false;
 		}
 
-		if (selectionAnalysis.canEncrypt && !allowEncryption){
+		if ( mode == EncryptOrDecryptMode.Decrypt && !selectionAnalysis.canDecrypt ) {
+			if (!checking){
+				new Notice('Unable to Decrypt that.');
+			}
 			return false;
 		}
 
@@ -565,7 +663,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 					pw,
 					finalSelectionStart,
 					finalSelectionEnd,
-					decryptInPlace
 				);
 
 				// remember password?
@@ -604,8 +701,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		decryptable: Decryptable,
 		password: string,
 		selectionStart: CodeMirror.Position,
-		selectionEnd: CodeMirror.Position,
-		decryptInPlace: boolean
+		selectionEnd: CodeMirror.Position
 	) : Promise<boolean> {
 
 		// decrypt
@@ -617,29 +713,25 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			return false;
 		} else {
 
-			if (decryptInPlace) {
-				editor.setSelection(selectionStart, selectionEnd);
-				editor.replaceSelection(decryptedText);
-			} else {
-				const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText );
-				decryptModal.onClose = async () => {
-					editor.focus();
-					if (decryptModal.decryptInPlace) {
-						editor.setSelection(selectionStart, selectionEnd);
-						editor.replaceSelection(decryptModal.text);
-					} else if (decryptModal.save) {
-						const crypto = CryptoHelperFactory.BuildDefault();
-						const encodedText = this.encodeEncryption(
-							await crypto.encryptToBase64(decryptModal.text, password),
-							decryptable.hint ?? "",
-							decryptable.showInReadingView
-						);
-						editor.setSelection(selectionStart, selectionEnd);
-						editor.replaceSelection(encodedText);
-					}
+			const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText );
+			decryptModal.onClose = async () => {
+				editor.focus();
+				if (decryptModal.decryptInPlace) {
+					editor.setSelection(selectionStart, selectionEnd);
+					editor.replaceSelection(decryptModal.text);
+				} else if (decryptModal.save) {
+					const crypto = CryptoHelperFactory.BuildDefault();
+					const encodedText = this.encodeEncryption(
+						await crypto.encryptToBase64(decryptModal.text, password),
+						decryptable.hint ?? "",
+						decryptable.showInReadingView
+					);
+					editor.setSelection(selectionStart, selectionEnd);
+					editor.replaceSelection(encodedText);
 				}
-				decryptModal.open();
 			}
+			decryptModal.open();
+
 		}
 		return true;
 	}

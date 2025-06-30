@@ -1,4 +1,4 @@
-import { CryptoHelperFactory } from "./CryptoHelperFactory";
+import { CryptoHelperFactory } from "./CryptoHelperFactory.ts";
 
 export class FileData {
 	
