@@ -1,9 +1,3 @@
----
-title: Development Notes
-layout: default
-nav_order: 5
----
-
 # Development Notes
 
 ## Releasing New Versions
