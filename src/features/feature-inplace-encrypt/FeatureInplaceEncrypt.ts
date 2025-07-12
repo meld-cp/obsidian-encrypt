@@ -40,7 +40,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 		plugin.addCommand({
 			id: 'meld-encrypt-in-place-decrypt',
-			name: 'Decrypt Selection',
+			name: 'Decrypt',
 			icon: 'lock-keyhole-open',
 			editorCheckCallback: (checking, editor, view) => this.processDecryptCommand( checking, editor )
 		});
@@ -59,7 +59,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 		this.plugin.addRibbonIcon(
 			'lock-keyhole-open',
-			'Decrypt Selection',
+			'Decrypt at Cursor',
 			(_) => {
 				const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView == null ){
@@ -314,20 +314,27 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		let startPos = editor.getCursor('from');
 		let endPos = editor.getCursor('to');
 
-		if (this.featureSettings.expandToWholeLines){
-			const startLine = startPos.line;
-			startPos = { line: startLine, ch: 0 }; // want the start of the first line
+		const nothingSelected = !editor.somethingSelected();
+		if ( nothingSelected){
+			if ( this.featureSettings.expandToWholeLines ){
+				const startLine = startPos.line;
+				startPos = { line: startLine, ch: 0 }; // want the start of the first line
 
-			const endLine = endPos.line;
-			const endLineText = editor.getLine(endLine);
-			endPos = { line: endLine, ch: endLineText.length }; // want the end of last line
-			editor.setSelection(startPos, endPos);
+				const endLine = endPos.line;
+				const endLineText = editor.getLine(endLine);
+				endPos = { line: endLine, ch: endLineText.length }; // want the end of last line
+			}else{
+				if (!checking){
+					new Notice('Please select text to encrypt.');
+				}
+				return false;
+			}
 		}
 
 		// check we are not within encrypted text or have selected encrypted text
 
-		const foundStartMarkerPos = this.getClosestPrefixCursorPos( editor );
-		const foundEndMarkerPos = this.getClosestSuffixCursorPos( editor );
+		const foundStartMarkerPos = this.getClosestPrefixCursorPos( editor, startPos );
+		const foundEndMarkerPos = this.getClosestSuffixCursorPos( editor, startPos );
 
 		if ( foundStartMarkerPos != null && foundEndMarkerPos != null && foundStartMarkerPos.line === foundEndMarkerPos.line ){
 
@@ -390,35 +397,28 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		let startPos = editor.getCursor('from');
 		let endPos = editor.getCursor('to');
 
-		if (this.featureSettings.expandToWholeLines){
-			const startLine = startPos.line;
-			startPos = { line: startLine, ch: 0 }; // want the start of the first line
+		const nothingSelected = !editor.somethingSelected();
 
-			const endLine = endPos.line;
-			const endLineText = editor.getLine(endLine);
-			endPos = { line: endLine, ch: endLineText.length }; // want the end of last line
-		}else{
-			if ( !editor.somethingSelected() ){
-				// nothing selected, first assume user wants to decrypt, expand to start and end markers...
-				// but if no markers found then prompt to encrypt text
-				const foundStartPos = this.getClosestPrefixCursorPos( editor );
-				const foundEndPos = this.getClosestSuffixCursorPos( editor );
+		if ( nothingSelected ){
+			// nothing selected, first assume user wants to decrypt, expand to start and end markers...
+			// but if no markers found then prompt to encrypt text
+			const foundStartPos = this.getClosestPrefixCursorPos( editor, startPos );
+			const foundEndPos = this.getClosestSuffixCursorPos( editor, startPos );
 
-				if (
-					foundStartPos == null
-					|| foundEndPos == null
-					|| ( startPos.line < foundStartPos.line )
-					|| ( endPos.line > foundEndPos.line )
-				){
-					if( !checking ){
-						new Notice('Please select text to decrypt or place cursor on encrypted text.');
-					}
-					return false;
+			if (
+				foundStartPos == null
+				|| foundEndPos == null
+				|| ( startPos.line < foundStartPos.line )
+				|| ( endPos.line > foundEndPos.line )
+			){
+				if( !checking ){
+					new Notice('Please select text to decrypt or place cursor on encrypted text.');
 				}
-
-				startPos = foundStartPos;
-				endPos = foundEndPos;
+				return false;
 			}
+
+			startPos = foundStartPos;
+			endPos = foundEndPos;
 		}
 
 		// Encrypt or Decrypt selected text
@@ -504,7 +504,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		return false;
 	}
 
-	private getClosestPrefixCursorPos(editor: Editor ): EditorPosition | null{
+	private getClosestPrefixCursorPos( editor: Editor, fromEditorPosition: EditorPosition ): EditorPosition | null{
 		
 		const maxLookback = this.featureSettings.markerSearchLimit;
 
@@ -513,7 +513,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			if ( cur.length > prev.length ) return cur;
 			return prev;
 		} );
-		const initOffset = editor.posToOffset( editor.getCursor("from") ) + maxLengthPrefix.length;
+		const initOffset = editor.posToOffset( fromEditorPosition ) + maxLengthPrefix.length;
 
 		const minOffset = Math.max(initOffset - maxLookback, 0);
 
@@ -535,7 +535,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	}
 
-	private getClosestSuffixCursorPos( editor: Editor ): EditorPosition | null{
+	private getClosestSuffixCursorPos( editor: Editor, fromEditorPosition:EditorPosition ): EditorPosition | null{
 		const maxLookForward = this.featureSettings.markerSearchLimit;
 
 		const maxLengthPrefix = _PREFIXES.reduce((prev,cur, i) => {
@@ -544,7 +544,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			return prev;
 		} );
 		
-		const initOffset = editor.posToOffset( editor.getCursor("from") ) - maxLengthPrefix.length + 1;
+		const initOffset = editor.posToOffset( fromEditorPosition ) - maxLengthPrefix.length + 1;
 		const lastLineNum = editor.lastLine();
 
 		const maxOffset = Math.min( initOffset + maxLookForward, editor.posToOffset( {line:lastLineNum, ch:editor.getLine(lastLineNum).length} ) );
