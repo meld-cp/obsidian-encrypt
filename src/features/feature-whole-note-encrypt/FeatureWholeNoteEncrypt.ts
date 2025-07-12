@@ -21,6 +21,10 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			await this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() );
 		});
 
+		this.plugin.addRibbonIcon( 'book-lock', 'Lock and Close all open encrypted notes', async (ev)=>{
+			await this.processLockAndCloseAllEncryptedNotesCommand();
+		});
+
 		this.plugin.addCommand({
 			id: 'meld-encrypt-create-new-note',
 			name: 'Create new encrypted note',
@@ -28,6 +32,12 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			callback: async () => await this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() ),
 		});
 
+		this.plugin.addCommand({
+			id: 'meld-encrypt-close-and-forget',
+			name: 'Lock and Close all open encrypted notes',
+			icon: 'book-lock',
+			callback: async () => await this.processLockAndCloseAllEncryptedNotesCommand(),
+		});
 		
 		this.plugin.registerEvent(
 			this.plugin.app.workspace.on( 'file-menu', (menu, file) => {
@@ -150,6 +160,17 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			} )
 		);
 
+	}
+
+	private async processLockAndCloseAllEncryptedNotesCommand(): Promise<void> {
+		// loop through all open leaves
+		const leaves = this.plugin.app.workspace.getLeavesOfType( EncryptedMarkdownView.VIEW_TYPE );
+		for ( const leaf of leaves ) {
+			const view = leaf.view as EncryptedMarkdownView;
+			if ( view != null ){
+				view.lockAndClose();
+			}
+		}
 	}
 
 	private getDefaultFileFolder() : TFolder {
