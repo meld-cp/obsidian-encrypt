@@ -106,7 +106,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 		this.plugin.registerExtensions( ENCRYPTED_FILE_EXTENSIONS, EncryptedMarkdownView.VIEW_TYPE );
 
 		// show status indicator for encrypted files, hide for others
-		this.plugin.registerEvent( this.plugin.app.workspace.on('layout-change', () => {
+		this.plugin.registerEvent( this.plugin.app.workspace.on('active-leaf-change', () => {
 			const view = this.plugin.app.workspace.getActiveViewOfType(EncryptedMarkdownView);
 			if (view == null){
 				this.statusIndicator.hide();
