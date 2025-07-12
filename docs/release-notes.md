@@ -19,14 +19,15 @@ The full change log can be found on the [releases](https://github.com/meld-cp/ob
 ## v2.4.5
 
 ### Improvements
-* Fixed status icon showing on normal views
+* Documentation by @kalarp in https://github.com/meld-cp/obsidian-encrypt/pull/209
 * Updated libs
 
 ### New Features
-* Added command palette option to Lock encrypted notes (and forget PW) [#110](https://github.com/meld-cp/obsidian-encrypt/issues/110)
+* Added command palette option to Lock and Close all open encrypted notes https://github.com/meld-cp/obsidian-encrypt/issues/110
 
 ### Bug Fixes
-* Fixed slash commands not working if expand selection to whole line option is enabled [#212](https://github.com/meld-cp/obsidian-encrypt/issues/212)
+* Fixed encrypted wholenote status icon showing on normal views
+* Fixed slash commands not working if expand selection to whole line option is enabled https://github.com/meld-cp/obsidian-encrypt/issues/212
 
 
 ## v2.4.4
