@@ -20,6 +20,7 @@ The full change log can be found on the [releases](https://github.com/meld-cp/ob
 
 ### Improvements
 * Fixed status icon showing on normal views
+* Updated libs
 
 ### New Features
 * Added command palette option to Lock encrypted notes (and forget PW) [#110](https://github.com/meld-cp/obsidian-encrypt/issues/110)
