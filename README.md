@@ -16,6 +16,11 @@ Encrypted notes are never decrypted to disk giving you peace-of-mind that the de
 
 ---
 
+## Notes
+
+* Searching your vault won't find text in encrypted notes. Only searching within open (decrypted) notes is possible.
+
+
 ## Ongoing Maintenance and Development
 
 If you find this plugin useful please support the ongoing maintenance and development by:
