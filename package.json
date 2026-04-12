@@ -6,6 +6,8 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"version": "node version-bump.mjs",
 		"dev-tool-decrypt": "tsc -noEmit -skipLibCheck && node esbuild-tool-decrypt.config.mjs",
 		"build-tool-decrypt": "tsc -noEmit -skipLibCheck && node esbuild-tool-decrypt.config.mjs production",
@@ -26,6 +28,7 @@
 		"obsidian": "1.12.3",
 		"tslib": "2.8.1",
 		"typescript": "6.0.2",
+		"vitest": "^4.1.4",
 		"yargs": "18.0.0"
 	}
 }
