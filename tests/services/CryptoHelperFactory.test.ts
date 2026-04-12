@@ -12,6 +12,13 @@ describe('CryptoHelperFactory', () => {
 			const helper = CryptoHelperFactory.BuildDefault();
 			expect(helper).toBeInstanceOf(CryptoHelper2304);
 		});
+
+		it('should use expected constructor parameters', () => {
+			const helper = CryptoHelperFactory.BuildDefault() as CryptoHelper2304;
+			expect(helper.vectorSize).toBe(16);
+			expect(helper.saltSize).toBe(16);
+			expect(helper.iterations).toBe(210000);
+		});
 	});
 
 	describe('BuildFromFileDataOrNull', () => {
