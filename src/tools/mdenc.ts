@@ -99,21 +99,32 @@ class TestCommandHandler {
     async argHandler( passwords:string[], onlyListFails:boolean ) {
 
         const cwd = process.cwd();
+        let hasFailure = false;
 
         for await (const listing of Utils.listings(cwd, true)) {
 
             if (listing.featureType == 'InPlace'){
                 
                 for await (const result of this.testForInPlaceDecryption( listing, passwords )) {
+                    if (!result.success) {
+                        hasFailure = true;
+                    }
                     this.outputResult( result, onlyListFails );
                 }
 
             } else if (listing.featureType == 'WholeNote'){
                 
                 const result = await this.testForWholeNoteDecryption( listing, passwords );
+                if (!result.success) {
+                    hasFailure = true;
+                }
                 this.outputResult( result, onlyListFails );
 
             }
+        }
+
+        if (hasFailure) {
+            process.exitCode = 1;
         }
 
     }
@@ -248,20 +259,31 @@ class DecryptCommandHandler{
         console.log( `decrypting${dryrun?' (dry run)':''}...` );
 
         const cwd = process.cwd();
+        let hasFailure = false;
 
         for await (const listing of Utils.listings(cwd, true)) {
 
             if (listing.featureType == 'InPlace'){
                 
                  const result = await this.decryptInPlaceListing( listing, passwords, outdir, dryrun );
+                 if (!result.success) {
+                     hasFailure = true;
+                 }
                  this.outputResult( result );
                  
             } else if (listing.featureType == 'WholeNote'){
                 
                 const result = await this.decryptWholeNoteListing( listing, passwords, outdir, dryrun );
+                if (!result.success) {
+                    hasFailure = true;
+                }
                 this.outputResult( result );
 
             }
+        }
+
+        if (hasFailure) {
+            process.exitCode = 1;
         }
     }
     

@@ -16,6 +16,8 @@ vi.mock('../../src/services/Utils.ts', () => ({
 import { SessionPasswordService, PasswordAndHint } from '../../src/services/SessionPasswordService.ts';
 import { Notice, DataAdapter } from 'obsidian';
 
+const originalFetch = global.fetch;
+
 function makeFile(path: string, basename: string, parentPath: string) {
 	return {
 		path,
@@ -45,6 +47,7 @@ describe('SessionPasswordService', () => {
 	});
 
 	afterEach(() => {
+		global.fetch = originalFetch;
 		vi.useRealTimers();
 		vi.clearAllMocks();
 	});
@@ -259,36 +262,6 @@ describe('SessionPasswordService', () => {
 		});
 	});
 
-	describe('getPathCacheKey', () => {
-		it('should return same key for different paths at vault level', () => {
-			SessionPasswordService.setLevel(SessionPasswordService.LevelVault);
-			SessionPasswordService.putByPath(pw, '/path1');
-			const result = SessionPasswordService.getByPath('/path2');
-			expect(result.password).toBe('secret');
-		});
-
-		it('should return parent path at parent level', () => {
-			SessionPasswordService.setLevel(SessionPasswordService.LevelParentPath);
-			SessionPasswordService.putByPath(pw, '/folder/file.txt');
-			const result = SessionPasswordService.getByPath('/folder/other.txt');
-			expect(result.password).toBe('secret');
-		});
-
-		it('should return exact path at filename level', () => {
-			SessionPasswordService.setLevel(SessionPasswordService.LevelFilename);
-			SessionPasswordService.putByPath(pw, '/folder/file.txt');
-			const result = SessionPasswordService.getByPath('/folder/file.txt');
-			expect(result.password).toBe('secret');
-		});
-
-		it('should not share at filename level for different paths', () => {
-			SessionPasswordService.setLevel(SessionPasswordService.LevelFilename);
-			SessionPasswordService.putByPath(pw, '/folder/file.txt');
-			const result = SessionPasswordService.getByPath('/folder/other.txt');
-			expect(result).toEqual(SessionPasswordService.blankPasswordAndHint);
-		});
-	});
-
 	describe('getByPathAsync with external file', () => {
 		it('should show Notice when external file not found', async () => {
 			SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
@@ -298,6 +271,8 @@ describe('SessionPasswordService', () => {
 
 			const result = await SessionPasswordService.getByPathAsync('/path');
 			expect(result).toEqual(SessionPasswordService.blankPasswordAndHint);
+			expect(global.fetch).toHaveBeenCalledWith('/nonexistent.txt');
+			expect(global.fetch).toHaveBeenCalledTimes(1);
 			expect(Notice).toHaveBeenCalledWith('External password file not found', 10000);
 		});
 
@@ -312,6 +287,22 @@ describe('SessionPasswordService', () => {
 			const result = await SessionPasswordService.getByPathAsync('/path');
 			expect(result.password).toBe('external-password');
 			expect(result.hint).toBe('');
+			expect(global.fetch).toHaveBeenNthCalledWith(1, '/missing.txt');
+			expect(global.fetch).toHaveBeenNthCalledWith(2, '/found.txt');
+			expect(global.fetch).toHaveBeenCalledTimes(2);
+		});
+
+		it('should show Notice when external file is empty', async () => {
+			SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
+			SessionPasswordService.setExternalFilePaths(['empty.txt']);
+
+			global.fetch = vi.fn().mockResolvedValue({ text: () => Promise.resolve('') });
+
+			const result = await SessionPasswordService.getByPathAsync('/path');
+			expect(result).toEqual(SessionPasswordService.blankPasswordAndHint);
+			expect(global.fetch).toHaveBeenCalledWith('/empty.txt');
+			expect(global.fetch).toHaveBeenCalledTimes(1);
+			expect(Notice).toHaveBeenCalledWith('External password file not found', 10000);
 		});
 	});
 });

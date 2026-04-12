@@ -9,7 +9,7 @@ describe('FileData', () => {
 		expect(data.encodedData).toBe('encrypted-data');
 	});
 
-	it('should default version to 1.0', () => {
+	it('should construct with version 1.0', () => {
 		const data = new FileData('1.0', '', '');
 		expect(data.version).toBe('1.0');
 	});
@@ -82,10 +82,10 @@ describe('JsonFileEncoding', () => {
 		});
 	});
 
-	describe('decode', () => {
-		it('should decode valid JSON into FileData', () => {
-			const json = JSON.stringify({ version: '2.0', hint: 'hint', encodedData: 'data' });
-			const data = JsonFileEncoding.decode(json);
+		describe('decode', () => {
+			it('should decode valid JSON into FileData', () => {
+				const json = JSON.stringify({ version: '2.0', hint: 'hint', encodedData: 'data' });
+				const data = JsonFileEncoding.decode(json);
 			expect(data.version).toBe('2.0');
 			expect(data.hint).toBe('hint');
 			expect(data.encodedData).toBe('data');
@@ -97,7 +97,15 @@ describe('JsonFileEncoding', () => {
 			expect(data.hint).toBe('');
 			expect(data.encodedData).toBe('');
 		});
-	});
+
+		it('should throw for malformed JSON', () => {
+			expect(() => JsonFileEncoding.decode('{bad json}')).toThrow();
+		});
+
+			it('should throw for non-object JSON', () => {
+				expect(() => JsonFileEncoding.decode('42')).toThrow();
+			});
+		});
 
 	describe('isEncoded', () => {
 		it('should return true for valid JSON', () => {
