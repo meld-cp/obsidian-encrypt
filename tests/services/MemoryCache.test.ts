@@ -120,4 +120,30 @@ describe('MemoryCache', () => {
 			expect(objCache.get('item', { name: '', count: 0 })).toEqual({ name: 'test', count: 42 });
 		});
 	});
+
+	describe('null and undefined values', () => {
+		it('should return default when null is stored (null coalescing)', () => {
+			const cache = new MemoryCache<string | null>();
+			cache.put('key', null);
+			expect(cache.get('key', 'default')).toBe('default');
+		});
+
+		it('should return default when undefined is stored (null coalescing)', () => {
+			const cache = new MemoryCache<string | undefined>();
+			cache.put('key', undefined);
+			expect(cache.get('key', 'default')).toBe('default');
+		});
+
+		it('should return null from getOrNull when null is stored', () => {
+			const cache = new MemoryCache<string | null>();
+			cache.put('key', null);
+			expect(cache.getOrNull('key')).toBeNull();
+		});
+
+		it('should return null from getOrNull when undefined is stored', () => {
+			const cache = new MemoryCache<string | undefined>();
+			cache.put('key', undefined);
+			expect(cache.getOrNull('key')).toBeNull();
+		});
+	});
 });

@@ -25,6 +25,20 @@ describe('CryptoHelperObsolete', () => {
 			const decrypted = await helper.decryptFromBase64(encrypted, password);
 			expect(decrypted).toBe(plaintext);
 		});
+
+		it('should encrypt and decrypt multiline text', async () => {
+			const plaintext = 'Line 1\nLine 2\nLine 3';
+			const encrypted = await helper.encryptToBase64(plaintext, password);
+			const decrypted = await helper.decryptFromBase64(encrypted, password);
+			expect(decrypted).toBe(plaintext);
+		});
+
+		it('should encrypt and decrypt long text', async () => {
+			const plaintext = 'O'.repeat(10000);
+			const encrypted = await helper.encryptToBase64(plaintext, password);
+			const decrypted = await helper.decryptFromBase64(encrypted, password);
+			expect(decrypted).toBe(plaintext);
+		});
 	});
 
 	describe('wrong password', () => {
