@@ -47,16 +47,16 @@ export default class MeldEncrypt extends Plugin {
 		});
 
 		// load features
-		this.enabledFeatures.forEach(async f => {
+		for (const f of this.enabledFeatures) {
 			await f.onload( this, this.settings );
-		});
+		}
 
 	}
 	
 	override onunload() {
-		this.enabledFeatures.forEach(async f => {
+		for (const f of this.enabledFeatures) {
 			f.onunload();
-		});
+		}
 		super.onunload();
 	}
 

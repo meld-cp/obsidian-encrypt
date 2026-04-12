@@ -67,7 +67,7 @@ export class SessionPasswordService{
 		if ( SessionPasswordService.level == level ){
 			return;
 		}
-		if ( SessionPasswordService.allLevels.contains(level) ){
+		if ( SessionPasswordService.allLevels.includes(level) ){
 			SessionPasswordService.level = level;
 			return;
 		}
@@ -208,7 +208,6 @@ export class SessionPasswordService{
 	}
 
 	private static getByKey( key: string, defaultValue: PasswordAndHint ): PasswordAndHint {
-		console.debug( 'SessionPasswordService.getByKey', { 'level': SessionPasswordService.level, key, defaultValue } );
 		return this.cache.get( key, defaultValue );
 	}
 

@@ -59,7 +59,7 @@ export class CryptoHelperObsolete {
 			const key = await this.buildKey(password);
 
 			// decrypt into bytes
-			const decryptedBytes = await crypto.subtle.decrypt(algorithmObsolete, key, bytesToDecrypt);
+			const decryptedBytes = await crypto.subtle.decrypt(algorithmObsolete, key, bytesToDecrypt.buffer as ArrayBuffer);
 
 			// convert bytes to text
 			const utf8Decode = new TextDecoder();

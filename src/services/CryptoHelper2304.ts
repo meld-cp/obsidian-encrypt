@@ -31,7 +31,7 @@ export class CryptoHelper2304 implements ICryptoHelper {
 				/*algorithm*/ {
 					name: 'PBKDF2',
 					hash: 'SHA-512',
-					salt,
+					salt: salt.buffer as ArrayBuffer,
 					iterations: this.iterations,
 				},
 				/*baseKey*/ key,
