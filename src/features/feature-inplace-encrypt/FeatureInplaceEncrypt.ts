@@ -79,7 +79,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		
 		if ( node instanceof HTMLElement ){
 			for( const n of Array.from(node.childNodes) ){
-				var childNodes = this.replaceMarkersRecursive( n, rlevel+1 );
+				const childNodes = this.replaceMarkersRecursive( n, rlevel+1 );
 				n.replaceWith( ...childNodes );
 			}
 			return [node];
@@ -437,7 +437,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 	private promptForTextToEncrypt(
 		checking: boolean,
 		editor: Editor,
-		pos: CodeMirror.Position
+		pos: EditorPosition
 	) : boolean {
 
 		// show dialog with password, confirmation, hint and text
@@ -570,8 +570,8 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		checking: boolean,
 		editor: Editor,
 		selectionText: string,
-		finalSelectionStart: CodeMirror.Position,
-		finalSelectionEnd: CodeMirror.Position,
+		finalSelectionStart: EditorPosition,
+		finalSelectionEnd: EditorPosition,
 		mode:EncryptOrDecryptMode
 	) : boolean {
 		const selectionAnalysis = new FeatureInplaceTextAnalysis( selectionText );
@@ -681,8 +681,8 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		editor: Editor,
 		encryptable: Encryptable,
 		password: string,
-		finalSelectionStart: CodeMirror.Position,
-		finalSelectionEnd: CodeMirror.Position,
+		finalSelectionStart: EditorPosition,
+		finalSelectionEnd: EditorPosition,
 		showInReadingView: boolean
 	) {
 		//encrypt
@@ -700,8 +700,8 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		editor: Editor,
 		decryptable: Decryptable,
 		password: string,
-		selectionStart: CodeMirror.Position,
-		selectionEnd: CodeMirror.Position
+		selectionStart: EditorPosition,
+		selectionEnd: EditorPosition
 	) : Promise<boolean> {
 
 		// decrypt

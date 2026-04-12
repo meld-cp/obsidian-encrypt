@@ -1,7 +1,7 @@
 import MeldEncrypt from "../../main.ts";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature.ts";
 import { EncryptedMarkdownView } from "./EncryptedMarkdownView.ts";
-import { MarkdownView, TFolder, normalizePath, moment, TFile } from "obsidian";
+import { MarkdownView, TFolder, normalizePath, TFile } from "obsidian";
 import PluginPasswordModal from "../../PluginPasswordModal.ts";
 import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
 import { FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.ts";
@@ -185,7 +185,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 
 	private async processCreateNewEncryptedNoteCommand( parentFolder: TFolder ) : Promise<void> {
 		
-		const newFilename = moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
+		const newFilename = window.moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
 		const newFilepath = normalizePath( parentFolder.path + "/" + newFilename );
 		
 		let pwh : PasswordAndHint | undefined;

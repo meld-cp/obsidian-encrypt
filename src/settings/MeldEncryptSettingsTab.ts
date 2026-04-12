@@ -130,7 +130,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 				text
 					.setValue( this.settings.rememberPasswordExternalFilePaths.join( '\n' ) )
 					.onChange( async value => {
-						this.settings.rememberPasswordExternalFilePaths = value.trim().split( '\n' );
+						this.settings.rememberPasswordExternalFilePaths = value.trim().split( '\n' ).filter( p => p.length > 0 );
 						await this.plugin.saveSettings();
 						SessionPasswordService.setExternalFilePaths( this.settings.rememberPasswordExternalFilePaths );
 					})

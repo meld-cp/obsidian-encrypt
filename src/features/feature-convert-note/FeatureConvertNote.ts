@@ -42,7 +42,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 							}
 						);
 					}
-					if ( ENCRYPTED_FILE_EXTENSIONS.contains( file.extension ) ){
+					if ( ENCRYPTED_FILE_EXTENSIONS.includes( file.extension ) ){
 						menu.addItem( (item) => {
 							item
 								.setTitle('Decrypt note')
@@ -72,7 +72,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		if ( file == null ){
 			return false;
 		}
-		return ENCRYPTED_FILE_EXTENSIONS.contains( file.extension );
+		return ENCRYPTED_FILE_EXTENSIONS.includes( file.extension );
 	}
 
 	private processCommandEncryptNote( file:TFile ){
@@ -108,7 +108,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			});
 		}
 
-		if ( file && ENCRYPTED_FILE_EXTENSIONS.contains( file.extension ) ){
+		if ( file && ENCRYPTED_FILE_EXTENSIONS.includes( file.extension ) ){
 			this.getPasswordAndDecryptFile( file ).catch( reason => {
 				if (reason){
 					new Notice(reason, 10000);
@@ -147,7 +147,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 		}catch( error ){
 			if (error){
-				new Notice(error, 10000);
+				new Notice(error instanceof Error ? error.message : String(error), 10000);
 			}
 		}
 	}
@@ -192,7 +192,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 		}catch(error){
 			if (error){
-				new Notice(error, 10000);
+				new Notice(error instanceof Error ? error.message : String(error), 10000);
 			}
 		}
 	}
