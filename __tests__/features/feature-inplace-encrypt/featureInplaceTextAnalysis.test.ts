@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { FeatureInplaceTextAnalysis } from './featureInplaceTextAnalysis.ts';
+import { FeatureInplaceTextAnalysis } from '../../../src/features/feature-inplace-encrypt/featureInplaceTextAnalysis.ts';
 import {
 	_PREFIX_A,
 	_PREFIX_A_VISIBLE,
@@ -10,7 +10,7 @@ import {
 	_SUFFIX_WITH_COMMENT,
 	_SUFFIX_NO_COMMENT,
 	_HINT,
-} from './FeatureInplaceConstants.ts';
+} from '../../../src/features/feature-inplace-encrypt/FeatureInplaceConstants.ts';
 
 describe('FeatureInplaceTextAnalysis', () => {
 	describe('empty input', () => {

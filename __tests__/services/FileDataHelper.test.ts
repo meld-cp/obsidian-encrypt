@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { FileData, FileDataHelper, JsonFileEncoding } from './FileDataHelper.ts';
+import { FileData, FileDataHelper, JsonFileEncoding } from '../../src/services/FileDataHelper.ts';
 
 describe('FileData', () => {
 	it('should construct with given values', () => {

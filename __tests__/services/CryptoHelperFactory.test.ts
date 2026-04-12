@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { CryptoHelperFactory } from './CryptoHelperFactory.ts';
-import { CryptoHelper } from './CryptoHelper.ts';
-import { CryptoHelper2304 } from './CryptoHelper2304.ts';
-import { CryptoHelperObsolete } from './CryptoHelperObsolete.ts';
-import { FileData } from './FileDataHelper.ts';
-import { Decryptable } from '../features/feature-inplace-encrypt/Decryptable.ts';
+import { CryptoHelperFactory } from '../../src/services/CryptoHelperFactory.ts';
+import { CryptoHelper } from '../../src/services/CryptoHelper.ts';
+import { CryptoHelper2304 } from '../../src/services/CryptoHelper2304.ts';
+import { CryptoHelperObsolete } from '../../src/services/CryptoHelperObsolete.ts';
+import { FileData } from '../../src/services/FileDataHelper.ts';
+import { Decryptable } from '../../src/features/feature-inplace-encrypt/Decryptable.ts';
 
 describe('CryptoHelperFactory', () => {
 	describe('BuildDefault', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CryptoHelper2304 } from './CryptoHelper2304.ts';
+import { CryptoHelper2304 } from '../../src/services/CryptoHelper2304.ts';
 
 describe('CryptoHelper2304', () => {
 	const helper = new CryptoHelper2304(16, 16, 210000);
