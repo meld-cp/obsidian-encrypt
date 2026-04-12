@@ -471,8 +471,12 @@ class Utils{
             if ( ext == 'md' ){
                 
                 if (
-                    content!.includes( InPlaceConstants._PREFIX_A_VISIBLE )
+                    content!.includes( InPlaceConstants._PREFIX_A )
+                    || content!.includes( InPlaceConstants._PREFIX_A_VISIBLE )
+                    || content!.includes( InPlaceConstants._PREFIX_B )
                     || content!.includes( InPlaceConstants._PREFIX_B_VISIBLE )
+                    || content!.includes( InPlaceConstants._PREFIX_OBSOLETE )
+                    || content!.includes( InPlaceConstants._PREFIX_OBSOLETE_VISIBLE )
                 ){
                     yield {
                         featureType: 'InPlace',
