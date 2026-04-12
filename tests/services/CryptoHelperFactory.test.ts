@@ -15,9 +15,9 @@ describe('CryptoHelperFactory', () => {
 
 		it('should use expected constructor parameters', () => {
 			const helper = CryptoHelperFactory.BuildDefault() as CryptoHelper2304;
-			expect(helper.vectorSize).toBe(16);
+			expect(helper.vectorSize).toBe(12);
 			expect(helper.saltSize).toBe(16);
-			expect(helper.iterations).toBe(210000);
+			expect(helper.iterations).toBe(600000);
 		});
 	});
 
@@ -34,8 +34,14 @@ describe('CryptoHelperFactory', () => {
 			expect(helper).toBeInstanceOf(CryptoHelper2304);
 		});
 
-		it('should return null for unknown version', () => {
+		it('should return CryptoHelper2304 for version 3.0', () => {
 			const data = new FileData('3.0', '', '');
+			const helper = CryptoHelperFactory.BuildFromFileDataOrNull(data);
+			expect(helper).toBeInstanceOf(CryptoHelper2304);
+		});
+
+		it('should return null for unknown version', () => {
+			const data = new FileData('99.0', '', '');
 			const helper = CryptoHelperFactory.BuildFromFileDataOrNull(data);
 			expect(helper).toBeNull();
 		});
@@ -45,8 +51,10 @@ describe('CryptoHelperFactory', () => {
 		it('should return helper for valid versions', () => {
 			const data1 = new FileData('1.0', '', '');
 			const data2 = new FileData('2.0', '', '');
+			const data3 = new FileData('3.0', '', '');
 			expect(CryptoHelperFactory.BuildFromFileDataOrThrow(data1)).toBeInstanceOf(CryptoHelper);
 			expect(CryptoHelperFactory.BuildFromFileDataOrThrow(data2)).toBeInstanceOf(CryptoHelper2304);
+			expect(CryptoHelperFactory.BuildFromFileDataOrThrow(data3)).toBeInstanceOf(CryptoHelper2304);
 		});
 
 		it('should throw for unknown version', () => {
@@ -74,6 +82,12 @@ describe('CryptoHelperFactory', () => {
 			expect(helper).toBeInstanceOf(CryptoHelper2304);
 		});
 
+		it('should return CryptoHelper2304 for version 3', () => {
+			const decryptable: Decryptable = { version: 3, base64CipherText: '', hint: '', showInReadingView: false };
+			const helper = CryptoHelperFactory.BuildFromDecryptableOrNull(decryptable);
+			expect(helper).toBeInstanceOf(CryptoHelper2304);
+		});
+
 		it('should return null for unknown version', () => {
 			const decryptable: Decryptable = { version: 99, base64CipherText: '', hint: '', showInReadingView: false };
 			const helper = CryptoHelperFactory.BuildFromDecryptableOrNull(decryptable);
@@ -86,9 +100,11 @@ describe('CryptoHelperFactory', () => {
 			const d0: Decryptable = { version: 0, base64CipherText: '', hint: '', showInReadingView: false };
 			const d1: Decryptable = { version: 1, base64CipherText: '', hint: '', showInReadingView: false };
 			const d2: Decryptable = { version: 2, base64CipherText: '', hint: '', showInReadingView: false };
+			const d3: Decryptable = { version: 3, base64CipherText: '', hint: '', showInReadingView: false };
 			expect(CryptoHelperFactory.BuildFromDecryptableOrThrow(d0)).toBeInstanceOf(CryptoHelperObsolete);
 			expect(CryptoHelperFactory.BuildFromDecryptableOrThrow(d1)).toBeInstanceOf(CryptoHelper);
 			expect(CryptoHelperFactory.BuildFromDecryptableOrThrow(d2)).toBeInstanceOf(CryptoHelper2304);
+			expect(CryptoHelperFactory.BuildFromDecryptableOrThrow(d3)).toBeInstanceOf(CryptoHelper2304);
 		});
 
 		it('should throw for unknown version', () => {

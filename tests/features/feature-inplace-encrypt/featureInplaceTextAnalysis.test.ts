@@ -3,6 +3,8 @@ import { FeatureInplaceTextAnalysis } from '../../../src/features/feature-inplac
 import {
 	_PREFIX_A,
 	_PREFIX_A_VISIBLE,
+	_PREFIX_C,
+	_PREFIX_C_VISIBLE,
 	_PREFIX_B,
 	_PREFIX_B_VISIBLE,
 	_PREFIX_OBSOLETE,
@@ -108,6 +110,61 @@ describe('FeatureInplaceTextAnalysis', () => {
 
 			expect(analysis.canDecrypt).toBe(false);
 			expect(analysis.decryptable).toBeUndefined();
+		});
+	});
+
+	describe('version C encrypted content', () => {
+		it('should detect version C with comment suffix', () => {
+			const content = _PREFIX_C + 'c29tZS1jaXBoZXI=' + _SUFFIX_WITH_COMMENT;
+			const analysis = new FeatureInplaceTextAnalysis(content);
+
+			expect(analysis.hasEncryptedPrefix).toBe(true);
+			expect(analysis.hasEncryptedSuffix).toBe(true);
+			expect(analysis.canDecrypt).toBe(true);
+			expect(analysis.canEncrypt).toBe(false);
+			expect(analysis.prefix).toBe(_PREFIX_C);
+			expect(analysis.suffix).toBe(_SUFFIX_WITH_COMMENT);
+		});
+
+		it('should detect version C visible (no comment) prefix', () => {
+			const content = _PREFIX_C_VISIBLE + 'c29tZS1jaXBoZXI=' + _SUFFIX_NO_COMMENT;
+			const analysis = new FeatureInplaceTextAnalysis(content);
+
+			expect(analysis.hasEncryptedPrefix).toBe(true);
+			expect(analysis.prefix).toBe(_PREFIX_C_VISIBLE);
+			expect(analysis.suffix).toBe(_SUFFIX_NO_COMMENT);
+			expect(analysis.canDecrypt).toBe(true);
+		});
+
+		it('should parse decryptable with version 3 for version C', () => {
+			const content = _PREFIX_C + 'c29tZS1jaXBoZXI=' + _SUFFIX_WITH_COMMENT;
+			const analysis = new FeatureInplaceTextAnalysis(content);
+
+			expect(analysis.decryptable).toBeDefined();
+			expect(analysis.decryptable!.version).toBe(3);
+			expect(analysis.decryptable!.base64CipherText).toBe('c29tZS1jaXBoZXI=');
+			expect(analysis.decryptable!.showInReadingView).toBe(false);
+		});
+
+		it('should parse decryptable with version 3 for version C visible', () => {
+			const content = _PREFIX_C_VISIBLE + 'c29tZS1jaXBoZXI=' + _SUFFIX_NO_COMMENT;
+			const analysis = new FeatureInplaceTextAnalysis(content);
+
+			expect(analysis.decryptable).toBeDefined();
+			expect(analysis.decryptable!.version).toBe(3);
+			expect(analysis.decryptable!.base64CipherText).toBe('c29tZS1jaXBoZXI=');
+			expect(analysis.decryptable!.showInReadingView).toBe(true);
+		});
+
+		it('should parse hint correctly for version C', () => {
+			const content = _PREFIX_C_VISIBLE + _HINT + 'gamma hint' + _HINT + 'YWJjMTIz' + _SUFFIX_NO_COMMENT;
+			const analysis = new FeatureInplaceTextAnalysis(content);
+
+			expect(analysis.decryptable).toBeDefined();
+			expect(analysis.decryptable!.version).toBe(3);
+			expect(analysis.decryptable!.hint).toBe('gamma hint');
+			expect(analysis.decryptable!.base64CipherText).toBe('YWJjMTIz');
+			expect(analysis.decryptable!.showInReadingView).toBe(true);
 		});
 	});
 
@@ -231,6 +288,8 @@ describe('FeatureInplaceTextAnalysis', () => {
 	describe('prefix and suffix detection', () => {
 		it('should detect correct prefix for each version', () => {
 			const testCases = [
+				{ prefix: _PREFIX_C, expected: _PREFIX_C },
+				{ prefix: _PREFIX_C_VISIBLE, expected: _PREFIX_C_VISIBLE },
 				{ prefix: _PREFIX_B, expected: _PREFIX_B },
 				{ prefix: _PREFIX_B_VISIBLE, expected: _PREFIX_B_VISIBLE },
 				{ prefix: _PREFIX_A, expected: _PREFIX_A },

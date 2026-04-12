@@ -489,20 +489,13 @@ class Utils{
             const relativePath = '.' + path.sep + path.relative(dir, p);
             const content = ( includeContent || ext == 'md' ) ? await fs.promises.readFile( p, 'utf8' ) : undefined;
             
-            // could have inplace encrypted notes
-            if ( ext == 'md' ){
-                
-                if (
-                    content!.includes( InPlaceConstants._PREFIX_A )
-                    || content!.includes( InPlaceConstants._PREFIX_A_VISIBLE )
-                    || content!.includes( InPlaceConstants._PREFIX_B )
-                    || content!.includes( InPlaceConstants._PREFIX_B_VISIBLE )
-                    || content!.includes( InPlaceConstants._PREFIX_OBSOLETE )
-                    || content!.includes( InPlaceConstants._PREFIX_OBSOLETE_VISIBLE )
-                ){
-                    yield {
-                        featureType: 'InPlace',
-                        fullPath: p,
+			// could have inplace encrypted notes
+			if ( ext == 'md' ){
+				
+				if ( InPlaceConstants._PREFIXES.some( (prefix) => content!.includes(prefix) ) ){
+					yield {
+						featureType: 'InPlace',
+						fullPath: p,
                         relativePath: relativePath,
                         extension: ext,
                         content: includeContent ? content : undefined

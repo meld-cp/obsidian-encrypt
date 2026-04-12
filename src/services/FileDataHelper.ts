@@ -15,7 +15,7 @@ export class FileData {
 
 export class FileDataHelper{
 
-	public static DEFAULT_VERSION = '2.0';
+	public static DEFAULT_VERSION = '3.0';
 
 	public static async encrypt( pass: string, hint:string, text:string ) : Promise<FileData>{
 		const crypto = CryptoHelperFactory.BuildDefault();
