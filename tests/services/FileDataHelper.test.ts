@@ -19,7 +19,7 @@ describe('FileDataHelper', () => {
 	const password = 'file-test-password';
 
 	describe('encrypt', () => {
-		it('should return FileData with version 2.0', async () => {
+		it('should return FileData with version 3.0', async () => {
 			const data = await FileDataHelper.encrypt(password, 'hint', 'plaintext');
 			expect(data.version).toBe(FileDataHelper.DEFAULT_VERSION);
 			expect(data.hint).toBe('hint');
@@ -82,10 +82,10 @@ describe('JsonFileEncoding', () => {
 		});
 	});
 
-		describe('decode', () => {
-			it('should decode valid JSON into FileData', () => {
-				const json = JSON.stringify({ version: '2.0', hint: 'hint', encodedData: 'data' });
-				const data = JsonFileEncoding.decode(json);
+	describe('decode', () => {
+		it('should decode valid JSON into FileData', () => {
+			const json = JSON.stringify({ version: '2.0', hint: 'hint', encodedData: 'data' });
+			const data = JsonFileEncoding.decode(json);
 			expect(data.version).toBe('2.0');
 			expect(data.hint).toBe('hint');
 			expect(data.encodedData).toBe('data');
@@ -102,10 +102,10 @@ describe('JsonFileEncoding', () => {
 			expect(() => JsonFileEncoding.decode('{bad json}')).toThrow();
 		});
 
-			it('should throw for non-object JSON', () => {
-				expect(() => JsonFileEncoding.decode('42')).toThrow();
-			});
+		it('should throw for non-object JSON', () => {
+			expect(() => JsonFileEncoding.decode('42')).toThrow();
 		});
+	});
 
 	describe('isEncoded', () => {
 		it('should return true for valid JSON', () => {

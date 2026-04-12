@@ -12,6 +12,7 @@ import {
 	_PREFIX_B_VISIBLE,
 	_PREFIX_A,
 	_PREFIX_A_VISIBLE,
+	_PREFIX_C,
 	_PREFIX_OBSOLETE,
 	_PREFIX_OBSOLETE_VISIBLE,
 	_SUFFIX_WITH_COMMENT,
@@ -32,10 +33,10 @@ afterEach(() => {
 });
 
 async function encryptInPlace(plaintext: string, password: string, version: number, withHint = false): Promise<string> {
-	const ch = version === 0 ? new CryptoHelperObsolete() : version === 1 ? new CryptoHelper() : new CryptoHelper2304(16, 16, 210000);
+	const ch = version === 0 ? new CryptoHelperObsolete() : version === 1 ? new CryptoHelper() : version === 2 ? new CryptoHelper2304(16, 16, 210000) : new CryptoHelper2304(12, 16, 600000);
 	const ciphertext = await ch.encryptToBase64(plaintext, password);
 
-	const prefix = version === 0 ? _PREFIX_OBSOLETE : version === 1 ? _PREFIX_A : _PREFIX_B;
+	const prefix = version === 0 ? _PREFIX_OBSOLETE : version === 1 ? _PREFIX_A : version === 2 ? _PREFIX_B : _PREFIX_C;
 	const suffix = _SUFFIX_WITH_COMMENT;
 	const hint = withHint ? `${_HINT}my-hint${_HINT}` : '';
 
@@ -212,6 +213,17 @@ describe('mdenc CLI tool', () => {
 			expect(stdout).toContain('PASSED');
 		});
 
+		it('should pass for correct password on inplace (version 3)', async () => {
+			const dir = path.join(tmpDir, 'test-inplace-v3');
+			fs.mkdirSync(dir, { recursive: true });
+
+			const encrypted = await encryptInPlace('secret', 'pw', 3);
+			fs.writeFileSync(path.join(dir, 'note.md'), `Text ${encrypted} end`);
+
+			const { stdout } = runMdenc('test --passwords pw', dir);
+			expect(stdout).toContain('PASSED');
+		});
+
 		it('should test multiple passwords and use first match', async () => {
 			const dir = path.join(tmpDir, 'test-multi-pw');
 			fs.mkdirSync(dir, { recursive: true });
@@ -313,6 +325,26 @@ describe('mdenc CLI tool', () => {
 			expect(fs.existsSync(decryptedFile)).toBe(true);
 			const content = fs.readFileSync(decryptedFile, 'utf8');
 			expect(content).toContain('inplace secret');
+			expect(content).toContain('Before');
+			expect(content).toContain('After');
+			expect(content).not.toContain('🔐');
+		});
+
+		it('should decrypt inplace encrypted content (version 3)', async () => {
+			const dir = path.join(tmpDir, 'decrypt-inplace-v3');
+			const outDir = path.join(dir, 'out');
+			fs.mkdirSync(dir, { recursive: true });
+
+			const encrypted = await encryptInPlace('gamma secret', 'pw', 3);
+			fs.writeFileSync(path.join(dir, 'note.md'), `Before ${encrypted} After`);
+
+			const { stdout } = runMdenc(`decrypt --passwords pw --outdir "${outDir}"`, dir);
+			expect(stdout).toContain('Decrypted');
+
+			const decryptedFile = path.join(outDir, 'note.md');
+			expect(fs.existsSync(decryptedFile)).toBe(true);
+			const content = fs.readFileSync(decryptedFile, 'utf8');
+			expect(content).toContain('gamma secret');
 			expect(content).toContain('Before');
 			expect(content).toContain('After');
 			expect(content).not.toContain('🔐');

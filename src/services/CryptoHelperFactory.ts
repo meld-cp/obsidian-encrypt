@@ -8,9 +8,10 @@ import { CryptoHelperObsolete } from "./CryptoHelperObsolete.ts";
 export class CryptoHelperFactory{
 
 	public static cryptoHelper2304_v2 = new CryptoHelper2304( 16, 16, 210000 );
+	public static cryptoHelper2304_v3 = new CryptoHelper2304( 12, 16, 600000 );
 
 	public static BuildDefault(): ICryptoHelper{
-		return this.cryptoHelper2304_v2;
+		return this.cryptoHelper2304_v3;
 	}
 
 	public static BuildFromFileDataOrThrow( data: FileData ) : ICryptoHelper {
@@ -29,6 +30,11 @@ export class CryptoHelperFactory{
 		// note				v2.0	CryptoHelper2304
 		if ( data.version == '2.0' ){
 			return this.cryptoHelper2304_v2;
+		}
+
+		// note				v3.0	CryptoHelper2304
+		if ( data.version == '3.0' ){
+			return this.cryptoHelper2304_v3;
 		}
 
 		return null;
@@ -53,6 +59,9 @@ export class CryptoHelperFactory{
 		// inplace beta 	_PREFIX_B = '%%🔐β '		CryptoHelper2304( 16, 16, 210000 )
 		//					_PREFIX_B_VISIBLE = '🔐β '	CryptoHelper2304( 16, 16, 210000 )
 		
+		// inplace gamma 	_PREFIX_C = '%%🔐γ '		CryptoHelper2304( 12, 16, 600000 )
+		//				_PREFIX_C_VISIBLE = '🔐γ '	CryptoHelper2304( 12, 16, 600000 )
+
 		if ( decryptable.version == 0 ){
 			return new CryptoHelperObsolete();
 		}
@@ -63,6 +72,10 @@ export class CryptoHelperFactory{
 
 		if ( decryptable.version == 2 ){
 			return this.cryptoHelper2304_v2;
+		}
+
+		if ( decryptable.version == 3 ){
+			return this.cryptoHelper2304_v3;
 		}
 
 		return null;

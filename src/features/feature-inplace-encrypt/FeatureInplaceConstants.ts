@@ -1,5 +1,7 @@
 
 export const ENCRYPTED_ICON = '🔐';
+export const _PREFIX_C = '%%🔐γ ';
+export const _PREFIX_C_VISIBLE = '🔐γ ';
 export const _PREFIX_B = '%%🔐β ';
 export const _PREFIX_B_VISIBLE = '🔐β ';
 
@@ -8,11 +10,13 @@ export const _PREFIX_A_VISIBLE = '🔐α ';
 export const _PREFIX_OBSOLETE = '%%🔐 ';
 export const _PREFIX_OBSOLETE_VISIBLE = '🔐 ';
 
-export const _PREFIX_ENCODE_DEFAULT = _PREFIX_B;
-export const _PREFIX_ENCODE_DEFAULT_VISIBLE = _PREFIX_B_VISIBLE;
+export const _PREFIX_ENCODE_DEFAULT = _PREFIX_C;
+export const _PREFIX_ENCODE_DEFAULT_VISIBLE = _PREFIX_C_VISIBLE;
 
 // Should be listed by evaluation priority
 export const _PREFIXES = [
+	_PREFIX_C,
+	_PREFIX_C_VISIBLE,
 	_PREFIX_B,
 	_PREFIX_B_VISIBLE,
 	_PREFIX_A,

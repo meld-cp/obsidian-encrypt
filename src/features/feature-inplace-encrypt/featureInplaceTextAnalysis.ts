@@ -1,5 +1,5 @@
 import { Decryptable } from "./Decryptable.ts";
-import { _HINT, _PREFIXES, _PREFIX_A, _PREFIX_A_VISIBLE, _PREFIX_B, _PREFIX_B_VISIBLE, _PREFIX_OBSOLETE, _PREFIX_OBSOLETE_VISIBLE, _SUFFIXES } from "./FeatureInplaceConstants.ts";
+import { _HINT, _PREFIXES, _PREFIX_A, _PREFIX_A_VISIBLE, _PREFIX_B, _PREFIX_B_VISIBLE, _PREFIX_C, _PREFIX_C_VISIBLE, _PREFIX_OBSOLETE, _PREFIX_OBSOLETE_VISIBLE, _SUFFIXES } from "./FeatureInplaceConstants.ts";
 
 export class FeatureInplaceTextAnalysis{
 	processedText:string;
@@ -62,6 +62,8 @@ export class FeatureInplaceTextAnalysis{
 		
 		if ( this.hasObsoleteEncryptedPrefix ){
 			result.version = 0;
+		}else if ( this.prefix == _PREFIX_C || this.prefix == _PREFIX_C_VISIBLE ){
+			result.version = 3;
 		}else if ( this.prefix == _PREFIX_B || this.prefix == _PREFIX_B_VISIBLE ){
 			result.version = 2;
 		}else if ( this.prefix == _PREFIX_A || this.prefix == _PREFIX_A_VISIBLE ){
