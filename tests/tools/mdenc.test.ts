@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -23,6 +23,14 @@ const MDENC = `node ${path.join(process.cwd(), 'tools', 'mdenc.mjs')}`;
 
 let tmpDir: string;
 
+beforeEach(() => {
+	tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mdenc-test-'));
+});
+
+afterEach(() => {
+	fs.rmSync(tmpDir, { recursive: true, force: true });
+});
+
 async function encryptInPlace(plaintext: string, password: string, version: number, withHint = false): Promise<string> {
 	const ch = version === 0 ? new CryptoHelperObsolete() : version === 1 ? new CryptoHelper() : new CryptoHelper2304(16, 16, 210000);
 	const ciphertext = await ch.encryptToBase64(plaintext, password);
@@ -39,25 +47,25 @@ async function encryptWholeNote(plaintext: string, password: string): Promise<st
 	return JsonFileEncoding.encode(fileData);
 }
 
-function runMdenc(args: string, cwd: string): { stdout: string; stderr: string } {
+function runMdenc(args: string, cwd: string, expectSuccess = true): { stdout: string; stderr: string; status: number } {
 	try {
 		const stdout = execSync(`${MDENC} ${args}`, { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
-		return { stdout, stderr: '' };
+		return { stdout, stderr: '', status: 0 };
 	} catch (err: unknown) {
-		const e = err as { stdout?: string; stderr?: string };
-		return { stdout: e.stdout || '', stderr: e.stderr || '' };
+		const e = err as { stdout?: string; stderr?: string; status?: number };
+		const result = {
+			stdout: e.stdout || '',
+			stderr: e.stderr || '',
+			status: typeof e.status === 'number' ? e.status : 1,
+		};
+		if (expectSuccess) {
+			throw new Error(`mdenc ${args} failed with exit code ${result.status}: ${result.stderr || result.stdout}`);
+		}
+		return result;
 	}
 }
 
 describe('mdenc CLI tool', () => {
-	beforeAll(() => {
-		tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mdenc-test-'));
-	});
-
-	afterAll(() => {
-		fs.rmSync(tmpDir, { recursive: true, force: true });
-	});
-
 	describe('list command', () => {
 		it('should list whole-note encrypted .mdenc files', async () => {
 			const dir = path.join(tmpDir, 'list-wholenote');
@@ -165,7 +173,9 @@ describe('mdenc CLI tool', () => {
 			const content = await encryptWholeNote('secret', 'correct-pw');
 			fs.writeFileSync(path.join(dir, 'note.mdenc'), content);
 
-			const { stdout } = runMdenc('test --passwords wrong-pw', dir);
+			const result = runMdenc('test --passwords wrong-pw', dir, false);
+			expect(result.status).toBe(1);
+			const { stdout } = result;
 			expect(stdout).toContain('FAILED');
 		});
 
@@ -222,7 +232,9 @@ describe('mdenc CLI tool', () => {
 			fs.writeFileSync(path.join(dir, 'good.mdenc'), content);
 			fs.writeFileSync(path.join(dir, 'bad.mdenc'), content);
 
-			const { stdout } = runMdenc('test --passwords wrong-pw --fails', dir);
+			const result = runMdenc('test --passwords wrong-pw --fails', dir, false);
+			expect(result.status).toBe(1);
+			const { stdout } = result;
 			expect(stdout).toContain('FAILED');
 			expect(stdout).not.toContain('PASSED');
 		});
@@ -279,8 +291,11 @@ describe('mdenc CLI tool', () => {
 			const content = await encryptWholeNote('secret', 'correct-pw');
 			fs.writeFileSync(path.join(dir, 'note.mdenc'), content);
 
-			const { stdout } = runMdenc(`decrypt --passwords wrong-pw --outdir "${outDir}"`, dir);
+			const result = runMdenc(`decrypt --passwords wrong-pw --outdir "${outDir}"`, dir, false);
+			expect(result.status).toBe(1);
+			const { stdout } = result;
 			expect(stdout).toContain('Unable to decrypt');
+			expect(fs.existsSync(path.join(outDir, 'note.md'))).toBe(false);
 		});
 
 		it('should decrypt inplace encrypted content', async () => {
@@ -299,6 +314,29 @@ describe('mdenc CLI tool', () => {
 			const content = fs.readFileSync(decryptedFile, 'utf8');
 			expect(content).toContain('inplace secret');
 			expect(content).toContain('Before');
+			expect(content).toContain('After');
+			expect(content).not.toContain('🔐');
+		});
+
+		it('should decrypt multiple inplace matches on the same line', async () => {
+			const dir = path.join(tmpDir, 'decrypt-inplace-multi');
+			const outDir = path.join(dir, 'out');
+			fs.mkdirSync(dir, { recursive: true });
+
+			const first = await encryptInPlace('first secret', 'pw', 2);
+			const second = await encryptInPlace('second secret', 'pw', 2);
+			fs.writeFileSync(path.join(dir, 'note.md'), `Before ${first} middle ${second} After`);
+
+			const { stdout } = runMdenc(`decrypt --passwords pw --outdir "${outDir}"`, dir);
+			expect(stdout).toContain('Decrypted');
+
+			const decryptedFile = path.join(outDir, 'note.md');
+			expect(fs.existsSync(decryptedFile)).toBe(true);
+			const content = fs.readFileSync(decryptedFile, 'utf8');
+			expect(content).toContain('first secret');
+			expect(content).toContain('second secret');
+			expect(content).toContain('Before');
+			expect(content).toContain('middle');
 			expect(content).toContain('After');
 			expect(content).not.toContain('🔐');
 		});
@@ -327,7 +365,8 @@ describe('mdenc CLI tool', () => {
 			const content = await encryptWholeNote('nested', 'pw');
 			fs.writeFileSync(path.join(subDir, 'note.mdenc'), content);
 
-			runMdenc(`decrypt --passwords pw --outdir "${outDir}"`, dir);
+			const { stdout } = runMdenc(`decrypt --passwords pw --outdir "${outDir}"`, dir);
+			expect(stdout).toContain('Decrypted');
 
 			const decryptedFile = path.join(outDir, 'a', 'b', 'note.md');
 			expect(fs.existsSync(decryptedFile)).toBe(true);

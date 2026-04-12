@@ -53,6 +53,10 @@ export class JsonFileEncoding {
 		if ( encodedText === '' ){
 			return new FileData( FileDataHelper.DEFAULT_VERSION, '', '' );
 		}
-		return JSON.parse( encodedText ) as FileData;
+		const parsed = JSON.parse( encodedText );
+		if ( parsed === null || typeof parsed !== 'object' || Array.isArray(parsed) ) {
+			throw new Error('Invalid FileData JSON');
+		}
+		return parsed as FileData;
 	}
 }
