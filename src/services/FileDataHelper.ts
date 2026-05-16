@@ -57,6 +57,14 @@ export class JsonFileEncoding {
 		if ( parsed === null || typeof parsed !== 'object' || Array.isArray(parsed) ) {
 			throw new Error('Invalid FileData JSON');
 		}
-		return parsed as FileData;
+		const data = parsed as Record<string, unknown>;
+		if (
+			typeof data.version !== 'string'
+			|| typeof data.hint !== 'string'
+			|| typeof data.encodedData !== 'string'
+		) {
+			throw new Error('Invalid FileData JSON');
+		}
+		return new FileData( data.version as string, data.hint as string, data.encodedData as string );
 	}
 }

@@ -105,6 +105,10 @@ describe('JsonFileEncoding', () => {
 		it('should throw for non-object JSON', () => {
 			expect(() => JsonFileEncoding.decode('42')).toThrow();
 		});
+
+		it('should throw for JSON missing FileData fields', () => {
+			expect(() => JsonFileEncoding.decode(JSON.stringify({ version: '3.0', hint: 'hint' }))).toThrow();
+		});
 	});
 
 	describe('isEncoded', () => {
