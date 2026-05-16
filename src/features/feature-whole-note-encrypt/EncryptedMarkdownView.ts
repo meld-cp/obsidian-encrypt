@@ -277,15 +277,12 @@ export class EncryptedMarkdownView extends MarkdownView {
 			}
 			
 			const unencryptedDataToSave = this.getUnencryptedViewData();
+			// If the file was opened from an older encryption format, rewrite it as v3 on the next save.
+			const needsVersionUpgrade = this.encryptedData != null && this.encryptedData.version !== FileDataHelper.DEFAULT_VERSION;
 			
-			if ( JsonFileEncoding.isEncoded( unencryptedDataToSave ) ){
-				// data is already encrypted, protect it from being overwritten
-				console.info('Saving was prevented beacuse the data was already encoded but it was expected to not be');
-				return;
-			}
-
 			if (
-				!this.dataWasChangedSinceLastSave
+				!needsVersionUpgrade
+				&& !this.dataWasChangedSinceLastSave
 				&& this.cachedUnencryptedData.length == unencryptedDataToSave.length
 				&& this.cachedUnencryptedData == unencryptedDataToSave
 			){
