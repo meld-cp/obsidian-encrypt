@@ -146,19 +146,19 @@ export class EncryptedMarkdownView extends MarkdownView {
 			this.dataWasChangedSinceLastSave = true;
 		}
 		await super.onUnloadFile(file);
-	}    
+	}
 	
 	override async onRename(file: TFile): Promise<void> {
 		//console.debug('onRename', { newfile: file, oldfile:this.file});
 		if (this.origFile){
 			SessionPasswordService.clearForFile( this.origFile );
-		}    
+		}
 
 		if (this.passwordAndHint!=null){
 			SessionPasswordService.putByFile( this.passwordAndHint, file );
-		}    
+		}
 		await super.onRename(file);    
-	}    
+	}
 
 
 	private getUnencryptedViewData(): string {
@@ -201,28 +201,29 @@ export class EncryptedMarkdownView extends MarkdownView {
 			return;
 		}
 
-		if ( !JsonFileEncoding.isEncoded(data) ){
+		try{
+			console.info( 'View is being set with encoded FileData, trying to decode', {data} );
+			if (this.passwordAndHint == null){
+				console.error('passwordAndHint == null');
+				return;
+			}
+			const newEncoded = JsonFileEncoding.decode(data);
+			
+			FileDataHelper.decrypt( newEncoded, this.passwordAndHint.password ).then( decryptedText => {
+				if ( decryptedText == null ){
+					console.info('View was being set with encoded data but the decryption failed, closing view');
+					this.isSavingEnabled = false; // don't overwrite the data when we detach
+					this.leaf.detach();
+					return;
+				}
+				this.setUnencryptedViewData(decryptedText, clear);
+			});
+		}catch{
+			this.dataWasChangedSinceLastSave = true;
 			this.setUnencryptedViewData(data, clear);
 			return;
 		}
 
-		console.info( 'View is being set with already encoded data, trying to decode', {data} );
-		if (this.passwordAndHint == null){
-			console.error('passwordAndHint == null');
-			return;
-		}
-		const newEncoded = JsonFileEncoding.decode(data);
-		
-		FileDataHelper.decrypt( newEncoded, this.passwordAndHint.password ).then( decryptedText => {
-			if ( decryptedText == null ){
-				console.info('View was being set with already encoceded data but the decryption failed, closing view');
-				this.isSavingEnabled = false; // don't overwrite the data when we detach
-				this.leaf.detach();
-				return;
-			}
-			this.setUnencryptedViewData(decryptedText, clear);
-		});
-		
 	}
 
 	override async setState(state: any, result: ViewStateResult): Promise<void> {
