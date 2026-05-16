@@ -1,7 +1,7 @@
 {
 	"name": "meld-encrypt",
 	"version": "2.4.5",
-	"description": "Hide secrets in your vault",
+	"description": "Hide secrets in your vault.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
