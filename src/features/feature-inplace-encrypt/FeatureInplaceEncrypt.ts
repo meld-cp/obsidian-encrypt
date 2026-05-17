@@ -32,14 +32,14 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		);
 
 		plugin.addCommand({
-			id: 'meld-encrypt-in-place-encrypt',
-			name: 'Encrypt Selection',
+			id: 'in-place-encrypt',
+			name: 'Encrypt selection',
 			icon: 'lock-keyhole',
 			editorCheckCallback: (checking, editor, view) => this.processEncryptCommand( checking, editor )
 		});
 
 		plugin.addCommand({
-			id: 'meld-encrypt-in-place-decrypt',
+			id: 'in-place-decrypt',
 			name: 'Decrypt',
 			icon: 'lock-keyhole-open',
 			editorCheckCallback: (checking, editor, view) => this.processDecryptCommand( checking, editor )
@@ -47,7 +47,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 		this.plugin.addRibbonIcon(
 			'lock-keyhole',
-			'Encrypt Selection',
+			'Encrypt selection',
 			(_) => {
 				const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView == null ){
@@ -77,7 +77,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	private replaceMarkersRecursive( node: Node, rlevel: number = 0 ) : Node[] {
 		
-		if ( node instanceof HTMLElement ){
+		if ( node.instanceOf( HTMLElement ) ){
 			for( const n of Array.from(node.childNodes) ){
 				const childNodes = this.replaceMarkersRecursive( n, rlevel+1 );
 				n.replaceWith( ...childNodes );
@@ -85,13 +85,9 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			return [node];
 		}
 
-		if ( node instanceof Text ){
+		if ( node.instanceOf(Text) ){
 			
 			const text = node.textContent;
-
-			if ( text == null ){
-				return [node];
-			}
 
 			if ( !text.contains( '🔐' ) ){
 				return [node];
@@ -235,10 +231,6 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 	private async showDecryptedTextIfPasswordKnown( filePath: string, decryptable: Decryptable ) : Promise<boolean> {
 		const bestGuessPasswordAndHint = await SessionPasswordService.getByPathAsync(filePath);
-		if ( bestGuessPasswordAndHint.password == null ){
-			return false;
-		}
-
 		return await this.showDecryptedResultForPassword(
 			decryptable,
 			bestGuessPasswordAndHint.password
@@ -273,7 +265,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			.setDesc('How far to look for markers when encrypting/decrypting.')
 			.addText( text => {
 				text
-					.setValue(this.featureSettings.markerSearchLimit?.toString() ?? '10000' )
+					.setValue( this.featureSettings.markerSearchLimit.toString() )
 					.onChange( async value => {
 						const num = parseInt(value);
 						if ( !isNaN(num) ){
@@ -289,7 +281,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 		new Setting(containerEl)
 			.setName('By default, show encrypted marker when reading')
-			.setDesc('When encrypting inline text, should the default be to have a visible marker in Reading view?')
+			.setDesc('When encrypting inline text, should the default be to have a visible marker in reading view?')
 			.addToggle( toggle =>{
 				toggle
 					.setValue(this.featureSettings.showMarkerWhenReadingDefault)
@@ -412,7 +404,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				|| ( endPos.line > foundEndPos.line )
 			){
 				if( !checking ){
-					new Notice('Please select text to decrypt or place cursor on encrypted text.');
+					new Notice('Please select text to decrypt or place Cursor on encrypted text.');
 				}
 				return false;
 			}
@@ -480,14 +472,14 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				return;
 			}
 			const pw = pwModal.resultPassword ?? ''
-			const hint = pwModal.resultHint ?? '';
+			const hint = pwModal.resultHint;
 			const textToEncrypt = pwModal.resultTextToEncrypt ?? '';
 
 			const encryptable = new Encryptable();
 			encryptable.text = textToEncrypt;
 			encryptable.hint = hint;
 
-			this.encryptSelection(
+			await this.encryptSelection(
 				editor,
 				encryptable,
 				pw,
@@ -585,14 +577,14 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 		if ( mode == EncryptOrDecryptMode.Encrypt && !selectionAnalysis.canEncrypt ) {
 			if (!checking){
-				new Notice('Unable to Encrypt that.');
+				new Notice('Unable to encrypt that.');
 			}
 			return false;
 		}
 
 		if ( mode == EncryptOrDecryptMode.Decrypt && !selectionAnalysis.canDecrypt ) {
 			if (!checking){
-				new Notice('Unable to Decrypt that.');
+				new Notice('Unable to decrypt that.');
 			}
 			return false;
 		}
@@ -635,7 +627,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				return;
 			}
 			const pw = pwModal.resultPassword ?? ''
-			const hint = pwModal.resultHint ?? '';
+			const hint = pwModal.resultHint;
 
 			if (selectionAnalysis.canEncrypt) {
 
@@ -643,7 +635,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				encryptable.text = selectionText;
 				encryptable.hint = hint;
 
-				this.encryptSelection(
+				await this.encryptSelection(
 					editor,
 					encryptable,
 					pw,
@@ -723,7 +715,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 					const crypto = CryptoHelperFactory.BuildDefault();
 					const encodedText = this.encodeEncryption(
 						await crypto.encryptToBase64(decryptModal.text, password),
-						decryptable.hint ?? "",
+						decryptable.hint,
 						decryptable.showInReadingView
 					);
 					editor.setSelection(selectionStart, selectionEnd);

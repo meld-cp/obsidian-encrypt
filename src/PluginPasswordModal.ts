@@ -118,7 +118,7 @@ export default class PluginPasswordModal extends Modal {
 		/* Hint input row */
 		const sHint = new Setting(contentEl)
 			.setName('Optional Password Hint')
-			.addText( tc=>{
+			.addText( tc => {
 				//tcHint = tc;
 				tc.inputEl.placeholder = `Password Hint`;
 				tc.inputEl.tabIndex = 2;
@@ -127,7 +127,7 @@ export default class PluginPasswordModal extends Modal {
 				tc.inputEl.on('keypress', '*', (ev, target) => {
 					if (
 						ev.key == 'Enter'
-						&& target instanceof HTMLInputElement
+						&& target.instanceOf(HTMLInputElement)
 						&& target.value.length > 0
 					) {
 						ev.preventDefault();
@@ -148,7 +148,7 @@ export default class PluginPasswordModal extends Modal {
 			cb.buttonEl.tabIndex = 99;
 			cb
 				.setButtonText('Confirm')
-				.onClick( evt =>{
+				.onClick( _ =>{
 					if (validate()){
 						this.close();
 					}
@@ -178,7 +178,7 @@ export default class PluginPasswordModal extends Modal {
 	}
 
 	open2Async(): Promise<PasswordAndHint|null> {
-		return new Promise<PasswordAndHint|null>( (resolve) =>{
+		return new Promise<PasswordAndHint|null>( ( resolve, _ ) =>{
 
 			this.onClose = () =>{
 				if (this.resultConfirmed == true){

@@ -17,15 +17,15 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		this.plugin = plugin;
 
 		this.plugin.addCommand({
-			id: 'meld-encrypt-convert-to-or-from-encrypted-note',
-			name: 'Convert to or from an Encrypted note',
+			id: 'convert-to-or-from-encrypted-note',
+			name: 'Convert to or from an encrypted note',
 			icon: 'file-lock-2',
 			checkCallback: (checking) => this.processCommandConvertActiveNote( checking ),
 		});
 
 		this.plugin.addRibbonIcon(
 			'file-lock-2',
-			'Convert to or from an Encrypted note',
+			'Convert to or from an encrypted note',
 			(_) => this.processCommandConvertActiveNote( false )
 		);
 
@@ -38,7 +38,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 							item
 								.setTitle('Encrypt note')
 								.setIcon('file-lock-2')
-								.onClick( () => this.processCommandEncryptNote( file ) );
+								.onClick( () => { this.processCommandEncryptNote( file ); } );
 							}
 						);
 					}
@@ -47,7 +47,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 							item
 								.setTitle('Decrypt note')
 								.setIcon('file')
-								.onClick( () => this.processCommandDecryptNote( file ) );
+								.onClick( () => { this.processCommandDecryptNote( file ); } );
 							}
 						);
 					}
@@ -76,22 +76,22 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	}
 
 	private processCommandEncryptNote( file:TFile ){
-		this.getPasswordAndEncryptFile( file ).catch( reason => {
-			if (reason){
+		this.getPasswordAndEncryptFile( file ).catch( (reason:unknown) => {
+			if ( typeof(reason) == 'string' ){
 				new Notice(reason, 10000);
 			}
 		});
 	}
 
 	private processCommandDecryptNote( file:TFile ){
-		this.getPasswordAndDecryptFile( file ).catch( reason => {
-			if (reason){
+		this.getPasswordAndDecryptFile( file ).catch( (reason:unknown) => {
+			if ( typeof(reason) == 'string' ){
 				new Notice(reason, 10000);
 			}
 		});
 	}
 
-	private processCommandConvertActiveNote( checking: boolean ) : boolean | void {
+	private processCommandConvertActiveNote( checking: boolean ) : boolean {
 		const file = this.plugin.app.workspace.getActiveFile();
 		
 		if (checking){
@@ -101,20 +101,22 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 		}
 
 		if ( file?.extension == 'md' ){
-			this.getPasswordAndEncryptFile( file ).catch( reason => {
-				if (reason){
+			this.getPasswordAndEncryptFile( file ).catch( (reason:unknown) => {
+				if ( typeof(reason) == 'string' ){
 					new Notice(reason, 10000);
 				}
 			});
 		}
 
 		if ( file && ENCRYPTED_FILE_EXTENSIONS.includes( file.extension ) ){
-			this.getPasswordAndDecryptFile( file ).catch( reason => {
-				if (reason){
+			this.getPasswordAndDecryptFile( file ).catch( (reason:unknown) => {
+				if ( typeof(reason) == 'string' ){
 					new Notice(reason, 10000);
 				}
 			});
 		}
+		
+		return true;
 	}
 
 	private async getPasswordAndEncryptFile( file:TFile ) {
@@ -146,8 +148,10 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			new Notice( '🔐 Note was encrypted 🔐' );
 
 		}catch( error ){
-			if (error){
-				new Notice(error instanceof Error ? error.message : String(error), 10000);
+			if ( error instanceof Error ){
+				new Notice(error.message, 10000);
+			}else if ( typeof(error) == 'string' ){
+				new Notice(error, 10000);
 			}
 		}
 	}
@@ -191,15 +195,17 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			new Notice( '🔓 Note was decrypted 🔓' );
 
 		}catch(error){
-			if (error){
-				new Notice(error instanceof Error ? error.message : String(error), 10000);
+			if ( error instanceof Error ){
+				new Notice(error.message, 10000);
+			}else if ( typeof(error) == 'string' ){
+				new Notice(error, 10000);
 			}
 		}
 	}
 
 	private async closeUpdateRememberPasswordThenReopen( file:TFile, newFileExtension: string, content: string, pw:PasswordAndHint ) {
 		
-		let didDetach = false;
+		let detachCount = 0;
 
 		this.plugin.app.workspace.iterateAllLeaves( l => {
 			if ( l.view instanceof TextFileView && l.view.file == file ){
@@ -208,7 +214,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 				}else{
 					l.detach();
 				}
-				didDetach = true;
+				detachCount++;
 			}
 		});
 
@@ -218,7 +224,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			await this.plugin.app.vault.modify( file, content );
 			SessionPasswordService.putByFile( pw, file );
 		}finally{
-			if( didDetach ){
+			if( detachCount > 0 ){
 				await this.plugin.app.workspace.getLeaf( true ).openFile(file);
 			}
 		}

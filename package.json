@@ -3,6 +3,7 @@
 	"version": "2.4.5",
 	"description": "Hide secrets in your vault.",
 	"main": "main.js",
+	"type": "module",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
@@ -18,6 +19,7 @@
 	"author": "meld-cp",
 	"license": "MIT",
 	"devDependencies": {
+		"@eslint/js": "^10.0.1",
 		"@types/node": "25.6.0",
 		"@types/yargs": "17.0.35",
 		"@typescript-eslint/eslint-plugin": "8.58.1",
@@ -25,9 +27,12 @@
 		"builtin-modules": "5.0.0",
 		"esbuild": "0.28.0",
 		"esbuild-copy-static-files": "0.1.0",
+		"eslint": "^10.4.0",
+		"eslint-plugin-obsidianmd": "^0.3.0",
 		"obsidian": "1.12.3",
 		"tslib": "2.8.1",
-		"typescript": "6.0.2",
+		"typescript": "^6.0.2",
+		"typescript-eslint": "^8.59.3",
 		"vitest": "^4.1.4",
 		"yargs": "18.0.0"
 	}

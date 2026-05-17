@@ -44,6 +44,7 @@ export class JsonFileEncoding {
 			JSON.parse( text );
 			return true;
 		} catch ( error ) {
+			console.error( error );
 			return false;
 		}
 	}
@@ -53,7 +54,7 @@ export class JsonFileEncoding {
 		if ( encodedText === '' ){
 			return new FileData( FileDataHelper.DEFAULT_VERSION, '', '' );
 		}
-		const parsed = JSON.parse( encodedText );
+		const parsed: unknown = JSON.parse( encodedText );
 		if ( parsed === null || typeof parsed !== 'object' || Array.isArray(parsed) ) {
 			throw new Error('Invalid FileData JSON');
 		}
@@ -65,6 +66,6 @@ export class JsonFileEncoding {
 		) {
 			throw new Error('Invalid FileData JSON');
 		}
-		return new FileData( data.version as string, data.hint as string, data.encodedData as string );
+		return new FileData( data.version, data.hint, data.encodedData );
 	}
 }

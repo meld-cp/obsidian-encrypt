@@ -4,5 +4,6 @@
 		"encryptable",
 		"Inplace"
 	],
-	"typescript.tsdk": "node_modules\\typescript\\lib"
+	"typescript.tsdk": "node_modules\\typescript\\lib",
+	"js/ts.format.semicolons": "insert"
 }

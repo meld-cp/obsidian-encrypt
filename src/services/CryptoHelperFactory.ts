@@ -46,7 +46,7 @@ export class CryptoHelperFactory{
 		if (result != null){
 			return result;
 		}
-		throw new Error( `Unable to determine ICryptoHelper for Decryptable ver ${decryptable.version}`);
+		throw new Error( `Unable to determine ICryptoHelper for Decryptable ver ${decryptable.version.toString()}`);
 	}
 
 	public static BuildFromDecryptableOrNull( decryptable: Decryptable ) : ICryptoHelper | null {

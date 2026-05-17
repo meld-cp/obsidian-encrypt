@@ -36,11 +36,11 @@ export class UiHelper{
 		const sControl = new Setting(container)
 			.setName(name)
 			.setDesc(desc)
-			.addButton( cb=>{
+			.addButton( cb => {
 				cb.buttonEl.tabIndex = -1;
 				cb
 					.setIcon( 'reading-glasses' )
-					.onClick( evt =>{
+					.onClick( _ =>{
 						// toggle view password
 						const inputCtrl = sControl.components.find( (bc, idx, obj)=>bc instanceof TextComponent );
 						if (inputCtrl instanceof TextComponent){
@@ -66,7 +66,7 @@ export class UiHelper{
 					}
 				}
 				if (autoFocus){
-					setTimeout(() => tc.inputEl.focus(), 0);
+					window.setTimeout(() => tc.inputEl.focus(), 0);
 				}
 			} )
 		;

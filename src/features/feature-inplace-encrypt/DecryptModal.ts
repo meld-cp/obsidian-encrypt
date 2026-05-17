@@ -40,7 +40,7 @@ export default class DecryptModal extends Modal {
 			.addButton(cb => {
 				cb
 					.setButtonText('Save')
-					.onClick( evt =>{
+					.onClick( _ =>{
 						this.save = true;
 						this.text = cTextArea.getValue();
 						this.close();
@@ -51,8 +51,8 @@ export default class DecryptModal extends Modal {
 			.addButton( cb =>{
 				cb
 					.setButtonText('Copy')
-					.onClick( evt =>{
-						navigator.clipboard.writeText( cTextArea.getValue() );
+					.onClick( async _ =>{
+						await navigator.clipboard.writeText( cTextArea.getValue() );
 						new Notice('Copied!');
 					})
 				;
@@ -62,7 +62,7 @@ export default class DecryptModal extends Modal {
 			sActions.addButton( cb =>{
 				cb.setWarning()
 				.setButtonText('Decrypt in-place')
-				.onClick( evt =>{
+				.onClick( _ =>{
 					this.decryptInPlace = true;
 					this.text = cTextArea.getValue();
 					this.close();
