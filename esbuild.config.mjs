@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from 'builtin-modules';
+import { builtinModules } from 'node:module';
 import copyStaticFiles from 'esbuild-copy-static-files';
 import { spawnSync } from 'child_process';
 
@@ -12,6 +12,10 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === 'production');
+
+const nodeBuiltins = builtinModules.flatMap(moduleName =>
+    moduleName.startsWith('node:') ? [moduleName] : [moduleName, `node:${moduleName}`]
+);
 
 const packageName = process.env.npm_package_name || 'meld-encrypt';
 const versionString = process.env.npm_package_version || '0.0.0';
@@ -41,9 +45,10 @@ const ctx = await esbuild.context({
 		'@lezer/common',
 		'@lezer/highlight',
 		'@lezer/lr',
-		...builtins],
+		...nodeBuiltins],
 	format: 'cjs',
 	target: 'es2018',
+	charset: 'utf8',
 	logLevel: "info",
 	sourcemap: prod ? false : 'inline',
 	treeShaking: true,
