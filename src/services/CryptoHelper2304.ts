@@ -148,7 +148,7 @@ export class CryptoHelper2304 implements ICryptoHelper {
 			return decryptedText;
 			
 		} catch (e) {
-			//console.error(e);
+			console.error(e);
 			return null;
 		}
 	}
@@ -158,6 +158,7 @@ export class CryptoHelper2304 implements ICryptoHelper {
 			const bytesToDecode = this.stringToArray(atob(base64Encoded));
 			return await this.decryptFromBytes( bytesToDecode, password );
 		} catch (e) {
+			console.error(e);
 			return null;
 		}
 	}

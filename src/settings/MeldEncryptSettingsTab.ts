@@ -92,7 +92,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 				.addOption( SessionPasswordService.LevelVault, 'Vault')
 				.addOption( SessionPasswordService.LevelParentPath, 'Folder')
 				.addOption( SessionPasswordService.LevelFilename, 'File')
-				.addOption( SessionPasswordService.LevelExternalFile, 'External File')
+				.addOption( SessionPasswordService.LevelExternalFile, 'External file')
 					.setValue( this.settings.rememberPasswordLevel )
 					.onChange( async value => {
 						console.debug( 'rememberPasswordLevelSetting.onChange', { value } );
@@ -124,7 +124,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		;
 
 		const extFilePathsSetting = new Setting(containerEl)
-			.setName( 'External File Paths' )
+			.setName( 'External file paths' )
 			.setDesc( 'When needed the password is read from one of these filepaths. Paths must be relative to vault root' )
 			.addTextArea( text => {
 				text
@@ -143,7 +143,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 			.addButton( btn => {
 				btn
 					.setIcon( 'check' )
-					.setTooltip( 'Check Paths' )
+					.setTooltip( 'Check paths' )
 					.onClick( async () => {
 						const filePaths = this.settings.rememberPasswordExternalFilePaths;
 						for( const filePath of filePaths ){
@@ -188,7 +188,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		tr.createEl( 'td', { text: 'Typically, each note will have a unique password.' });
 		
 		tr = tbody.createEl( 'tr' );
-		tr.createEl( 'th', { text: 'External File:', attr: { 'align': 'right', 'style': 'width:12em;'} });
+		tr.createEl( 'th', { text: 'External file:', attr: { 'align': 'right', 'style': 'width:12em;'} });
 		tr.createEl( 'td', { text: 'When needed the password/key is read from one of these filepaths.' });
 
 		return f;

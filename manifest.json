@@ -2,7 +2,7 @@
 	"id": "meld-encrypt",
 	"name": "Meld Encrypt",
 	"version": "2.4.5",
-	"minAppVersion": "1.0.3",
+	"minAppVersion": "1.1.13",
 	"description": "Hide secrets in your vault.",
 	"author": "meld-cp",
 	"authorUrl": "https://github.com/meld-cp/",

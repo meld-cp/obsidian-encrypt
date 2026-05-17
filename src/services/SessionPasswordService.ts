@@ -238,9 +238,10 @@ export class SessionPasswordService{
 			return false;
 		}
 		try {
-			const _ = await this.fetchFileContents(vaultRelativePath);
+			await this.fetchFileContents(vaultRelativePath);
 			return true;
 		} catch (err) {
+			console.error(err, {vaultRelativePath});
 			return false;
 		}
 	}
@@ -250,7 +251,7 @@ export class SessionPasswordService{
 			throw new Error('SessionPasswordService.vaultFileAdapter == null');
 		}
 		const resUrl = SessionPasswordService.vaultFileAdapter.getResourcePath( vaultRelativePath );
-		const res = await fetch ( resUrl  );
+		const res = await fetch ( resUrl );
 		const contents = await res.text();
 		if (contents.length == 0){
 			throw new Error('File contents empty');

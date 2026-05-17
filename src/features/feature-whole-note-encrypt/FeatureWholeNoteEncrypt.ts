@@ -21,22 +21,22 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			await this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() );
 		});
 
-		this.plugin.addRibbonIcon( 'book-lock', 'Lock and Close all open encrypted notes', async (ev)=>{
+		this.plugin.addRibbonIcon( 'book-lock', 'Lock and close all open encrypted notes', async (ev)=>{
 			await this.processLockAndCloseAllEncryptedNotesCommand();
 		});
 
 		this.plugin.addCommand({
-			id: 'meld-encrypt-create-new-note',
+			id: 'create-new-note',
 			name: 'Create new encrypted note',
 			icon: 'file-lock-2',
-			callback: async () => await this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() ),
+			callback: async () => { await this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() ); },
 		});
 
 		this.plugin.addCommand({
-			id: 'meld-encrypt-close-and-forget',
-			name: 'Lock and Close all open encrypted notes',
+			id: 'close-and-forget',
+			name: 'Lock and close all open encrypted notes',
 			icon: 'book-lock',
-			callback: async () => await this.processLockAndCloseAllEncryptedNotesCommand(),
+			callback: async () => { await this.processLockAndCloseAllEncryptedNotesCommand(); },
 		});
 		
 		this.plugin.registerEvent(
@@ -66,16 +66,16 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			if (view instanceof EncryptedMarkdownView){
 				menu.addItem( (item) => {
 					item
-						.setTitle('Change Password')
+						.setTitle('Change password')
 						.setIcon('key-round')
-						.onClick( async () => await view.changePassword() );
+						.onClick( async () => { await view.changePassword(); } );
 					}
 				);
 				menu.addItem( (item) => {
 					item
-						.setTitle('Lock & Close')
+						.setTitle('Lock & close')
 						.setIcon('lock')
-						.onClick( () => view.lockAndClose() );
+						.onClick( () => { view.lockAndClose(); } );
 					}
 				);
 			}
@@ -96,16 +96,16 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 
 			menu.addItem( (item) => {
 				item
-					.setTitle('Change Password')
+					.setTitle('Change password')
 					.setIcon('key-round')
-					.onClick( async () => await view.changePassword() );
+					.onClick( async () => { await view.changePassword(); } );
 				}
 			);
 			menu.addItem( (item) => {
 				item
-					.setTitle('Lock & Close')
+					.setTitle('Lock & close')
 					.setIcon('lock')
-					.onClick( () => view.lockAndClose() );
+					.onClick( () => { view.lockAndClose(); } );
 				}
 			);
 		}))
@@ -166,9 +166,8 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 		// loop through all open leaves
 		const leaves = this.plugin.app.workspace.getLeavesOfType( EncryptedMarkdownView.VIEW_TYPE );
 		for ( const leaf of leaves ) {
-			const view = leaf.view as EncryptedMarkdownView;
-			if ( view != null ){
-				view.lockAndClose();
+			if ( leaf.view instanceof EncryptedMarkdownView ){
+				leaf.view.lockAndClose();
 			}
 		}
 	}
@@ -208,7 +207,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			
 			try{
 				pwh = await pwm.openAsync();
-			}catch(e){
+			}catch{
 				return; // cancelled
 			}	
 		}
@@ -227,6 +226,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 
 	}
 
+	// eslint-disable-next-line obsidianmd/detach-leaves
 	onunload() {
 		this.plugin.app.workspace.detachLeavesOfType(EncryptedMarkdownView.VIEW_TYPE);
 	}

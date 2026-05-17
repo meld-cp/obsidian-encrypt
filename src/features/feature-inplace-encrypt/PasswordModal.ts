@@ -126,16 +126,16 @@ export default class PasswordModal extends Modal {
 
 		/* Hint input row */
 		const sHint = new Setting(contentEl)
-			.setName('Optional Password Hint')
-			.addText( tc=>{
+			.setName('Optional password hint')
+			.addText( tc => {
 				//tcHint = tc;
-				tc.inputEl.placeholder = `Password Hint`;
+				tc.inputEl.placeholder = `Password hint`;
 				tc.setValue(hint);
 				tc.onChange( v=> hint = v );
 				tc.inputEl.on('keypress', '*', (ev, target) => {
 					if (
 						ev.key == 'Enter'
-						&& target instanceof HTMLInputElement
+						&& target.instanceOf(HTMLInputElement)
 						&& target.value.length > 0
 					) {
 						ev.preventDefault();
@@ -154,7 +154,7 @@ export default class PasswordModal extends Modal {
 
 		/* Show indicator in reading mode */
 		const sShowWhenReading = new Setting(contentEl)
-			.setName('Show encrypted marker in Reading view')
+			.setName('Show encrypted marker in reading view')
 			.addToggle( cb=>{
 				cb
 					.setValue( showInReadingView )
@@ -187,7 +187,7 @@ export default class PasswordModal extends Modal {
 		new Setting(contentEl).addButton( cb=>{
 			cb
 				.setButtonText('Confirm')
-				.onClick( evt =>{
+				.onClick( _ =>{
 					if (validate()){
 						this.close();
 					}

@@ -104,7 +104,7 @@ export class CryptoHelper {
 			const decryptedText = utf8Decoder.decode(decryptedBytes);
 			return decryptedText;
 		} catch (e) {
-			//console.error(e);
+			console.error(e);
 			return null;
 		}
 	}
@@ -135,7 +135,7 @@ export class CryptoHelper {
 			// let decryptedText = utf8Decoder.decode(decryptedBytes);
 			// return decryptedText;
 		} catch (e) {
-			//console.error(e);
+			console.error(e);
 			return null;
 		}
 	}
