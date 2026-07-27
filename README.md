@@ -1,5 +1,18 @@
 # [Meld Encrypt](https://github.com/meld-cp/obsidian-encrypt) Plugin for Obsidian
 
+## Forked additions:
+[See preview here](https://raw.githubusercontent.com/landnthrnnn/DUMP/refs/heads/main/GitHub/Meld-Encrypt-Fork-Preview.gif)
+
+- Improved appearance and use of selected text encryption/decryption
+- Added ability to encrypt text by simply typing:
+````
+```encrypt
+<type or paste your text>
+```
+````
+
+---
+
 **Create Encrypted Notes Within Your [Obsidian.md](https://obsidian.md/) Vault**
 
 [Meld Encrypt](https://github.com/meld-cp/obsidian-encrypt) is a community plugin that lets you encrypt and decrypt your notes in [Obsidian](https://obsidian.md/). You can choose to encrypt an [entire note](https://meld-cp.github.io/obsidian-encrypt/whole-encrypted-notes.html) or just [selected text within a note](https://meld-cp.github.io/obsidian-encrypt/in-place-encryption.html).
@@ -18,14 +31,12 @@ Encrypted notes are never decrypted to disk giving you peace-of-mind that the de
 
 ## Ongoing Maintenance and Development
 
-If you find this plugin useful please support the ongoing maintenance and development by:
+If you find this plugin useful please support the creator
+
+### Developer [meld-cp](https://github.com/meld-cp) Links:
 * [Staring ⭐ this repo](https://github.com/meld-cp/obsidian-encrypt)
 * [Buying me a coffee ☕](https://www.buymeacoffee.com/cleon)
 * [Sponsoring ❤️ me](https://github.com/sponsors/meld-cp).
-
-Thank you for your support 😊
-
-<a href="https://www.buymeacoffee.com/cleon" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 50px !important;" ></a>
 
 
 ## Latest Changes
