@@ -2,6 +2,7 @@ import * as yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as readline from 'node:readline';
 import { CryptoHelperFactory } from '../services/CryptoHelperFactory.ts';
 import { JsonFileEncoding } from "../services/FileDataHelper.ts";
 import * as Constants from '../services/Constants.ts';
@@ -30,7 +31,7 @@ interface DecryptResult{
 }
 
 class ListCommandHandler {
-    
+
 
     async argHandler( format : string ) {
 
@@ -39,12 +40,12 @@ class ListCommandHandler {
         let onStart : () => void;
         let onListing : (l:Listing) => void;
         let onEnd : () => void;
-        
+
         const listings: Listing[] = [];
 
 
         if ( format === 'csv') {
-            
+
             onStart = () => console.log( 'feature,fullPath,relativePath,extension' );
             onListing = (l) => console.log( `"${l.featureType}","${l.fullPath}","${l.relativePath}","${l.extension}"` );
             onEnd = () => {};
@@ -103,13 +104,13 @@ class TestCommandHandler {
         for await (const listing of Utils.listings(cwd, true)) {
 
             if (listing.featureType == 'InPlace'){
-                
+
                 for await (const result of this.testForInPlaceDecryption( listing, passwords )) {
                     this.outputResult( result, onlyListFails );
                 }
 
             } else if (listing.featureType == 'WholeNote'){
-                
+
                 const result = await this.testForWholeNoteDecryption( listing, passwords );
                 this.outputResult( result, onlyListFails );
 
@@ -130,7 +131,7 @@ class TestCommandHandler {
         }
 
         const lines = listing.content!.split( '\n' );
-        
+
         for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
             const line = lines[lineIdx];
             const lineNo = lineIdx + 1;
@@ -184,7 +185,7 @@ class TestCommandHandler {
                 }
 
             }
-            
+
         }
 
     }
@@ -208,7 +209,7 @@ class TestCommandHandler {
                 message: 'Unknown format'
             };
         }
-        
+
         for (let i = 0; i < passwords.length; i++) {
             const pw = passwords[i];
             const decoded = await ch.decryptFromBase64(fileData.encodedData, pw)
@@ -244,7 +245,7 @@ class TestCommandHandler {
 
 class DecryptCommandHandler{
     async argHandler( passwords:string[], outdir:string, dryrun:boolean ) {
-        
+
         console.log( `decrypting${dryrun?' (dry run)':''}...` );
 
         const cwd = process.cwd();
@@ -252,30 +253,67 @@ class DecryptCommandHandler{
         for await (const listing of Utils.listings(cwd, true)) {
 
             if (listing.featureType == 'InPlace'){
-                
+
                  const result = await this.decryptInPlaceListing( listing, passwords, outdir, dryrun );
                  this.outputResult( result );
-                 
+
             } else if (listing.featureType == 'WholeNote'){
-                
+
                 const result = await this.decryptWholeNoteListing( listing, passwords, outdir, dryrun );
                 this.outputResult( result );
 
             }
         }
     }
-    
+
+
+    async decryptFileHandler(password: string | undefined, filename: string) {
+        // check extname of filename
+        const ext = path.extname(filename);
+        if (ext != ".mdenc") {
+            process.stderr.write(`ERROR: Only .mdenc files are supported\n`);
+            process.exit(1);
+        }
+        if (!password) {
+            password = await promptPassword();
+        }
+        if (!password) {
+            process.stderr.write(`ERROR: Password not provided\n`);
+            process.exit(1);
+        }
+
+        const content = await fs.promises.readFile(filename, {
+            encoding: "utf-8",
+        });
+        const fileData = JsonFileEncoding.decode(content);
+        const ch = CryptoHelperFactory.BuildFromFileDataOrNull(fileData);
+        if (ch == null) {
+            process.stderr.write(`ERROR: Unknown format\n`);
+            process.exit(1);
+        }
+        const decrypted = await ch.decryptFromBase64(
+            fileData.encodedData,
+            password
+        );
+        if (decrypted === null) {
+            process.stderr.write(`ERROR: Unable to decrypt\n`);
+            process.exit(1);
+        }
+
+        process.stdout.write(decrypted || "");
+    }
+
     async decryptInPlaceListing(listing: Listing, passwords: string[], outdir: string, dryrun: boolean) : Promise<DecryptResult> {
-        
+
         const lines = listing.content!.split( '\n' );
         const decryptedLines : string[] = [];
-        
+
         for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-            
+
             const line = lines[lineIdx];
-            
+
             const lineNo = lineIdx + 1;
-            
+
             const reInplaceMatchers = [
                 /%%🔐(.*?)🔐%%/g,
                 /🔐(.*?)🔐/g
@@ -286,10 +324,10 @@ class DecryptCommandHandler{
             let decryptedCount = 0;
 
             for (const reInplaceMatcher of reInplaceMatchers) {
-                
-            
+
+
                 for await (const match of decryptedLine.matchAll( reInplaceMatcher ) ) {
-                    
+
                     matchCount++;
 
                     const matchLoc = `Line ${lineNo}, pos ${match.index!+1}`;
@@ -380,7 +418,7 @@ class DecryptCommandHandler{
 
         // final outfile
         outFile = path.join(path.dirname(outFile), newFileName);
-        
+
         if (!dryrun){
             const outFileDir = path.dirname( outFile );
             if (!fs.existsSync( outFileDir )){
@@ -413,7 +451,7 @@ class DecryptCommandHandler{
                 outFile: undefined
             };
         }
-        
+
         for (let i = 0; i < passwords.length; i++) {
             const pw = passwords[i];
             const decoded = await ch.decryptFromBase64(fileData.encodedData, pw)
@@ -442,7 +480,7 @@ class DecryptCommandHandler{
 
 class Utils{
     static async * walk( dir : string ) : AsyncIterableIterator<string> {
-        
+
         for await (const d of await fs.promises.opendir(dir)) {
             const entry = path.join(dir, d.name);
             if (d.isDirectory()) {
@@ -454,22 +492,22 @@ class Utils{
     }
 
     static async * listings( dir : string, includeContent: boolean ) : AsyncIterableIterator<Listing> {
-        
+
         for await (const p of Utils.walk( dir )) {
-    
+
             const ext = path.extname(p).toLowerCase().slice(1);
 
             // exit early if not a relevant file
             if ( !['md', ...Constants.ENCRYPTED_FILE_EXTENSIONS].includes( ext ) ){
                 continue;
             }
-            
+
             const relativePath = '.' + path.sep + path.relative(dir, p);
             const content = ( includeContent || ext == 'md' ) ? await fs.promises.readFile( p, 'utf8' ) : undefined;
-            
+
             // could have inplace encrypted notes
             if ( ext == 'md' ){
-                
+
                 if (
                     content!.includes( InPlaceConstants._PREFIX_A_VISIBLE )
                     || content!.includes( InPlaceConstants._PREFIX_B_VISIBLE )
@@ -484,7 +522,7 @@ class Utils{
                 }
                 continue;
             }
-            
+
             // must be whole note encrypted
             yield {
                 featureType: 'WholeNote',
@@ -515,6 +553,36 @@ const optListingFormat : yargs.Options = {
     default: 'default',
 }
 
+function promptPassword(prompt = "Password:") {
+    return new Promise<string>((resolve) => {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+        }) as any;
+
+        rl.question(prompt, (password: string) => {
+            rl.close();
+            resolve(password);
+            process.stdout.write("\n");
+        });
+
+        // This is the key to preventing echo:
+        // We override the internal _writeToOutput method
+        // to write nothing when stdoutMuted is true.
+        // This effectively mutes the output for password input.
+        rl._writeToOutput = function _writeToOutput(stringToWrite: any) {
+            if (rl.stdoutMuted) {
+                // Do nothing, preventing the password from being echoed
+            } else {
+                rl.output.write(stringToWrite);
+            }
+        };
+
+        // Set stdoutMuted to true before asking the question
+        // to ensure the password is not echoed.
+        rl.stdoutMuted = true;
+    });
+}
 
 
 yargs.default(hideBin(process.argv))
@@ -524,7 +592,7 @@ yargs.default(hideBin(process.argv))
     .command( 'list', 'list all encrypted artifacts within the current directory', (yargs) => yargs.option( {
         format: optListingFormat
     } ), (argv) => new ListCommandHandler().argHandler(argv.format as string ) )
-    
+
     .command(['test', 'check'], 'check that all notes can be decrypted with the given password list', (yargs) => yargs.option(  {
         passwords: optPasswordList,
         fails: {
@@ -534,7 +602,7 @@ yargs.default(hideBin(process.argv))
             default: false
         }
     } ), (argv) => new TestCommandHandler().argHandler( argv.passwords as string[], argv.fails as boolean ) )
-    
+
     .command('decrypt', 'decrypt notes to plain text given a password list and an output directory',  (yargs) => yargs.option(  {
         passwords: optPasswordList,
         outdir: {
@@ -549,8 +617,29 @@ yargs.default(hideBin(process.argv))
             type: 'boolean',
             default: false
         }
-    } ), (argv) => new DecryptCommandHandler().argHandler( argv.passwords as string[], argv.outdir as string, argv.dryrun !== false ) ) 
-    
+    } ), (argv) => new DecryptCommandHandler().argHandler( argv.passwords as string[], argv.outdir as string, argv.dryrun !== false ) )
+
+
+    .command(
+        "decrypt-file <filename>",
+        "decrypt note to plain text given a password",
+        (yargs) =>
+            yargs
+                .option("password", {
+                    type: "string",
+                    alias: ["p"],
+                    demandOption: false,
+                })
+                .positional("filename", { type: "string", demandOption: true }),
+        (argv) => {
+            new DecryptCommandHandler().decryptFileHandler(
+                argv.password,
+                argv.filename
+            );
+        }
+    )
+
+
     .demandCommand()
     .help()
     .wrap( null )
@@ -561,5 +650,3 @@ yargs.default(hideBin(process.argv))
       ])
     .parse()
 ;
- 
-
