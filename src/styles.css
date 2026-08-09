@@ -26,3 +26,51 @@ div[data-type="meld-encrypted-view"] .view-content {
 }
 
 /* END FEATURE ENCRYPTED MD */
+
+/* FEATURE OUTLINE */
+
+.meld-encrypt-outline-container {
+	padding: 0.5em;
+	font-size: var(--font-ui-small);
+}
+
+.meld-encrypt-outline-list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.meld-encrypt-outline-item {
+	margin: 0;
+	padding: 0;
+}
+
+.meld-encrypt-outline-link {
+	display: block;
+	padding: 0.15em 0.5em;
+	border-radius: 3px;
+	color: var(--text-normal);
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.meld-encrypt-outline-link:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-accent);
+}
+
+.meld-encrypt-outline-level-1 > .meld-encrypt-outline-link { font-weight: 600; }
+.meld-encrypt-outline-level-2 > .meld-encrypt-outline-link { padding-left: 1em; }
+.meld-encrypt-outline-level-3 > .meld-encrypt-outline-link { padding-left: 1.75em; }
+.meld-encrypt-outline-level-4 > .meld-encrypt-outline-link { padding-left: 2.5em; }
+.meld-encrypt-outline-level-5 > .meld-encrypt-outline-link { padding-left: 3.25em; }
+.meld-encrypt-outline-level-6 > .meld-encrypt-outline-link { padding-left: 4em; }
+
+.meld-encrypt-outline-empty {
+	color: var(--text-muted);
+	font-style: italic;
+	padding: 0.5em;
+	margin: 0;
+}
+
+/* END FEATURE OUTLINE */
