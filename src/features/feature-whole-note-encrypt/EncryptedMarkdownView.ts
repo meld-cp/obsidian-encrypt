@@ -3,8 +3,10 @@ import { FileData, FileDataHelper, JsonFileEncoding } from "../../services/FileD
 import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
 import PluginPasswordModal from "../../PluginPasswordModal.ts";
 import { ENCRYPTED_FILE_EXTENSIONS } from "../../services/Constants.ts";
+import { Heading } from "../../services/EncryptedHeadingParser.ts";
+import { OutlineSource } from "../../services/OutlineSource.ts";
 
-export class EncryptedMarkdownView extends MarkdownView {
+export class EncryptedMarkdownView extends MarkdownView implements OutlineSource {
 
 	static VIEW_TYPE = 'meld-encrypted-view';
 
@@ -163,6 +165,25 @@ export class EncryptedMarkdownView extends MarkdownView {
 
 	private getUnencryptedViewData(): string {
 		return super.getViewData();
+	}
+
+	public getDecryptedText(): string {
+		return this.getUnencryptedViewData();
+	}
+
+	public jumpToHeading(heading: Heading): void {
+		if (this.editor == null) {
+			console.debug("[meld-encrypt] jumpToHeading: editor is null (view not yet loaded)");
+			return;
+		}
+		try {
+			const position = { line: heading.line, ch: 0 };
+			console.debug("[meld-encrypt] jumpToHeading", { heading, position });
+			this.editor.setCursor(position);
+			this.editor.scrollIntoView({ from: position, to: position });
+		} catch (reason: unknown) {
+			console.error("[meld-encrypt] Failed to jump to heading", reason);
+		}
 	}
 
 	override getViewData(): string {
