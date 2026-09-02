@@ -26,3 +26,22 @@ div[data-type="meld-encrypted-view"] .view-content {
 }
 
 /* END FEATURE ENCRYPTED MD */
+.canvas-node.meld-canvas-unencrypted {
+	box-shadow: 0 0 0 2px var(--color-orange);
+}
+
+.meld-canvas-unencrypted-badge {
+	position: absolute;
+	top: -22px;
+	left: 0;
+	z-index: 20;
+	padding: 2px 6px;
+	border: 1px solid var(--color-orange);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--color-orange);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	pointer-events: none;
+}
