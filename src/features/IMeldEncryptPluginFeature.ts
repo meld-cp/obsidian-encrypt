@@ -3,7 +3,7 @@ import { IMeldEncryptPluginSettings } from "../settings/MeldEncryptPluginSetting
 
 export interface IMeldEncryptPluginFeature {
 	onload(plugin: MeldEncrypt, settings: IMeldEncryptPluginSettings): Promise<void>;
-	onunload(): void;
+	onunload(): void | Promise<void>;
 	buildSettingsUi(
 		containerEl: HTMLElement,
 		saveSettingCallback : () => Promise<void>
