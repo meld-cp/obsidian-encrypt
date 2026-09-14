@@ -3,6 +3,7 @@ import process from "process";
 import builtins from 'builtin-modules';
 import copyStaticFiles from 'esbuild-copy-static-files';
 import { spawnSync } from 'child_process';
+import { rmSync } from 'fs';
 
 const banner =
 `/*
@@ -66,17 +67,15 @@ if (prod) {
 	const result = await ctx.rebuild();
 	if ( result.errors.length == 0 ){
 		console.log( `Zip it up to dist/${packageName}-${versionString}.zip` );
-		spawnSync(
-			'tar', [
-				'-cav',
-				'-f', `./dist/${packageName}-${versionString}.zip`,
-				'-C', `./dist/${packageName}-${versionString}`,
-				packageName
-			],
+		rmSync(`./dist/${packageName}-${versionString}.zip`, { force: true });
+		const archive = spawnSync(
+			'zip', ['-r', `../${packageName}-${versionString}.zip`, packageName],
 			{
+				cwd: `./dist/${packageName}-${versionString}`,
 				stdio: 'inherit'
 			}
 		);
+		if (archive.status !== 0) process.exit(archive.status ?? 1);
 	}
 	process.exit(0);
 }else{

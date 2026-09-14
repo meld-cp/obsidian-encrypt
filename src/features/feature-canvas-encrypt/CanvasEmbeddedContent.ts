@@ -57,6 +57,36 @@ export function imageFileToMarkdown(file: File): Promise<string> {
 	});
 }
 
+export async function imageVaultFileToMarkdown(app: App, file: TFile): Promise<string> {
+	const mime = MIME_TYPES[file.extension.toLowerCase()] ?? 'application/octet-stream';
+	return `![${escapeMarkdownLabel(file.name)}](${arrayBufferToDataUrl(await app.vault.readBinary(file), mime)})`;
+}
+
+export function getReferencingNotePaths(app: App, target: TFile, excludingPath?: string): string[] {
+	const resolvedLinks = app.metadataCache.resolvedLinks;
+	return Object.entries(resolvedLinks)
+		.filter(([sourcePath, destinations]) => sourcePath !== excludingPath && (destinations[target.path] ?? 0) > 0)
+		.map(([sourcePath]) => sourcePath)
+		.sort((a, b) => a.localeCompare(b));
+}
+
+export function replaceImageReferences(
+	app: App, markdown: string, sourcePath: string, target: TFile, replacement: string,
+): { markdown: string; replacements: number } {
+	let replacements = 0;
+	const replaceIfTarget = (fullMatch: string, linkPath: string): string => {
+		const decoded = decodeURIComponent(linkPath.replace(/^<|>$/g, ''));
+		if (app.metadataCache.getFirstLinkpathDest(decoded, sourcePath) !== target) return fullMatch;
+		replacements += 1;
+		return replacement;
+	};
+	let result = markdown.replace(/!\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]*)?\]\]/g,
+		(fullMatch, linkPath: string) => replaceIfTarget(fullMatch, linkPath));
+	result = result.replace(/!\[[^\]]*\]\((<[^>]+>|[^\s)]+)(?:\s+["'][^)]*["'])?\)/g,
+		(fullMatch, linkPath: string) => replaceIfTarget(fullMatch, linkPath));
+	return { markdown: result, replacements };
+}
+
 export async function hydrateEncryptedNotes(
 	app: App, data: CanvasData, password: string,
 ): Promise<{ data: CanvasData; failedPaths: string[]; hydratedPaths: string[] }> {
@@ -100,10 +130,7 @@ export async function embedPendingImages(
 			|| !pendingPaths.has(node.file) || !isImagePath(node.file)) return node;
 		const file = app.vault.getAbstractFileByPath(node.file);
 		if (!(file instanceof TFile)) return node;
-		const extension = file.extension.toLowerCase();
-		const markdown = `![${escapeMarkdownLabel(file.name)}](${arrayBufferToDataUrl(
-			await app.vault.readBinary(file), MIME_TYPES[extension] ?? 'application/octet-stream',
-		)})`;
+		const markdown = await imageVaultFileToMarkdown(app, file);
 		const { type: _type, file: sourcePath, subpath: _subpath, ...rest } = node;
 		embeddedPaths.push(sourcePath);
 		return {

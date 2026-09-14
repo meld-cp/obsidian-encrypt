@@ -6,9 +6,10 @@ import {
 } from './CanvasEncryptionWrapper.ts';
 import { assertCanvasData, isNativeCanvasView, type CanvasData, type NativeCanvasView } from './CanvasTypes.ts';
 import {
-	embedPendingImages, hydrateEncryptedNotes, imageFileToMarkdown, isImagePath, markUnencryptedFileNodes,
-	isUnencryptedFileNodeData,
+	embedPendingImages, getReferencingNotePaths, hydrateEncryptedNotes, imageFileToMarkdown,
+	imageVaultFileToMarkdown, isImagePath, markUnencryptedFileNodes, isUnencryptedFileNodeData,
 } from './CanvasEmbeddedContent.ts';
+import { CanvasConfirmationModal } from './CanvasConfirmationModal.ts';
 
 type CanvasMethod = (...args: never[]) => unknown;
 type CanvasPrototype = Record<string, CanvasMethod>;
@@ -29,7 +30,7 @@ export class CanvasPatcher {
 	private prototype: CanvasPrototype | null = null;
 	private vaultWriteGuardInstalled = false;
 	private restorers: Array<() => void> = [];
-	private protectedPaths = new Set<string>();
+	private protectedFiles = new Map<string, TFile>();
 	private states = new WeakMap<NativeCanvasView, ViewState>();
 	private openViewsByPath = new Map<string, NativeCanvasView>();
 	private acceptingLoads = true;
@@ -43,7 +44,7 @@ export class CanvasPatcher {
 	}
 
 	isInstalled(): boolean { return this.prototype !== null; }
-	hasProtectedFiles(): boolean { return this.protectedPaths.size > 0; }
+	hasProtectedFiles(): boolean { return this.protectedFiles.size > 0; }
 	hasViewState(view: NativeCanvasView): boolean { return this.states.has(view); }
 	stopAcceptingLoads(): void { this.acceptingLoads = false; }
 
@@ -59,9 +60,13 @@ export class CanvasPatcher {
 		return true;
 	}
 
-	markProtected(file: TFile): void { this.protectedPaths.add(file.path); }
-	unmarkProtected(file: TFile): void { this.protectedPaths.delete(file.path); }
-	isProtected(file: TFile | null): boolean { return file !== null && this.protectedPaths.has(file.path); }
+	markProtected(file: TFile): void { this.protectedFiles.set(file.path, file); }
+	unmarkProtected(file: TFile): void {
+		if (this.protectedFiles.get(file.path) === file) this.protectedFiles.delete(file.path);
+	}
+	isProtected(file: TFile | null): boolean {
+		return file !== null && this.protectedFiles.get(file.path) === file;
+	}
 
 	registerUnlocked(view: NativeCanvasView, wrapperText: string, passwordAndHint: PasswordAndHint): void {
 		this.states.set(view, {
@@ -118,7 +123,11 @@ export class CanvasPatcher {
 	}
 
 	rename(oldPath: string, newPath: string): void {
-		if (this.protectedPaths.delete(oldPath)) this.protectedPaths.add(newPath);
+		const file = this.protectedFiles.get(oldPath);
+		if (file !== undefined) {
+			this.protectedFiles.delete(oldPath);
+			this.protectedFiles.set(newPath, file);
+		}
 		const view = this.openViewsByPath.get(oldPath);
 		if (view !== undefined) {
 			this.openViewsByPath.delete(oldPath);
@@ -128,7 +137,7 @@ export class CanvasPatcher {
 
 	renameFolder(oldPath: string, newPath: string): void {
 		const prefix = `${oldPath}/`;
-		for (const path of [...this.protectedPaths]) {
+		for (const path of [...this.protectedFiles.keys()]) {
 			if (!path.startsWith(prefix)) continue;
 			this.rename(path, `${newPath}/${path.slice(prefix.length)}`);
 		}
@@ -139,7 +148,7 @@ export class CanvasPatcher {
 		this.restorers = [];
 		this.prototype = null;
 		this.vaultWriteGuardInstalled = false;
-		this.protectedPaths.clear();
+		this.protectedFiles.clear();
 		this.openViewsByPath.clear();
 	}
 
@@ -362,8 +371,52 @@ export class CanvasPatcher {
 					badge.setAttribute('aria-label', 'This Canvas item is stored unencrypted');
 					element.appendChild(badge);
 				}
+				if (data !== undefined && typeof data.file === 'string' && isImagePath(data.file)
+					&& element.querySelector(':scope > .meld-image-encrypt-button') === null) {
+					const button = document.createElement('button');
+					button.className = 'meld-image-encrypt-button';
+					button.textContent = '🔒';
+					button.setAttribute('aria-label', 'Encrypt and embed this image');
+					button.addEventListener('click', event => {
+						event.preventDefault();
+						event.stopPropagation();
+						void this.encryptReferencedImage(view, data);
+					});
+					element.appendChild(button);
+				}
 			}
 		});
+	}
+
+	private async encryptReferencedImage(view: NativeCanvasView, nodeData: Record<string, unknown>): Promise<void> {
+		if (view.file === null || typeof nodeData.file !== 'string') return;
+		const imageFile = this.app.vault.getAbstractFileByPath(nodeData.file);
+		if (!(imageFile instanceof TFile) || !isImagePath(imageFile.path)) return;
+		const references = getReferencingNotePaths(this.app, imageFile, view.file.path);
+		const warning = references.length === 0
+			? 'The original image file will be moved to the system trash after it is embedded.'
+			: `The original image is also referenced by ${references.length} note(s):\n\n${references.join('\n')}\n\nThose references will stop working.`;
+		if (!await new CanvasConfirmationModal(
+			this.app, `Encrypt image "${imageFile.name}"?`, warning, 'Encrypt image',
+		).openAsync()) return;
+		try {
+			const markdown = await imageVaultFileToMarkdown(this.app, imageFile);
+			const canvasData = view.canvas.getData();
+			const nodes = canvasData.nodes.map(node => {
+				if (typeof node !== 'object' || node === null) return node;
+				const candidate = node as Record<string, unknown>;
+				if (candidate.id !== nodeData.id) return node;
+				const { type: _type, file: _file, subpath: _subpath, meldUnencrypted: _marker, ...rest } = candidate;
+				return { ...rest, type: 'text', text: markdown, meldEncryptedSource: { kind: 'image', name: imageFile.name } };
+			});
+			view.canvas.setData({ ...canvasData, nodes });
+			await view.save();
+			await this.app.vault.delete(imageFile, true);
+			new Notice('Image encrypted and embedded');
+		} catch (error) {
+			console.error('Encrypted Canvas image encryption failed', { path: imageFile.path, error });
+			new Notice('Image was not encrypted');
+		}
 	}
 
 	private patchVaultWrites(): void {
@@ -385,7 +438,12 @@ export class CanvasPatcher {
 		};
 		const originalAdapterWrite = adapter.write;
 		const guardedAdapterWrite = async function(path: string, data: string, options?: unknown): Promise<void> {
-			if (patcher.protectedPaths.has(path) && !isEncryptedCanvasWrapper(data)) {
+			const protectedFile = patcher.protectedFiles.get(path);
+			const currentFile = patcher.app.vault.getAbstractFileByPath(path);
+			if (protectedFile !== undefined && currentFile !== protectedFile) {
+				patcher.protectedFiles.delete(path);
+			}
+			if (currentFile === protectedFile && protectedFile !== undefined && !isEncryptedCanvasWrapper(data)) {
 				new Notice(`Blocked adapter plaintext write to protected Canvas: ${path}`);
 				throw new Error(`Meld blocked a non-encrypted adapter write to ${path}`);
 			}
@@ -396,7 +454,7 @@ export class CanvasPatcher {
 
 		const originalAppend = adapter.append;
 		const guardedAppend = async function(path: string, data: string, options?: unknown): Promise<void> {
-			if (patcher.protectedPaths.has(path)) {
+			if (patcher.isProtectedFileAtPath(path)) {
 				throw new Error(`Meld blocked append to protected Canvas: ${path}`);
 			}
 			return originalAppend.call(this, path, data, options as never);
@@ -406,13 +464,21 @@ export class CanvasPatcher {
 
 		const originalWriteBinary = adapter.writeBinary;
 		const guardedWriteBinary = async function(path: string, data: ArrayBuffer, options?: unknown): Promise<void> {
-			if (patcher.protectedPaths.has(path)) {
+			if (patcher.isProtectedFileAtPath(path)) {
 				throw new Error(`Meld blocked binary write to protected Canvas: ${path}`);
 			}
 			return originalWriteBinary.call(this, path, data, options as never);
 		};
 		adapter.writeBinary = guardedWriteBinary;
 		this.restorers.push(() => { if (adapter.writeBinary === guardedWriteBinary) adapter.writeBinary = originalWriteBinary; });
+	}
+
+	private isProtectedFileAtPath(path: string): boolean {
+		const protectedFile = this.protectedFiles.get(path);
+		if (protectedFile === undefined) return false;
+		if (this.app.vault.getAbstractFileByPath(path) === protectedFile) return true;
+		this.protectedFiles.delete(path);
+		return false;
 	}
 
 	private patch(name: string, factory: (original: CanvasMethod) => CanvasMethod): void {

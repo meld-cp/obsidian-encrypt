@@ -11,7 +11,8 @@ export class CanvasConfirmationModal extends Modal {
 	onOpen(): void {
 		this.contentEl.empty();
 		new Setting(this.contentEl).setHeading().setName(this.heading);
-		this.contentEl.createEl('p', { text: this.warning });
+		const warningEl = this.contentEl.createEl('p', { text: this.warning });
+		warningEl.style.whiteSpace = 'pre-wrap';
 		new Setting(this.contentEl)
 			.addButton(button => button.setButtonText('Cancel').onClick(() => this.close()))
 			.addButton(button => button.setWarning().setButtonText(this.confirmText).onClick(() => {
