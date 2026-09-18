@@ -101,7 +101,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 				SessionPasswordService.putByFile( this.passwordAndHint, file );
 			}
 
-			this.setUnencryptedViewData( decryptedText, false );
+			this.setUnencryptedViewData( decryptedText, true );
 			
 			
 			this.isLoadingFileInProgress = true;
@@ -183,7 +183,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 	private setUnencryptedViewData(data: string, clear: boolean): void {
 		//console.debug('setUnencryptedViewData', {data, clear});
 		this.cachedUnencryptedData = data;
-		super.setViewData(data, false);
+		super.setViewData(data, clear);
 	}
 
 	override setViewData(data: string, clear: boolean): void {
