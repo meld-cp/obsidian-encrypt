@@ -4,10 +4,13 @@
 
 # npm
 node_modules
+.tools
+.test-build
 
 # build
 dist
 *.map
 Obsidian Encrypt - test-vault
 test-vault
-
+TESTVAULT
+SECURITY-TESTVAULT

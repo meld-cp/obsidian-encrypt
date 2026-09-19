@@ -6,6 +6,9 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"test:canvas": "esbuild tests/canvas-encryption-wrapper.test.ts --bundle --platform=node --format=cjs --outfile=.test-build/canvas-encryption-wrapper.test.cjs && node .test-build/canvas-encryption-wrapper.test.cjs",
+		"test:canvas-security-watch": "node tools/canvas-security-watch.mjs",
+		"test:canvas-fixture": "esbuild tools/create-encrypted-canvas-fixture.ts --bundle --platform=node --format=cjs --outfile=.test-build/create-encrypted-canvas-fixture.cjs && node .test-build/create-encrypted-canvas-fixture.cjs",
 		"version": "node version-bump.mjs",
 		"dev-tool-decrypt": "tsc -noEmit -skipLibCheck && node esbuild-tool-decrypt.config.mjs",
 		"build-tool-decrypt": "tsc -noEmit -skipLibCheck && node esbuild-tool-decrypt.config.mjs production",

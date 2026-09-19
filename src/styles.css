@@ -26,3 +26,74 @@ div[data-type="meld-encrypted-view"] .view-content {
 }
 
 /* END FEATURE ENCRYPTED MD */
+.canvas-node.meld-canvas-unencrypted {
+	box-shadow: 0 0 0 2px var(--color-orange);
+}
+
+.meld-canvas-unencrypted-badge {
+	position: absolute;
+	top: -32px;
+	left: 0;
+	z-index: 20;
+	padding: 2px 6px;
+	border: 1px solid var(--color-orange);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--color-orange);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	pointer-events: none;
+}
+
+.canvas-node.meld-canvas-unencrypted > .meld-image-encrypt-button {
+	top: -34px;
+	right: 0;
+}
+
+/* Canvas nodes retain Obsidian's absolute positioning; only inline images need a relative wrapper. */
+.meld-unencrypted-image {
+	position: relative;
+	display: inline-block;
+	box-shadow: 0 0 0 2px var(--color-orange);
+}
+
+.meld-unencrypted-image-badge {
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	z-index: 20;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--color-orange);
+	font-size: 10px;
+	font-weight: 700;
+	pointer-events: none;
+}
+
+.meld-image-encrypt-button {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	z-index: 21;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 4px;
+	border: 1px solid var(--interactive-accent);
+	border-radius: 5px;
+	background: var(--background-primary);
+	color: var(--interactive-accent);
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+
+.meld-unencrypted-image:hover > .meld-image-encrypt-button,
+.canvas-node.meld-canvas-unencrypted:hover > .meld-image-encrypt-button,
+.meld-image-encrypt-button:focus-visible {
+	opacity: 1;
+}

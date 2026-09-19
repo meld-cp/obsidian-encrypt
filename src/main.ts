@@ -6,6 +6,7 @@ import { SessionPasswordService } from './services/SessionPasswordService.ts';
 import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInplaceEncrypt.ts';
 import FeatureConvertNote from './features/feature-convert-note/FeatureConvertNote.ts';
 import FeatureWholeNoteEncryptV2 from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt.ts';
+import FeatureCanvasEncrypt from './features/feature-canvas-encrypt/FeatureCanvasEncrypt.ts';
 
 export default class MeldEncrypt extends Plugin {
 
@@ -14,7 +15,7 @@ export default class MeldEncrypt extends Plugin {
 	private enabledFeatures : IMeldEncryptPluginFeature[] = [];
 
 	async onload() {
-		
+
 		SessionPasswordService.init(this.app.vault.adapter);
 
 		// Settings
@@ -24,6 +25,7 @@ export default class MeldEncrypt extends Plugin {
 			new FeatureWholeNoteEncryptV2(),
 			new FeatureConvertNote(),
 			new FeatureInplaceEncrypt(),
+			new FeatureCanvasEncrypt(),
 		);
 
 		this.addSettingTab(
@@ -47,21 +49,21 @@ export default class MeldEncrypt extends Plugin {
 		});
 
 		// load features
-		this.enabledFeatures.forEach(async f => {
-			await f.onload( this, this.settings );
-		});
+		for (const feature of this.enabledFeatures) {
+			await feature.onload(this, this.settings);
+		}
 
 	}
-	
-	override onunload() {
-		this.enabledFeatures.forEach(async f => {
-			f.onunload();
-		});
+
+	override async onunload(): Promise<void> {
+		for (const feature of [...this.enabledFeatures].reverse()) {
+			await feature.onunload();
+		}
 		super.onunload();
 	}
 
 	async loadSettings() {
-		
+
 		const DEFAULT_SETTINGS: IMeldEncryptPluginSettings = {
 			confirmPassword: true,
 			rememberPassword: true,
@@ -71,11 +73,15 @@ export default class MeldEncrypt extends Plugin {
 
 			featureWholeNoteEncrypt: {
 			},
-			
+
 			featureInplaceEncrypt:{
 				expandToWholeLines: false,
 				markerSearchLimit: 10000,
 				showMarkerWhenReadingDefault: true
+			},
+
+			featureCanvasEncrypt: {
+				enabled: true
 			}
 		}
 

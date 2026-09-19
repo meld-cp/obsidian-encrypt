@@ -1,8 +1,12 @@
-import { MarkdownView, Notice, TFile, ViewStateResult } from "obsidian";
+import { MarkdownView, Notice, TFile, ViewStateResult, setIcon } from "obsidian";
 import { FileData, FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.ts";
 import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
 import PluginPasswordModal from "../../PluginPasswordModal.ts";
 import { ENCRYPTED_FILE_EXTENSIONS } from "../../services/Constants.ts";
+import {
+	getReferencingNotePaths, imageFileToMarkdown, imageVaultFileToMarkdown, isImagePath, replaceImageReferences,
+} from "../feature-canvas-encrypt/CanvasEmbeddedContent.ts";
+import { CanvasConfirmationModal } from "../feature-canvas-encrypt/CanvasConfirmationModal.ts";
 
 export class EncryptedMarkdownView extends MarkdownView {
 
@@ -31,6 +35,10 @@ export class EncryptedMarkdownView extends MarkdownView {
 
 	protected override async onOpen(): Promise<void> {
 		await super.onOpen();
+		this.registerDomEvent(this.contentEl, 'paste', event => { void this.handleImagePaste(event); }, true);
+		const observer = new MutationObserver(() => this.decorateExternalImages());
+		observer.observe(this.contentEl, { childList: true, subtree: true });
+		this.register(() => observer.disconnect());
 
 		// add view actions
 		this.addAction(
@@ -44,6 +52,71 @@ export class EncryptedMarkdownView extends MarkdownView {
 			'Lock & Close',
 			() => this.lockAndClose(),
 		)
+	}
+
+	private async handleImagePaste(event: ClipboardEvent): Promise<void> {
+		const image = Array.from(event.clipboardData?.files ?? []).find(file => file.type.startsWith('image/'));
+		if (image === undefined || !this.isSavingEnabled) return;
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		this.editor.replaceSelection(await imageFileToMarkdown(image));
+		this.dataWasChangedSinceLastSave = true;
+		await this.save();
+	}
+
+	private decorateExternalImages(): void {
+		for (const image of Array.from(this.contentEl.querySelectorAll<HTMLImageElement>('img'))) {
+			if (image.src.startsWith('data:') || image.dataset.meldImageDecorated === 'true') continue;
+			const file = this.resolveRenderedImage(image);
+			if (file === null) continue;
+			image.dataset.meldImageDecorated = 'true';
+			const container = image.parentElement;
+			if (container === null) continue;
+			container.classList.add('meld-unencrypted-image');
+			const badge = container.createEl('span', { cls: 'meld-unencrypted-image-badge', text: 'UNENCRYPTED' });
+			badge.setAttribute('aria-label', 'This image is stored unencrypted');
+			const button = container.createEl('button', { cls: 'meld-image-encrypt-button' });
+			setIcon(button, 'lock');
+			button.setAttribute('aria-label', 'Encrypt and embed this image');
+			button.addEventListener('click', (event: MouseEvent) => {
+				event.preventDefault();
+				event.stopPropagation();
+				void this.encryptReferencedImage(file);
+			});
+		}
+	}
+
+	private resolveRenderedImage(image: HTMLImageElement): TFile | null {
+		const resource = image.src.split('?')[0];
+		for (const file of this.app.vault.getFiles()) {
+			if (isImagePath(file.path) && this.app.vault.getResourcePath(file).split('?')[0] === resource) return file;
+		}
+		return null;
+	}
+
+	private async encryptReferencedImage(imageFile: TFile): Promise<void> {
+		if (this.file === null) return;
+		const references = getReferencingNotePaths(this.app, imageFile, this.file.path);
+		const referenceWarning = references.length === 0
+			? 'The original image file will be moved to the system trash after it is embedded.'
+			: `The original image is also referenced by ${references.length} other note(s):\n\n${references.join('\n')}\n\nThose references will stop working.`;
+		const confirmed = await new CanvasConfirmationModal(
+			this.app, `Encrypt image "${imageFile.name}"?`, referenceWarning, 'Encrypt image',
+		).openAsync();
+		if (!confirmed || this.file === null) return;
+		try {
+			const replacement = await imageVaultFileToMarkdown(this.app, imageFile);
+			const updated = replaceImageReferences(this.app, this.getUnencryptedViewData(), this.file.path, imageFile, replacement);
+			if (updated.replacements === 0) throw new Error('Image reference was not found in the note');
+			this.setUnencryptedViewData(updated.markdown, false);
+			this.dataWasChangedSinceLastSave = true;
+			await this.save();
+			await this.app.vault.delete(imageFile, true);
+			new Notice('Image encrypted and embedded');
+		} catch (error) {
+			console.error('Encrypted note image encryption failed', { path: imageFile.path, error });
+			new Notice('Image was not encrypted');
+		}
 	}
 
 	override async onLoadFile(file: TFile): Promise<void> {
@@ -102,6 +175,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 			}
 
 			this.setUnencryptedViewData( decryptedText, false );
+			queueMicrotask(() => this.decorateExternalImages());
 			
 			
 			this.isLoadingFileInProgress = true;
