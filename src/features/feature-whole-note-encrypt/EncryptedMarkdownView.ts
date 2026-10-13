@@ -16,6 +16,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 	isSavingEnabled = false;
 	isLoadingFileInProgress = false;
 	isSavingInProgress = false;
+	saveInProgress : Promise<void> | null = null;
 	
 	override allowNoFile = false;
 
@@ -142,7 +143,10 @@ export class EncryptedMarkdownView extends MarkdownView {
 		
 		if (this.isSavingInProgress){
 			console.info( 'Saving is in progress, but forcing another save because the file is being unloaded' );
-			this.isSavingInProgress = false;
+			// wait for the save to finish before saving again. If two saves
+			// overlap, the first one to finish resets isSavingInProgress and
+			// the other one writes the unencrypted view data to the file
+			await this.saveInProgress;
 			this.dataWasChangedSinceLastSave = true;
 		}
 		await super.onUnloadFile(file);
@@ -240,12 +244,18 @@ export class EncryptedMarkdownView extends MarkdownView {
 		//console.debug('setState done');
 	}
 
-	override async save(clear?: boolean | undefined): Promise<void> {
+	override save(clear?: boolean | undefined): Promise<void> {
 		console.debug('save', { clear });
 		if ( this.isSavingInProgress ) {
 			console.info('Saving was prevented because another save is in progress, Obsidian will try again later if the content changed.');
-			return;
+			return Promise.resolve();
 		}
+
+		this.saveInProgress = this.encryptAndSave( clear );
+		return this.saveInProgress;
+	}
+
+	private async encryptAndSave(clear?: boolean | undefined): Promise<void> {
 
 		this.isSavingInProgress = true;
 		this.setViewBusy( true );
