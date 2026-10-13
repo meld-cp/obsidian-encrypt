@@ -1,5 +1,13 @@
 
 export const ENCRYPTED_ICON = '🔐';
+
+/** Fenced block id for ```encrypt … ``` (plaintext → Encrypt UI, ciphertext → Decrypt UI). */
+export const MELD_ENCRYPT_FENCE_LANG = 'encrypt';
+
+/** Older vaults; still registered so existing notes keep working. */
+export const MELD_ENCRYPT_FENCE_LANG_LEGACY = 'meld-encrypted';
+
+export const MELD_ENCRYPT_BLOCK_HEADER = 'ENCRYPTED DATA:';
 export const _PREFIX_B = '%%🔐β ';
 export const _PREFIX_B_VISIBLE = '🔐β ';
 

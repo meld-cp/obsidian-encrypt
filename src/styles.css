@@ -4,6 +4,46 @@
 	cursor: pointer;
 }
 
+.meld-encrypt-fenced-details {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: 0.5em 0.75em;
+	margin: 0.5em 0;
+	background-color: var(--background-secondary);
+}
+
+.meld-encrypt-fenced-summary {
+	cursor: pointer;
+	font-weight: 600;
+	list-style: none;
+}
+
+.meld-encrypt-fenced-summary::-webkit-details-marker {
+	display: none;
+}
+
+.meld-encrypt-fenced-body {
+	margin-top: 0.5em;
+}
+
+.meld-encrypt-fenced-cipher {
+	margin: 0;
+	padding: 0.5em;
+	font-size: var(--code-size);
+	overflow-x: auto;
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.meld-encrypt-fenced-actions {
+	margin-top: 0.5em;
+}
+
+.meld-encrypt-fenced-decrypt-btn,
+.meld-encrypt-fenced-encrypt-btn {
+	margin: 0;
+}
+
 .meld-encrypt-decrypt-modal textarea{
 	width: 100%;
 	min-height: 3em;
