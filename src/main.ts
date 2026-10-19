@@ -6,6 +6,7 @@ import { SessionPasswordService } from './services/SessionPasswordService.ts';
 import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInplaceEncrypt.ts';
 import FeatureConvertNote from './features/feature-convert-note/FeatureConvertNote.ts';
 import FeatureWholeNoteEncryptV2 from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt.ts';
+import FeatureFolderEncrypt from './features/feature-folder-encrypt/FeatureFolderEncrypt.ts';
 
 export default class MeldEncrypt extends Plugin {
 
@@ -24,6 +25,7 @@ export default class MeldEncrypt extends Plugin {
 			new FeatureWholeNoteEncryptV2(),
 			new FeatureConvertNote(),
 			new FeatureInplaceEncrypt(),
+			new FeatureFolderEncrypt(),
 		);
 
 		this.addSettingTab(
