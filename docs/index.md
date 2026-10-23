@@ -10,13 +10,13 @@ nav_order: 1
 
 [Meld Encrypt](https://github.com/meld-cp/obsidian-encrypt) is a community plugin that lets you encrypt and decrypt your notes in [Obsidian](https://obsidian.md/). You can choose to encrypt an [entire note](https://meld-cp.github.io/obsidian-encrypt/whole-encrypted-notes.html) or just [selected text within a note](https://meld-cp.github.io/obsidian-encrypt/in-place-encryption.html).
 
-Encrypted notes are never decrypted to disk giving you peace-of-mind that the decrypted contents haven't been sync'd or backed up to external systems.
+While you view or edit an encrypted note, the plugin keeps its saved contents encrypted. Choosing **Decrypt note** or **Decrypt in-place**, or exporting through the CLI, writes plaintext that may be synced or backed up.
 
 ---
 
 > [!WARNING]
 > ⚠️ Use at Your Own Risk ⚠️
-> - Your passwords are never stored. If you forget your password, your notes cannot be decrypted..
+> - Passwords are normally remembered only in memory for the current session. **External file** mode reads a password from a file you provide. Without the correct password, encrypted content cannot be recovered.
 > - The encryption methods used have not been independently audited. Unauthorized access may be possible if someone gains access to your files.
 > - Bugs may be introduced at any time. You are solely responsible for maintaining backups of your notes.
 
