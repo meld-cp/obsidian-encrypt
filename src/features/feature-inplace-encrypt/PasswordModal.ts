@@ -1,5 +1,6 @@
 import { App, Modal, Setting, TextComponent } from 'obsidian';
 import { UiHelper } from '../../services/UiHelper.ts';
+import { getInlineHintError } from './InlineHintValidation.ts';
 
 export default class PasswordModal extends Modal {
 	
@@ -127,11 +128,16 @@ export default class PasswordModal extends Modal {
 		/* Hint input row */
 		const sHint = new Setting(contentEl)
 			.setName('Optional password hint')
+			.setDesc(this.isEncrypting ? getInlineHintError(hint) ?? '' : '')
 			.addText( tc => {
 				//tcHint = tc;
 				tc.inputEl.placeholder = `Password hint`;
 				tc.setValue(hint);
-				tc.onChange( v=> hint = v );
+				tc.onChange( v=> {
+					hint = v;
+					this.invalidate();
+					sHint.setDesc(this.isEncrypting ? getInlineHintError(hint) ?? '' : '');
+				});
 				tc.inputEl.on('keypress', '*', (ev, target) => {
 					if (
 						ev.key == 'Enter'
@@ -199,6 +205,9 @@ export default class PasswordModal extends Modal {
 			this.invalidate();
 
 			sConfirmPassword.setDesc('');
+			const hintError = this.isEncrypting ? getInlineHintError(hint) : null;
+			sHint.setDesc(hintError ?? '');
+			if (hintError) return false;
 
 			if ( this.confirmPassword ){
 				if (password != confirmPass){

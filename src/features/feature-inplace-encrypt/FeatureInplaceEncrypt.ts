@@ -9,6 +9,7 @@ import { UiHelper } from "../../services/UiHelper.ts";
 import { SessionPasswordService } from "../../services/SessionPasswordService.ts";
 import { CryptoHelperFactory } from "../../services/CryptoHelperFactory.ts";
 import { Decryptable } from "./Decryptable.ts";
+import { getInlineHintError } from './InlineHintValidation.ts';
 import { FeatureInplaceTextAnalysis } from "./featureInplaceTextAnalysis.ts";
 import { ENCRYPTED_ICON, _HINT, _PREFIXES, _PREFIX_ENCODE_DEFAULT, _PREFIX_ENCODE_DEFAULT_VISIBLE, _SUFFIXES, _SUFFIX_NO_COMMENT, _SUFFIX_WITH_COMMENT } from "./FeatureInplaceConstants.ts";
 
@@ -479,7 +480,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			encryptable.text = textToEncrypt;
 			encryptable.hint = hint;
 
-			await this.encryptSelection(
+			const encrypted = await this.encryptSelection(
 				editor,
 				encryptable,
 				pw,
@@ -489,7 +490,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			);
 
 			// remember password
-			SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
+			if (encrypted) SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
 		}
 		pwModal.open();
 
@@ -635,7 +636,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				encryptable.text = selectionText;
 				encryptable.hint = hint;
 
-				await this.encryptSelection(
+				const encrypted = await this.encryptSelection(
 					editor,
 					encryptable,
 					pw,
@@ -645,7 +646,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				);
 
 				// remember password
-				SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
+				if (encrypted) SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
 
 			} else if ( selectionAnalysis.decryptable ) {
 
@@ -677,6 +678,11 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		finalSelectionEnd: EditorPosition,
 		showInReadingView: boolean
 	) {
+		const hintError = getInlineHintError(encryptable.hint);
+		if (hintError) {
+			new Notice(hintError);
+			return false;
+		}
 		//encrypt
 		const crypto = CryptoHelperFactory.BuildDefault();
 		const encodedText = this.encodeEncryption(
@@ -686,6 +692,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		);
 		editor.setSelection(finalSelectionStart, finalSelectionEnd);
 		editor.replaceSelection(encodedText);
+		return true;
 	}
 
 	private async decryptSelection(
@@ -712,6 +719,11 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 					editor.setSelection(selectionStart, selectionEnd);
 					editor.replaceSelection(decryptModal.text);
 				} else if (decryptModal.save) {
+					const hintError = getInlineHintError(decryptable.hint);
+					if (hintError) {
+						new Notice(hintError);
+						return;
+					}
 					const crypto = CryptoHelperFactory.BuildDefault();
 					const encodedText = this.encodeEncryption(
 						await crypto.encryptToBase64(decryptModal.text, password),
@@ -728,7 +740,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		return true;
 	}
 
-	private encodeEncryption( encryptedText: string, hint: string, showInReadingView: boolean ): string {
+	private encodeEncryption( encryptedText: string, hint: string = '', showInReadingView: boolean ): string {
 		if (
 			!_PREFIXES.some( (prefix) => encryptedText.includes(prefix) )
 			&& !_SUFFIXES.some( (suffix) => encryptedText.includes(suffix) )
