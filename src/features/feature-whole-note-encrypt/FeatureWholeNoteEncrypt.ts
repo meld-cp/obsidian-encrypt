@@ -1,7 +1,7 @@
 import MeldEncrypt from "../../main.ts";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature.ts";
 import { EncryptedMarkdownView } from "./EncryptedMarkdownView.ts";
-import { MarkdownView, TFolder, normalizePath, TFile } from "obsidian";
+import { MarkdownView, Notice, TFolder, normalizePath, TFile } from "obsidian";
 import PluginPasswordModal from "../../PluginPasswordModal.ts";
 import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
 import { FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.ts";
@@ -195,14 +195,14 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 		}
 
 		// if the password is unknown, prompt for it
-		if ( !pwh ){
+		if ( !pwh?.password.length ){
 			// prompt for password
 			const pwm = new PluginPasswordModal(
 				this.plugin.app,
 				'Please provide a password for encryption',
 				true,
 				true,
-				await SessionPasswordService.getByPathAsync( newFilepath )
+				pwh ?? await SessionPasswordService.getByPathAsync( newFilepath )
 			);
 			
 			try{
@@ -210,6 +210,11 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			}catch{
 				return; // cancelled
 			}	
+		}
+
+		if ( !pwh.password.length ){
+			new Notice('A password is required to create an encrypted note');
+			return;
 		}
 
 		// create the new file
