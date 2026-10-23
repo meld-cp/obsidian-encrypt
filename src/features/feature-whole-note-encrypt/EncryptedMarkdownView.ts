@@ -11,6 +11,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 	passwordAndHint : PasswordAndHint | null = null;
 	encryptedData : FileData | null = null;
 	private pendingEncryptedData: FileData | null = null;
+	private isChangingPassword = false;
 	cachedUnencryptedData : string = '';
 	dataWasChangedSinceLastSave = false;
 	
@@ -214,6 +215,12 @@ export class EncryptedMarkdownView extends MarkdownView {
 				return;
 			}
 			const newEncoded = JsonFileEncoding.decode(data);
+			if (this.pendingEncryptedData != null
+				&& JsonFileEncoding.encode(newEncoded) === JsonFileEncoding.encode(this.pendingEncryptedData)){
+				// Ignore our own pending write: its new password is not committed yet,
+				// and the editor may already contain newer edits.
+				return;
+			}
 			
 			FileDataHelper.decrypt( newEncoded, this.passwordAndHint.password ).then( decryptedText => {
 				if ( decryptedText == null ){
@@ -261,18 +268,19 @@ export class EncryptedMarkdownView extends MarkdownView {
 		return this.saveInProgress;
 	}
 
-	private async encryptAndSave(clear?: boolean): Promise<void> {
+	private async encryptAndSave(clear?: boolean, newPasswordAndHint?: PasswordAndHint): Promise<void> {
 
 		this.isSavingInProgress = true;
 		this.setViewBusy( true );
 		try{
 			
-			if (this.file == null){
+			const file = this.file;
+			if (file == null){
 				console.debug('Saving was prevented beacuse there is no file loaded in the view yet');
 				return;
 			}
 
-			if ( !ENCRYPTED_FILE_EXTENSIONS.includes( this.file.extension ) ){
+			if ( !ENCRYPTED_FILE_EXTENSIONS.includes( file.extension ) ){
 				console.debug('Saving was prevented because the file is not an encrypted file');
 				return;
 			}
@@ -290,13 +298,15 @@ export class EncryptedMarkdownView extends MarkdownView {
 				console.debug('Saving was prevented beacuse there is no password set');
 				return;
 			}
+			const passwordAndHint = newPasswordAndHint ?? this.passwordAndHint;
 			
 			const unencryptedDataToSave = this.getUnencryptedViewData();
 			// If the file was opened from an older encryption format, rewrite it as v3 on the next save.
 			const needsVersionUpgrade = this.encryptedData != null && this.encryptedData.version !== FileDataHelper.DEFAULT_VERSION;
 			
 			if (
-				!needsVersionUpgrade
+				newPasswordAndHint == null
+				&& !needsVersionUpgrade
 				&& !this.dataWasChangedSinceLastSave
 				&& this.cachedUnencryptedData.length == unencryptedDataToSave.length
 				&& this.cachedUnencryptedData == unencryptedDataToSave
@@ -310,10 +320,15 @@ export class EncryptedMarkdownView extends MarkdownView {
 
 			// build up-to-date encrypted data
 			const encryptedDataToSave = await FileDataHelper.encrypt(
-				this.passwordAndHint.password,
-				this.passwordAndHint.hint,
+				passwordAndHint.password,
+				passwordAndHint.hint,
 				unencryptedDataToSave
 			);
+			if (newPasswordAndHint && (
+				this.file !== file || !this.isSavingEnabled || !ENCRYPTED_FILE_EXTENSIONS.includes(file.extension)
+			)){
+				throw new Error('The note is no longer available for changing its password');
+			}
 			this.pendingEncryptedData = encryptedDataToSave;
 
 			// call the real save.. which will call getViewData... getViewData will
@@ -323,6 +338,11 @@ export class EncryptedMarkdownView extends MarkdownView {
 
 			this.encryptedData = encryptedDataToSave;
 			this.cachedUnencryptedData = unencryptedDataToSave;
+			if (newPasswordAndHint){
+				// Commit before releasing the save lock so subsequent saves use the new key.
+				this.passwordAndHint = newPasswordAndHint;
+				SessionPasswordService.putByFile(newPasswordAndHint, file);
+			}
 			this.dataWasChangedSinceLastSave = this.getUnencryptedViewData() !== unencryptedDataToSave;
 
 		} finally{
@@ -341,33 +361,41 @@ export class EncryptedMarkdownView extends MarkdownView {
 	}
 
 	async changePassword(): Promise<void> {
+		if (this.isChangingPassword) return;
 		if (this.file == null){
 			console.debug('Unable to change password beacuse there is no file loaded in the view yet');
 			return;
 		}
 
-		// fetch password
-		const pwm = new PluginPasswordModal(
-			this.app,
-			`Change password for "${this.file.basename}"`,
-			true,
-			true,
-			await SessionPasswordService.getByFile( this.file )
-		);
-			
+		const file = this.file;
+		this.isChangingPassword = true;
 		try{
+			const pwm = new PluginPasswordModal(
+				this.app,
+				`Change password for "${file.basename}"`,
+				true,
+				true,
+				await SessionPasswordService.getByFile( file )
+			);
 			const newPwh = await pwm.openAsync();
 
-			this.passwordAndHint = newPwh;
-		
-			SessionPasswordService.putByFile( newPwh, this.file );
+			while (this.isSavingInProgress) await this.saveInProgress;
+			if (
+				this.file !== file || !this.isSavingEnabled || this.passwordAndHint == null
+				|| !ENCRYPTED_FILE_EXTENSIONS.includes(file.extension)
+			){
+				throw new Error('The note is no longer available for changing its password');
+			}
 
-			this.dataWasChangedSinceLastSave = true;
-			await this.save();
+			// Stage the new credentials for this write; commit them only when it succeeds.
+			this.saveInProgress = this.encryptAndSave(undefined, newPwh);
+			await this.saveInProgress;
 
 			new Notice( 'Password changed' );
 		} catch {
 			new Notice( 'Password wasn\'t changed' );
+		} finally {
+			this.isChangingPassword = false;
 		}
 	}
 
