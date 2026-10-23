@@ -16,6 +16,44 @@ Please report any bugs or features requests [here](https://github.com/meld-cp/ob
 
 The full change log can be found on the [releases](https://github.com/meld-cp/obsidian-encrypt/releases) page.
 
+## Unreleased
+
+Changes on `next` since v2.4.5.
+
+### Compatibility
+
+* Requires Obsidian 1.1.13 or later.
+* New encryption uses the v3 format. Existing encrypted notes remain readable, but saving a legacy whole note upgrades it to v3; inline blocks upgrade when edited and saved through the decryption dialog. Update the plugin on all devices before saving: earlier plugin versions cannot decrypt v3 content.
+* Command IDs have changed to follow Obsidian plugin conventions. Existing custom hotkeys may need to be reassigned.
+
+### New Features
+
+* Added v3 encryption for whole notes and inline text, using PBKDF2-HMAC-SHA512 with 220,000 iterations and AES-256-GCM. Encryption parameters are stored with the ciphertext and authenticated; inline text uses compact gamma (`γ`) markers.
+* Added v3 support to the `mdenc` CLI and offline decryptor while retaining support for released legacy formats.
+
+### Improvements
+
+* Updated dependencies, TypeScript checks, and linting to address Obsidian community review requirements.
+* Added automated coverage for encryption formats, password caching, inline text analysis, note saving and conversion, password changes, and recovery tools.
+* Development builds now write to the test vault under `tests/test-vault`.
+* Updated documentation for inline commands and ribbon buttons, plaintext and password storage, external password file setup, running `mdenc` from the vault directory, and release validation and artifact paths.
+
+### Bug Fixes
+
+* Fixed undo wiping decrypted whole-note contents ([#241](https://github.com/meld-cp/obsidian-encrypt/issues/241), [#242](https://github.com/meld-cp/obsidian-encrypt/pull/242)).
+* Fixed overlapping saves during note unloading that could write plaintext to an encrypted file. Closing a note now waits for its save to succeed.
+* Preserved unsaved edits when encryption or disk writes fail, including edits made while a save is running.
+* Fixed note conversion to wait for saves and view unloading before reading the final contents, retain edits made during password entry, and prevent simultaneous conversions of the same file.
+* Password changes now update the active password and session cache only after a successful save, and reject changes if the note is no longer available.
+* Creating an encrypted note now prompts for a password when an external password file is unavailable or empty, instead of using an empty password.
+* Fixed inconsistent password cache keys between file and path lookups, so whole-note and inline operations share and clear remembered passwords consistently.
+* Made decrypted inline text in reading view read-only, with a Copy action. Use the editor's Decrypt command to edit and save changes.
+* Rejected reserved encryption markers in inline password hints to prevent unreadable encrypted blocks.
+* Hardened encrypted file and v3 payload validation to reject malformed data and unsupported encryption parameters.
+* Fixed `mdenc` detection of supported inline markers and testing of every encrypted block. The `test` and `decrypt` commands now return a nonzero exit status when any decryption fails.
+* Fixed CLI recovery altering literal plaintext containing replacement sequences such as `$&`.
+* Fixed offline decryptor format detection and handling of invalid encrypted input.
+
 ## v2.4.5
 
 ### Improvements
