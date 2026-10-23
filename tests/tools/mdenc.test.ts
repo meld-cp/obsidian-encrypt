@@ -53,14 +53,19 @@ function runMdenc(args: string, cwd: string, expectSuccess = true): { stdout: st
 		const stdout = execSync(`${MDENC} ${args}`, { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
 		return { stdout, stderr: '', status: 0 };
 	} catch (err: unknown) {
-		const e = err as { stdout?: string; stderr?: string; status?: number };
+		const e = err as { message?: string; code?: string; syscall?: string; signal?: string | null; stdout?: string; stderr?: string; status?: number | null };
+		const command = `${MDENC} ${args}`;
+		const details = [e.message, e.code && `code=${e.code}`, e.syscall && `syscall=${e.syscall}`, e.signal && `signal=${e.signal}`, e.stderr, e.stdout].filter(Boolean).join('\n');
+		if (e.code || e.signal || typeof e.status !== 'number' || e.status === 0) {
+			throw new Error(`Failed to launch or complete command: ${command}\nWorking directory: ${cwd}\n${details}`);
+		}
 		const result = {
 			stdout: e.stdout || '',
 			stderr: e.stderr || '',
 			status: typeof e.status === 'number' ? e.status : 1,
 		};
 		if (expectSuccess) {
-			throw new Error(`mdenc ${args} failed with exit code ${result.status}: ${result.stderr || result.stdout}`);
+			throw new Error(`Command failed with exit code ${result.status}: ${command}\nWorking directory: ${cwd}\n${details}`);
 		}
 		return result;
 	}
