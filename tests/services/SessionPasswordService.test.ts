@@ -6,13 +6,6 @@ vi.mock('obsidian', () => ({
 	TFile: class {},
 }));
 
-vi.mock('../../src/services/Utils.ts', () => ({
-	Utils: {
-		getFilePathExcludingExtension: (file: { path: string }) => file.path.replace(/\.[^.]+$/, ''),
-		getFilePathWithNewExtension: (file: { path: string }, ext: string) => file.path.replace(/\.[^.]+$/, `.${ext}`),
-	},
-}));
-
 import { SessionPasswordService, PasswordAndHint } from '../../src/services/SessionPasswordService.ts';
 import { Notice, DataAdapter } from 'obsidian';
 
@@ -187,6 +180,78 @@ describe('SessionPasswordService', () => {
 			const result = await SessionPasswordService.getByFile(file);
 
 			expect(result.password).toBe('secret');
+		});
+	});
+
+	describe('file and path API interoperability', () => {
+		const cases = [
+			SessionPasswordService.LevelFilename,
+			SessionPasswordService.LevelParentPath,
+			SessionPasswordService.LevelVault,
+		].flatMap(level => ['note.mdenc', 'folder.with.dots/note.v2.mdenc'].map(path => ({ level, path })));
+
+		it.each(cases)('shares one entry across both APIs at $level scope for $path', async ({ level, path }) => {
+			SessionPasswordService.setLevel(level);
+			const file = makeFile(path, path.includes('/') ? 'note.v2' : 'note', path.includes('/') ? 'folder.with.dots' : '/');
+			SessionPasswordService.putByFile(pw, file);
+
+			expect(SessionPasswordService.getByPath(path)).toEqual(pw);
+			expect(await SessionPasswordService.getByPathAsync(path)).toEqual(pw);
+			const updated = { password: 'updated password', hint: 'updated hint' };
+			SessionPasswordService.putByPath(updated, path);
+			expect(await SessionPasswordService.getByFile(file)).toEqual(updated);
+			expect(SessionPasswordService.clear()).toBe(1);
+		});
+
+		it.each(cases)('clears path-stored credentials through clearForFile at $level scope for $path', async ({ level, path }) => {
+			SessionPasswordService.setLevel(level);
+			const file = makeFile(path, path.includes('/') ? 'note.v2' : 'note', path.includes('/') ? 'folder.with.dots' : '/');
+			SessionPasswordService.putByPath(pw, path);
+			SessionPasswordService.clearForFile(file);
+
+			expect(SessionPasswordService.getByPath(path)).toEqual(SessionPasswordService.blankPasswordAndHint);
+			expect(await SessionPasswordService.getByPathAsync(path)).toEqual(SessionPasswordService.blankPasswordAndHint);
+			expect(await SessionPasswordService.getByFile(file)).toEqual(SessionPasswordService.blankPasswordAndHint);
+		});
+
+		it('keeps different extensions separate at file scope and only clears the requested file', async () => {
+			SessionPasswordService.setLevel(SessionPasswordService.LevelFilename);
+			const markdown = makeFile('folder/note.md', 'note', 'folder');
+			const encrypted = makeFile('folder/note.mdenc', 'note', 'folder');
+			const legacy = makeFile('folder/note.encrypted', 'note', 'folder');
+			const other = { password: 'another password', hint: 'another hint' };
+			SessionPasswordService.putByFile(pw, markdown);
+			SessionPasswordService.putByPath(other, encrypted.path);
+			SessionPasswordService.putByFile(other, legacy);
+
+			expect(SessionPasswordService.getByPath(markdown.path)).toEqual(pw);
+			expect(await SessionPasswordService.getByFile(encrypted)).toEqual(other);
+			SessionPasswordService.clearForFile(encrypted);
+			expect(SessionPasswordService.getByPath(encrypted.path)).toEqual(SessionPasswordService.blankPasswordAndHint);
+			expect(await SessionPasswordService.getByFile(markdown)).toEqual(pw);
+			expect(SessionPasswordService.getByPath(legacy.path)).toEqual(other);
+		});
+
+		it('keeps identical filenames in different folders separate at file scope', async () => {
+			SessionPasswordService.setLevel(SessionPasswordService.LevelFilename);
+			const file = makeFile('first/note.mdenc', 'note', 'first');
+			SessionPasswordService.putByFile(pw, file);
+
+			expect(SessionPasswordService.getByPath(file.path)).toEqual(pw);
+			expect(SessionPasswordService.getByPath('second/note.mdenc')).toEqual(SessionPasswordService.blankPasswordAndHint);
+			expect(await SessionPasswordService.getByFile(makeFile('second/note.mdenc', 'note', 'second')))
+				.toEqual(SessionPasswordService.blankPasswordAndHint);
+		});
+
+		it('expires the shared file-scoped entry when retrieved through the path API', async () => {
+			SessionPasswordService.setLevel(SessionPasswordService.LevelFilename);
+			SessionPasswordService.setAutoExpire(5);
+			const file = makeFile('note.mdenc', 'note', '/');
+			SessionPasswordService.putByFile(pw, file);
+			vi.advanceTimersByTime(6 * 60 * 1000);
+
+			expect(SessionPasswordService.getByPath(file.path)).toEqual(SessionPasswordService.blankPasswordAndHint);
+			expect(await SessionPasswordService.getByFile(file)).toEqual(SessionPasswordService.blankPasswordAndHint);
 		});
 	});
 

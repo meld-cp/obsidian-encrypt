@@ -1,6 +1,5 @@
 import { DataAdapter, Notice, TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache.ts";
-import { Utils } from "./Utils.ts";
 
 export type PasswordAndHint = {
 	password: string;
@@ -88,25 +87,11 @@ export class SessionPasswordService{
 	}
 
 	public static putByFile( pw: PasswordAndHint, file:TFile ): void {
-		if (!SessionPasswordService.isActive){
-			return;
-		}
-
-		const key = SessionPasswordService.getFileCacheKey( file );
-		this.putByKey( key, pw );
-
-		SessionPasswordService.updateExpiryTime();
+		this.putByPath(pw, file.path);
 	}
 
 	public static async getByFile( file:TFile  ) : Promise<PasswordAndHint> {
-		if (!SessionPasswordService.isActive){
-			return SessionPasswordService.blankPasswordAndHint;
-		}
-		this.clearIfExpired();
-		SessionPasswordService.updateExpiryTime();
-
-		const key = SessionPasswordService.getFileCacheKey( file );
-		return await this.getByKeyAsync( key, SessionPasswordService.blankPasswordAndHint );
+		return await this.getByPathAsync(file.path);
 	}
 
 	public static putByPath( pw: PasswordAndHint, path:string ): void {
@@ -160,24 +145,6 @@ export class SessionPasswordService{
 		return path;
 	}
 
-	private static getFileCacheKey( file : TFile ) : string {
-		
-		if (
-			SessionPasswordService.level ==  SessionPasswordService.LevelExternalFile
-			|| SessionPasswordService.level == SessionPasswordService.LevelVault
-		){
-			return '$' + SessionPasswordService.level;
-		}
-
-		if (SessionPasswordService.level == SessionPasswordService.LevelParentPath){
-			return file.parent!.path;
-		}
-
-		const fileExExt = Utils.getFilePathExcludingExtension( file );
-		return fileExExt;
-
-	}
-
 	private static clearIfExpired() : void{
 		if ( SessionPasswordService.expiryTime == null ){
 			return;
@@ -189,7 +156,7 @@ export class SessionPasswordService{
 	}
 
 	public static clearForFile( file: TFile ) : void {
-		const key = SessionPasswordService.getFileCacheKey( file );
+		const key = SessionPasswordService.getPathCacheKey( file.path );
 		this.cache.removeKey( key );
 	}
 
