@@ -1,64 +1,45 @@
-import { Decryptable } from "../features/feature-inplace-encrypt/Decryptable.ts";
-import { FeatureInplaceTextAnalysis } from "../features/feature-inplace-encrypt/featureInplaceTextAnalysis.ts";
-import { CryptoHelperFactory } from "../services/CryptoHelperFactory.ts";
-import { JsonFileEncoding } from "../services/FileDataHelper.ts";
+import { FeatureInplaceTextAnalysis } from '../features/feature-inplace-encrypt/featureInplaceTextAnalysis.ts';
+import { CryptoHelperFactory } from '../services/CryptoHelperFactory.ts';
+import { FileDataHelper, JsonFileEncoding } from '../services/FileDataHelper.ts';
+import { decodeInlineV3 } from '../services/CryptoHelperV3.ts';
 
 export class OfflineDecrypt {
-
-	public async decrypt( content:string, password: string ) : Promise<string | null> {
-
-		// Trying the default decryption
-		console.info( 'Trying the default decryption' );
-		const chDef = CryptoHelperFactory.BuildDefault();
-		const result = await chDef.decryptFromBase64( content, password );
-		if ( result != null ){
-			return result;
+	public async decrypt(content: string, password: string): Promise<string | null> {
+		const analysis = new FeatureInplaceTextAnalysis(content);
+		if (analysis.hasEncryptedPrefix) {
+			if (!analysis.decryptable) return null;
+			const helper = CryptoHelperFactory.BuildFromDecryptableOrNull(analysis.decryptable);
+			return helper ? await helper.decryptFromBase64(analysis.decryptable.base64CipherText, password) : null;
 		}
 
-		// Trying marked inplace feature decryption
-		console.info( 'Trying marked inplace feature decryption' );
-		const ta = new FeatureInplaceTextAnalysis( content );
-		if ( ta.decryptable != null ){
-			const ch = CryptoHelperFactory.BuildFromDecryptableOrNull(ta.decryptable);
-			if (ch != null){
-				const result = await ch.decryptFromBase64( ta.decryptable.base64CipherText, password );
-				if ( result != null ){
-					return result;
-				}
+		if (content.trimStart().startsWith('{')) {
+			try {
+				const data = JsonFileEncoding.decode(content);
+				if (!CryptoHelperFactory.BuildFromFileDataOrNull(data)) return null;
+				return await FileDataHelper.decrypt(data, password);
+			} catch {
+				return null;
 			}
 		}
 
-		// Trying non-marked inplace feature decryption
-		for (let ver = 10; ver >= 0; ver--) {
-			console.info( 'Trying non-marked inplace feature decryption', 'ver', ver );
-			const decryptable : Decryptable = { version: ver, base64CipherText: content, hint: '', showInReadingView: false };
-			const ch = CryptoHelperFactory.BuildFromDecryptableOrNull(decryptable)
-			const result = await ch?.decryptFromBase64( decryptable.base64CipherText, password );
-			if ( result != null ){
-				return result;
+		// Raw payloads have no marker. Recognize a valid v3 envelope before trying
+		// released legacy formats; never guess earlier experimental v3 layouts.
+		try {
+			const envelope = decodeInlineV3(content);
+			return await CryptoHelperFactory.BuildDefault().decryptEnvelope(envelope, password);
+		} catch {
+			for (const version of [2, 1, 0]) {
+				const helper = CryptoHelperFactory.BuildFromDecryptableOrNull({ version, base64CipherText: content, hint: '', showInReadingView: false });
+				const result = await helper?.decryptFromBase64(content, password);
+				if (result != null) return result;
 			}
+			return null;
 		}
-
-
-		// Trying whole note feature decryption
-		console.info( 'Trying whole note feature decryption' );
-		try{
-			const fileData = JsonFileEncoding.decode( content );
-			console.debug(fileData);
-			const chFd = CryptoHelperFactory.BuildFromFileDataOrNull( fileData );
-			const resultFd = await chFd?.decryptFromBase64( fileData.encodedData, password );
-			if ( resultFd != null ){
-				return resultFd;
-			}
-		} catch (e){
-			console.info(e);
-		}
-
-		return null;
 	}
 }
+
 declare global {
-    interface Window { $: OfflineDecrypt; }
+	interface Window { $: OfflineDecrypt; }
 }
 
 window.$ = new OfflineDecrypt();

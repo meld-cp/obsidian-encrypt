@@ -1,10 +1,18 @@
 import { CryptoHelperFactory } from "./CryptoHelperFactory.ts";
 
+import { validateEnvelopeV3 } from './CryptoHelperV3.ts';
+import type { CryptoEnvelopeV3 } from './CryptoHelperV3.ts';
+
+const blankFile = Symbol('blank-file');
+
 export class FileData {
 	
 	public version = '1.0';
 	public hint: string;
 	public encodedData:string;
+	public kdf?: CryptoEnvelopeV3['kdf'];
+	public cipher?: CryptoEnvelopeV3['cipher'];
+	public [blankFile]?: boolean;
 
 	constructor( version:string, hint:string, encodedData:string ){
 		this.version = version;
@@ -19,11 +27,15 @@ export class FileDataHelper{
 
 	public static async encrypt( pass: string, hint:string, text:string ) : Promise<FileData>{
 		const crypto = CryptoHelperFactory.BuildDefault();
-		const encryptedData = await crypto.encryptToBase64(text, pass);
-		return new FileData( FileDataHelper.DEFAULT_VERSION, hint, encryptedData);
+		const envelope = await crypto.encryptEnvelope(text, pass);
+		return Object.assign(new FileData(envelope.version, hint, envelope.encodedData), { kdf: envelope.kdf, cipher: envelope.cipher });
 	}
 
 	public static async decrypt( data: FileData, pass:string ) : Promise<string|null>{
+		if (data[blankFile]) return '';
+		if (data.version === '3.0') {
+			return await CryptoHelperFactory.BuildDefault().decryptEnvelope(data, pass);
+		}
 		if ( data.encodedData == '' ){
 			return '';
 		}
@@ -52,7 +64,7 @@ export class JsonFileEncoding {
 	public static decode( encodedText:string ) : FileData {
 		//console.debug('JsonFileEncoding.decode',{encodedText});
 		if ( encodedText === '' ){
-			return new FileData( FileDataHelper.DEFAULT_VERSION, '', '' );
+			return Object.assign(new FileData(FileDataHelper.DEFAULT_VERSION, '', ''), { [blankFile]: true });
 		}
 		const parsed: unknown = JSON.parse( encodedText );
 		if ( parsed === null || typeof parsed !== 'object' || Array.isArray(parsed) ) {
@@ -65,6 +77,10 @@ export class JsonFileEncoding {
 			|| typeof data.encodedData !== 'string'
 		) {
 			throw new Error('Invalid FileData JSON');
+		}
+		if (data.version === '3.0') {
+			const envelope = validateEnvelopeV3(data);
+			return Object.assign(new FileData(envelope.version, data.hint, envelope.encodedData), { kdf: envelope.kdf, cipher: envelope.cipher });
 		}
 		return new FileData( data.version, data.hint, data.encodedData );
 	}

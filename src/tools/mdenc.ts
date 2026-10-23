@@ -3,7 +3,7 @@ import { hideBin } from 'yargs/helpers'
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { CryptoHelperFactory } from '../services/CryptoHelperFactory.ts';
-import { JsonFileEncoding } from "../services/FileDataHelper.ts";
+import { FileDataHelper, JsonFileEncoding } from "../services/FileDataHelper.ts";
 import * as Constants from '../services/Constants.ts';
 import * as InPlaceConstants from '../features/feature-inplace-encrypt/FeatureInplaceConstants.ts';
 import { FeatureInplaceTextAnalysis } from '../features/feature-inplace-encrypt/featureInplaceTextAnalysis.ts';
@@ -222,7 +222,7 @@ class TestCommandHandler {
         
         for (let i = 0; i < passwords.length; i++) {
             const pw = passwords[i];
-            const decoded = await ch.decryptFromBase64(fileData.encodedData, pw)
+            const decoded = await FileDataHelper.decrypt(fileData, pw)
             if ( decoded != null ){
                 return {
                     listing,
@@ -438,7 +438,7 @@ class DecryptCommandHandler{
         
         for (let i = 0; i < passwords.length; i++) {
             const pw = passwords[i];
-            const decoded = await ch.decryptFromBase64(fileData.encodedData, pw)
+            const decoded = await FileDataHelper.decrypt(fileData, pw)
             if ( decoded != null ){
                 if (!dryrun){
                     fs.writeFileSync( outFile, decoded );

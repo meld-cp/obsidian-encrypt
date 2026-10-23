@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { execSync } from 'node:child_process';
+import { CryptoHelperV3 } from '../../src/services/CryptoHelperV3.ts';
 import { CryptoHelper2304 } from '../../src/services/CryptoHelper2304.ts';
 import { CryptoHelper } from '../../src/services/CryptoHelper.ts';
 import { CryptoHelperObsolete } from '../../src/services/CryptoHelperObsolete.ts';
@@ -33,7 +34,7 @@ afterEach(() => {
 });
 
 async function encryptInPlace(plaintext: string, password: string, version: number, withHint = false): Promise<string> {
-	const ch = version === 0 ? new CryptoHelperObsolete() : version === 1 ? new CryptoHelper() : version === 2 ? new CryptoHelper2304(16, 16, 210000) : new CryptoHelper2304(12, 16, 220000);
+	const ch = version === 0 ? new CryptoHelperObsolete() : version === 1 ? new CryptoHelper() : version === 2 ? new CryptoHelper2304(16, 16, 210000) : new CryptoHelperV3();
 	const ciphertext = await ch.encryptToBase64(plaintext, password);
 
 	const prefix = version === 0 ? _PREFIX_OBSOLETE : version === 1 ? _PREFIX_A : version === 2 ? _PREFIX_B : _PREFIX_C;
@@ -391,6 +392,28 @@ describe('mdenc CLI tool', () => {
 			const decryptedFile = path.join(outDir, 'empty.md');
 			expect(fs.existsSync(decryptedFile)).toBe(true);
 			expect(fs.readFileSync(decryptedFile, 'utf8')).toBe('');
+		});
+
+		it.each(['whole-note', 'inline'])('should preserve existing output when v3 %s content is invalid', async format => {
+			const dir = path.join(tmpDir, 'invalid-v3');
+			const outDir = path.join(tmpDir, 'output');
+			fs.mkdirSync(dir, { recursive: true });
+			fs.mkdirSync(outDir);
+			const output = path.join(outDir, 'note.md');
+			fs.writeFileSync(output, 'existing output');
+			if (format === 'whole-note') {
+				const data = await FileDataHelper.encrypt('pw', '', 'secret');
+				data.kdf!.iterations = 2000001;
+				fs.writeFileSync(path.join(dir, 'note.mdenc'), JSON.stringify(data));
+			} else {
+				const encoded = await new CryptoHelperV3().encryptToBase64('secret', 'pw');
+				const bytes = Uint8Array.from(atob(encoded), c => c.charCodeAt(0));
+				bytes[bytes.length - 1] ^= 1;
+				fs.writeFileSync(path.join(dir, 'note.md'), `🔐γ ${btoa(String.fromCharCode(...bytes))} 🔐`);
+			}
+			const result = runMdenc(`decrypt --passwords pw --outdir "${outDir}"`, dir, false);
+			expect(result.status).toBe(1);
+			expect(fs.readFileSync(output, 'utf8')).toBe('existing output');
 		});
 
 		it('should create subdirectories in output', async () => {

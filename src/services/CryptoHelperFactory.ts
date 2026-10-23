@@ -5,15 +5,17 @@ import { ICryptoHelper } from "./ICryptoHelper.ts";
 import { CryptoHelper2304 } from "./CryptoHelper2304.ts";
 import { CryptoHelperObsolete } from "./CryptoHelperObsolete.ts";
 
+import { CryptoHelperV3 } from './CryptoHelperV3.ts';
+
 export class CryptoHelperFactory{
 
 	public static cryptoHelper2304_v2 = new CryptoHelper2304( 16, 16, 210000 );
 	// PBKDF2-HMAC-SHA512 uses a 220,000-iteration work factor (OWASP).
-	// These parameters define v3; future changes require a new format version.
-	public static cryptoHelper2304_v3 = new CryptoHelper2304( 12, 16, 220000 );
+	// V3 stores its parameters in an authenticated envelope.
+	public static cryptoHelper_v3 = new CryptoHelperV3();
 
-	public static BuildDefault(): ICryptoHelper{
-		return this.cryptoHelper2304_v3;
+	public static BuildDefault(): CryptoHelperV3{
+		return this.cryptoHelper_v3;
 	}
 
 	public static BuildFromFileDataOrThrow( data: FileData ) : ICryptoHelper {
@@ -34,9 +36,9 @@ export class CryptoHelperFactory{
 			return this.cryptoHelper2304_v2;
 		}
 
-		// note				v3.0	CryptoHelper2304
+		// note v3.0: authenticated, self-describing envelope
 		if ( data.version == '3.0' ){
-			return this.cryptoHelper2304_v3;
+			return this.cryptoHelper_v3;
 		}
 
 		return null;
@@ -61,8 +63,8 @@ export class CryptoHelperFactory{
 		// inplace beta 	_PREFIX_B = '%%🔐β '		CryptoHelper2304( 16, 16, 210000 )
 		//					_PREFIX_B_VISIBLE = '🔐β '	CryptoHelper2304( 16, 16, 210000 )
 		
-		// inplace gamma 	_PREFIX_C = '%%🔐γ '		CryptoHelper2304( 12, 16, 220000 )
-		//				_PREFIX_C_VISIBLE = '🔐γ '	CryptoHelper2304( 12, 16, 220000 )
+		// inplace gamma: compact suite/iterations/salt/IV/ciphertext envelope
+		// Both hidden and visible gamma markers use CryptoHelperV3.
 
 		if ( decryptable.version == 0 ){
 			return new CryptoHelperObsolete();
@@ -77,7 +79,7 @@ export class CryptoHelperFactory{
 		}
 
 		if ( decryptable.version == 3 ){
-			return this.cryptoHelper2304_v3;
+			return this.cryptoHelper_v3;
 		}
 
 		return null;
