@@ -502,6 +502,76 @@ describe('mdenc CLI tool', () => {
 			expect(fs.readFileSync(path.join(outDir, 'note.md'), 'utf8')).toBe('Before  After');
 		});
 
+		it.each([false, true])('checks and exports literal lock markers in plaintext (visible: %s)', async visible => {
+			const outDir = path.join(tmpDir, 'out');
+			const plaintext = 'literal 🔐 value 🔐\n%%🔐γ not ciphertext 🔐%% and 🔐β text 🔐';
+			let encrypted = await encryptInPlace(plaintext, 'pw', 3);
+			if (visible) {
+				encrypted = encrypted.replace(_PREFIX_C, _PREFIX_C_VISIBLE)
+					.replace(_SUFFIX_WITH_COMMENT, _SUFFIX_NO_COMMENT);
+			}
+			const source = `Before ${encrypted} After`;
+			const inputFile = path.join(tmpDir, 'note.md');
+			fs.writeFileSync(inputFile, source);
+
+			const checked = runMdenc('check --passwords pw', tmpDir);
+			expect(checked.stdout.match(/^PASSED =>/gm)).toHaveLength(1);
+			expect(checked.stdout).not.toContain('FAILED');
+
+			runMdenc(`decrypt --passwords pw --outdir "${outDir}"`, tmpDir);
+
+			expect(fs.readFileSync(path.join(outDir, 'note.md'), 'utf8')).toBe(`Before ${plaintext} After`);
+			expect(fs.readFileSync(inputFile, 'utf8')).toBe(source);
+		});
+
+		it('replaces original spans when recovered text contains another encrypted block', async () => {
+			const outDir = path.join(tmpDir, 'out');
+			const second = (await encryptInPlace('second secret', 'second-pw', 2))
+				.replace(_PREFIX_B, _PREFIX_B_VISIBLE).replace(_SUFFIX_WITH_COMMENT, _SUFFIX_NO_COMMENT);
+			const firstText = `recovered ${second}`;
+			const first = await encryptInPlace(firstText, 'first-pw', 3);
+			fs.writeFileSync(path.join(tmpDir, 'note.md'), `${first} middle ${second} repeated ${first}`);
+
+			const checked = runMdenc('test --passwords first-pw second-pw', tmpDir);
+			expect(checked.stdout.match(/^PASSED =>/gm)).toHaveLength(3);
+			expect(checked.stdout.match(/password #1/g)).toHaveLength(2);
+			expect(checked.stdout.match(/password #2/g)).toHaveLength(1);
+
+			runMdenc(`decrypt --passwords first-pw second-pw --outdir "${outDir}"`, tmpDir);
+
+			expect(fs.readFileSync(path.join(outDir, 'note.md'), 'utf8'))
+				.toBe(`${firstText} middle second secret repeated ${firstText}`);
+		});
+
+		it.each(['wrong password', 'malformed block'])('preserves existing output after a later %s', async failure => {
+			const dir = path.join(tmpDir, 'input');
+			const outDir = path.join(tmpDir, 'out');
+			fs.mkdirSync(dir);
+			fs.mkdirSync(outDir);
+			const output = path.join(outDir, 'note.md');
+			fs.writeFileSync(output, 'existing output');
+			const good = await encryptInPlace('good secret', 'pw', 3);
+			const bad = failure === 'wrong password'
+				? await encryptInPlace('bad secret', 'other-pw', 3)
+				: `${_PREFIX_C}${_HINT}unfinished hint${_SUFFIX_WITH_COMMENT}`;
+			const source = `Before ${good}\n😀 ${bad} between ${good}`;
+			const inputFile = path.join(dir, 'note.md');
+			fs.writeFileSync(inputFile, source);
+
+			const checked = runMdenc('check --passwords pw', dir, false);
+			expect(checked.status).toBe(1);
+			expect(checked.stdout.match(/^PASSED =>/gm)).toHaveLength(2);
+			expect(checked.stdout.match(/^FAILED =>/gm)).toHaveLength(1);
+			expect(checked.stdout).toContain('line 2, pos 6,');
+
+			for (const dryrun of ['', ' --dryrun']) {
+				const result = runMdenc(`decrypt --passwords pw --outdir "${outDir}"${dryrun}`, dir, false);
+				expect(result.status).toBe(1);
+				expect(fs.readFileSync(output, 'utf8')).toBe('existing output');
+			}
+			expect(fs.readFileSync(inputFile, 'utf8')).toBe(source);
+		});
+
 		it('should handle empty whole-note files', async () => {
 			const dir = path.join(tmpDir, 'decrypt-empty');
 			const outDir = path.join(dir, 'out');

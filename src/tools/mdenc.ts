@@ -29,6 +29,79 @@ interface DecryptResult{
     outFile: string | undefined;
 }
 
+interface PasswordMatch {
+    plaintext: string;
+    passwordNumber: number;
+}
+
+async function tryPasswords(
+    passwords: string[],
+    decrypt: (password: string) => Promise<string | null>
+): Promise<PasswordMatch | null> {
+    for (const [index, password] of passwords.entries()) {
+        const plaintext = await decrypt(password);
+        if (plaintext !== null) {
+            return { plaintext, passwordNumber: index + 1 };
+        }
+    }
+    return null;
+}
+
+interface InlineBlock {
+    start: number;
+    end: number;
+    line: number;
+    position: number;
+    encryptedText: string;
+}
+
+type InlineDecryption = InlineBlock & (
+    | { success: true; match: PasswordMatch }
+    | { success: false; error: 'cannot decrypt' | 'unknown format' | 'unable to decrypt' }
+);
+
+function* scanInlineBlocks(content: string): IterableIterator<InlineBlock> {
+    let lineOffset = 0;
+    for (const [lineIndex, line] of content.split('\n').entries()) {
+        // Prefer the complete hidden wrapper, and scan only the original source.
+        const matcher = /%%🔐(.*?)🔐%%|🔐(.*?)🔐/g;
+        for (const match of line.matchAll(matcher)) {
+            const start = lineOffset + match.index;
+            yield {
+                start,
+                end: start + match[0].length,
+                line: lineIndex + 1,
+                // Keep diagnostics at the lock icon, including for hidden blocks.
+                position: match.index + (match[1] !== undefined ? 2 : 0) + 1,
+                encryptedText: `🔐${match[1] ?? match[2]}🔐`,
+            };
+        }
+        lineOffset += line.length + 1;
+    }
+}
+
+async function* decryptInlineBlocks(content: string, passwords: string[]): AsyncIterableIterator<InlineDecryption> {
+    for (const block of scanInlineBlocks(content)) {
+        const analysis = new FeatureInplaceTextAnalysis(block.encryptedText);
+        if (!analysis.canDecrypt || analysis.decryptable == null) {
+            yield { ...block, success: false, error: 'cannot decrypt' };
+            continue;
+        }
+        const decryptable = analysis.decryptable;
+        const helper = CryptoHelperFactory.BuildFromDecryptableOrNull(decryptable);
+        if (helper == null) {
+            yield { ...block, success: false, error: 'unknown format' };
+            continue;
+        }
+        const match = await tryPasswords(passwords, password => helper.decryptFromBase64(decryptable.base64CipherText, password));
+        if (match == null) {
+            yield { ...block, success: false, error: 'unable to decrypt' };
+        } else {
+            yield { ...block, success: true, match };
+        }
+    }
+}
+
 class ListCommandHandler {
     
 
@@ -140,66 +213,13 @@ class TestCommandHandler {
             return;
         }
 
-        const lines = listing.content!.split( '\n' );
-        
-        for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-            const line = lines[lineIdx];
-            const lineNo = lineIdx + 1;
-            const reInplaceMatcher = /🔐(.*?)🔐/g;
-            const matches = Array.from( line.matchAll( reInplaceMatcher ) );
-            for (const match of matches) {
-
-                const matchLoc = `line ${lineNo}, pos ${match.index!+1}`;
-
-                const encryptedText = `🔐${match[1]}🔐`;
-
-                const txtAnalysis = new FeatureInplaceTextAnalysis( encryptedText );
-                if (!txtAnalysis.canDecrypt || txtAnalysis.decryptable == null ){
-                    yield {
-                        listing,
-                        success: false,
-                        message: `${matchLoc}, cannot decrypt`
-                    };
-
-                    continue;
-                }
-
-                const ch = CryptoHelperFactory.BuildFromDecryptableOrNull( txtAnalysis.decryptable );
-                if ( ch == null ){
-                    yield {
-                        listing,
-                        success: false,
-                        message: `${matchLoc}, unknown format`
-                    };
-                    continue;
-                }
-
-                let wasDecrypted = false;
-                for (let pwIdx = 0; pwIdx < passwords.length; pwIdx++) {
-                    const pw = passwords[pwIdx];
-                    const pwNo = pwIdx + 1;
-                    const decryptedText = await ch.decryptFromBase64(txtAnalysis.decryptable.base64CipherText, pw);
-                    if ( decryptedText != null ){
-                        wasDecrypted = true;
-                        yield {
-                            listing,
-                            success: true,
-                            message: `${matchLoc}, password #${pwNo}`
-                        };
-                        break;
-                    }
-                }
-
-                if (!wasDecrypted){
-                    yield {
-                        listing,
-                        success: false,
-                        message: `${matchLoc}, unable to decrypt`
-                    };
-                }
-
-            }
-            
+        for await (const result of decryptInlineBlocks(listing.content, passwords)) {
+            const message = result.success ? `password #${result.match.passwordNumber}` : result.error;
+            yield {
+                listing,
+                success: result.success,
+                message: `line ${result.line}, pos ${result.position}, ${message}`,
+            };
         }
 
     }
@@ -224,16 +244,13 @@ class TestCommandHandler {
             };
         }
         
-        for (let i = 0; i < passwords.length; i++) {
-            const pw = passwords[i];
-            const decoded = await FileDataHelper.decrypt(fileData, pw)
-            if ( decoded != null ){
-                return {
-                    listing,
-                    success: true,
-                    message: `password #${i+1}`
-                };
-            }
+        const match = await tryPasswords(passwords, password => FileDataHelper.decrypt(fileData, password));
+        if (match != null) {
+            return {
+                listing,
+                success: true,
+                message: `password #${match.passwordNumber}`,
+            };
         }
 
         return {
@@ -292,96 +309,31 @@ class DecryptCommandHandler{
     }
     
     async decryptInPlaceListing(listing: Listing, passwords: string[], outdir: string, dryrun: boolean) : Promise<DecryptResult> {
-        
-        const lines = listing.content!.split( '\n' );
-        const decryptedLines : string[] = [];
-        
-        for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-            
-            const line = lines[lineIdx];
-            
-            const lineNo = lineIdx + 1;
-            
-            const reInplaceMatchers = [
-                /%%🔐(.*?)🔐%%/g,
-                /🔐(.*?)🔐/g
-            ]
-
-            let decryptedLine = line;
-            let matchCount = 0;
-            let decryptedCount = 0;
-
-            for (const reInplaceMatcher of reInplaceMatchers) {
-                
-            
-                for await (const match of decryptedLine.matchAll( reInplaceMatcher ) ) {
-                    
-                    matchCount++;
-
-                    const matchLoc = `Line ${lineNo}, pos ${match.index!+1}`;
-
-                    const matchedText = match[0];
-                    const encryptedText = `🔐${match[1]}🔐`;
-
-                    const txtAnalysis = new FeatureInplaceTextAnalysis( encryptedText );
-                    if (!txtAnalysis.canDecrypt || txtAnalysis.decryptable == null ){
-                        return {
-                            listing,
-                            success: false,
-                            message: `ERROR: ${matchLoc}, cannot decrypt`,
-                            outFile: undefined
-                        };
-                    }
-
-                    const ch = CryptoHelperFactory.BuildFromDecryptableOrNull( txtAnalysis.decryptable );
-                    if ( ch == null ){
-                        return {
-                            listing,
-                            success: false,
-                            message: `ERROR: ${matchLoc}, unknown format`,
-                            outFile: undefined
-                        };
-                    }
-
-                    let decryptedText :  string | null = null;
-                    for (let pwIdx = 0; pwIdx < passwords.length; pwIdx++) {
-                        const pw = passwords[pwIdx];
-                        decryptedText = await ch.decryptFromBase64(txtAnalysis.decryptable.base64CipherText, pw);
-                        if ( decryptedText != null ){
-                            break;
-                        }
-                    }
-
-                    if (decryptedText!==null){
-                        decryptedCount ++;
-                        const plaintext = decryptedText;
-                        decryptedLine = decryptedLine.replace( matchedText, () => plaintext );
-                    }
-
-                }
-            }
-
-            if (matchCount != decryptedCount){
+        const content = listing.content!;
+        const parts: string[] = [];
+        let offset = 0;
+        for await (const result of decryptInlineBlocks(content, passwords)) {
+            if (!result.success) {
                 return {
                     listing,
                     success: false,
-                    message: `ERROR: Unable to decrypt all matches. Line ${lineNo}, match count ${matchCount} != decrypted count ${decryptedCount}`,
-                    outFile: undefined
+                    message: `ERROR: Line ${result.line}, pos ${result.position}, ${result.error}`,
+                    outFile: undefined,
                 };
             }
-
-            decryptedLines.push( decryptedLine );
-
+            parts.push(content.slice(offset, result.start), result.match.plaintext);
+            offset = result.end;
         }
+        parts.push(content.slice(offset));
 
-        let outFile = path.join( outdir, listing.relativePath );
+        const outFile = path.join( outdir, listing.relativePath );
 
         if (!dryrun){
             const outFileDir = path.dirname( outFile );
             if (!fs.existsSync( outFileDir )){
                 fs.mkdirSync( outFileDir, { recursive: true } );
             }
-            fs.writeFileSync( outFile, decryptedLines.join( '\n' ) );
+            fs.writeFileSync( outFile, parts.join('') );
         }
 
         return Promise.resolve({
@@ -441,21 +393,18 @@ class DecryptCommandHandler{
             };
         }
         
-        for (let i = 0; i < passwords.length; i++) {
-            const pw = passwords[i];
-            const decoded = await FileDataHelper.decrypt(fileData, pw)
-            if ( decoded != null ){
-                if (!dryrun){
-                    fs.writeFileSync( outFile, decoded );
-                }
-
-                return {
-                    listing,
-                    success: true,
-                    message: `Decrypted`,
-                    outFile: outFile
-                };
+        const match = await tryPasswords(passwords, password => FileDataHelper.decrypt(fileData, password));
+        if (match != null) {
+            if (!dryrun){
+                fs.writeFileSync( outFile, match.plaintext );
             }
+
+            return {
+                listing,
+                success: true,
+                message: `Decrypted`,
+                outFile: outFile
+            };
         }
 
         return {
