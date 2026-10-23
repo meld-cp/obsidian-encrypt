@@ -4,6 +4,10 @@
 	cursor: pointer;
 }
 
+.meld-encrypt-password-modal textarea {
+	width: 100%;
+}
+
 .meld-encrypt-decrypt-modal textarea{
 	width: 100%;
 	min-height: 3em;
