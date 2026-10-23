@@ -20,7 +20,24 @@ The following tables list the available settings and their descriptions:
 | Confirm password | Confirm password when encrypting (recommended). |
 | Remember password | Remember the last used passwords when encrypting or decrypting. Passwords are remembered until they timeout or Obsidian is closed. |
 | Remember password by | Remember password by category: Vault, Folder, File, or External File. |
-| Remember password (for ... minutes) | Remember the password for a specified number of minutes or until Obsidian is closed. |
+| Remember password (for ... minutes) | Remember the password for a specified number of minutes or until Obsidian is closed. This setting is hidden in External file mode. |
+| External file paths | In External file mode, enter one path per line, relative to the vault root. |
+
+### Using an External Password File
+
+1. Create a plain-text file containing your password.
+2. Enable **Remember password?** and select **External file** under **Remember passwords by:**.
+3. Under **External file paths**, enter one path per line, relative to the vault root. For example, `keys/password.txt` refers to a file in the vault's `keys` folder.
+4. Click the checkmark button (**Check paths**) to check whether each path can be read and returns nonempty contents. This does not check whether the password decrypts a note.
+
+When a password is needed, the plugin tries the paths in order and uses the
+first readable, nonempty file. It does not try later files if that password
+fails to decrypt a note. The entire file contents become the password,
+including spaces and trailing newlines. If you intend to use an existing
+password, make sure the file contains exactly that password.
+
+The password file contains plaintext and may be synced or backed up with
+your vault. Anyone who can read it has access to the password.
 
 ## In-place Encryption
 
