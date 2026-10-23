@@ -126,18 +126,21 @@ describe('decrypted text popup modes', () => {
 		await reading;
 	});
 
-	it('keeps editor-based editing and encrypted saving available', async () => {
+	it.each([true, false])('preserves the hint and marker visibility when saving edits (visible: %s)', async visible => {
+		encrypted.showInReadingView = visible;
 		await actions.decryptSelection(editor, encrypted, 'pw', start, end);
 
 		expect(ui.textarea?.inputEl.readOnly).toBe(false);
 		expect(ui.buttons.map(button => button.label)).toEqual(['Save', 'Copy', 'Decrypt in-place']);
-		ui.textarea!.value = 'edited secret';
+		const editedText = 'edited café 🥑\nsecond line';
+		ui.textarea!.value = editedText;
 		click('Save');
 		await ui.closeResult;
 
 		const saved = new FeatureInplaceTextAnalysis(payload).decryptable!;
 		expect(saved.hint).toBe(encrypted.hint);
-		expect(await CryptoHelperFactory.BuildFromDecryptableOrThrow(saved).decryptFromBase64(saved.base64CipherText, 'pw')).toBe('edited secret');
+		expect(saved.showInReadingView).toBe(visible);
+		expect(await CryptoHelperFactory.BuildFromDecryptableOrThrow(saved).decryptFromBase64(saved.base64CipherText, 'pw')).toBe(editedText);
 		expect(editor.setSelection).toHaveBeenCalledWith(start, end);
 	});
 

@@ -719,19 +719,14 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 					editor.setSelection(selectionStart, selectionEnd);
 					editor.replaceSelection(decryptModal.text);
 				} else if (decryptModal.save) {
-					const hintError = getInlineHintError(decryptable.hint);
-					if (hintError) {
-						new Notice(hintError);
-						return;
-					}
-					const crypto = CryptoHelperFactory.BuildDefault();
-					const encodedText = this.encodeEncryption(
-						await crypto.encryptToBase64(decryptModal.text, password),
-						decryptable.hint,
+					await this.encryptSelection(
+						editor,
+						{ text: decryptModal.text, hint: decryptable.hint },
+						password,
+						selectionStart,
+						selectionEnd,
 						decryptable.showInReadingView
 					);
-					editor.setSelection(selectionStart, selectionEnd);
-					editor.replaceSelection(encodedText);
 				}
 			}
 			decryptModal.open();
