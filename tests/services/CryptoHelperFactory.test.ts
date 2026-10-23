@@ -5,8 +5,42 @@ import { CryptoHelper2304 } from '../../src/services/CryptoHelper2304.ts';
 import { CryptoHelperObsolete } from '../../src/services/CryptoHelperObsolete.ts';
 import { FileData } from '../../src/services/FileDataHelper.ts';
 import { Decryptable } from '../../src/features/feature-inplace-encrypt/Decryptable.ts';
+import { FileDataHelper } from '../../src/services/FileDataHelper.ts';
+import { FeatureInplaceTextAnalysis } from '../../src/features/feature-inplace-encrypt/featureInplaceTextAnalysis.ts';
+import { _PREFIX_C, _PREFIX_C_VISIBLE, _SUFFIX_WITH_COMMENT, _SUFFIX_NO_COMMENT } from '../../src/features/feature-inplace-encrypt/FeatureInplaceConstants.ts';
 
 describe('CryptoHelperFactory', () => {
+	describe('v3 format interoperability', () => {
+		// Construct ciphertext independently of the factory to pin the wire parameters.
+		const writer = new CryptoHelper2304(12, 16, 220000);
+		const password = 'v3-format-password';
+
+		it('should decrypt independently encrypted v3 whole notes', async () => {
+			const encoded = await writer.encryptToBase64('whole note', password);
+			expect(await FileDataHelper.decrypt(new FileData('3.0', '', encoded), password)).toBe('whole note');
+		});
+
+		it.each([
+			[_PREFIX_C, _SUFFIX_WITH_COMMENT],
+			[_PREFIX_C_VISIBLE, _SUFFIX_NO_COMMENT],
+		])('should decrypt independently encrypted inline content with prefix %s', async (prefix, suffix) => {
+			const encoded = await writer.encryptToBase64('inline secret', password);
+			const analysis = new FeatureInplaceTextAnalysis(`${prefix}${encoded}${suffix}`);
+			expect(analysis.decryptable?.version).toBe(3);
+			const helper = CryptoHelperFactory.BuildFromDecryptableOrThrow(analysis.decryptable!);
+			expect(await helper.decryptFromBase64(analysis.decryptable!.base64CipherText, password)).toBe('inline secret');
+		});
+
+		it('should reject wrong passwords and modified ciphertext for v3', async () => {
+			const encoded = await writer.encryptToBase64('authenticated secret', password);
+			const helper = CryptoHelperFactory.BuildDefault();
+			expect(await helper.decryptFromBase64(encoded, 'wrong password')).toBeNull();
+			const bytes = Uint8Array.from(atob(encoded), character => character.charCodeAt(0));
+			bytes[bytes.length - 1] ^= 1;
+			const modified = btoa(String.fromCharCode(...bytes));
+			expect(await helper.decryptFromBase64(modified, password)).toBeNull();
+		});
+	});
 	describe('BuildDefault', () => {
 		it('should return a CryptoHelper2304 instance', () => {
 			const helper = CryptoHelperFactory.BuildDefault();
@@ -17,7 +51,7 @@ describe('CryptoHelperFactory', () => {
 			const helper = CryptoHelperFactory.BuildDefault() as CryptoHelper2304;
 			expect(helper.vectorSize).toBe(12);
 			expect(helper.saltSize).toBe(16);
-			expect(helper.iterations).toBe(600000);
+			expect(helper.iterations).toBe(220000);
 		});
 	});
 

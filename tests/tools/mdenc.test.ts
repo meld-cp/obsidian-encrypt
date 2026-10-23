@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 async function encryptInPlace(plaintext: string, password: string, version: number, withHint = false): Promise<string> {
-	const ch = version === 0 ? new CryptoHelperObsolete() : version === 1 ? new CryptoHelper() : version === 2 ? new CryptoHelper2304(16, 16, 210000) : new CryptoHelper2304(12, 16, 600000);
+	const ch = version === 0 ? new CryptoHelperObsolete() : version === 1 ? new CryptoHelper() : version === 2 ? new CryptoHelper2304(16, 16, 210000) : new CryptoHelper2304(12, 16, 220000);
 	const ciphertext = await ch.encryptToBase64(plaintext, password);
 
 	const prefix = version === 0 ? _PREFIX_OBSOLETE : version === 1 ? _PREFIX_A : version === 2 ? _PREFIX_B : _PREFIX_C;

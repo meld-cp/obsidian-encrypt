@@ -8,7 +8,9 @@ import { CryptoHelperObsolete } from "./CryptoHelperObsolete.ts";
 export class CryptoHelperFactory{
 
 	public static cryptoHelper2304_v2 = new CryptoHelper2304( 16, 16, 210000 );
-	public static cryptoHelper2304_v3 = new CryptoHelper2304( 12, 16, 600000 );
+	// PBKDF2-HMAC-SHA512 uses a 220,000-iteration work factor (OWASP).
+	// These parameters define v3; future changes require a new format version.
+	public static cryptoHelper2304_v3 = new CryptoHelper2304( 12, 16, 220000 );
 
 	public static BuildDefault(): ICryptoHelper{
 		return this.cryptoHelper2304_v3;
@@ -59,8 +61,8 @@ export class CryptoHelperFactory{
 		// inplace beta 	_PREFIX_B = '%%🔐β '		CryptoHelper2304( 16, 16, 210000 )
 		//					_PREFIX_B_VISIBLE = '🔐β '	CryptoHelper2304( 16, 16, 210000 )
 		
-		// inplace gamma 	_PREFIX_C = '%%🔐γ '		CryptoHelper2304( 12, 16, 600000 )
-		//				_PREFIX_C_VISIBLE = '🔐γ '	CryptoHelper2304( 12, 16, 600000 )
+		// inplace gamma 	_PREFIX_C = '%%🔐γ '		CryptoHelper2304( 12, 16, 220000 )
+		//				_PREFIX_C_VISIBLE = '🔐γ '	CryptoHelper2304( 12, 16, 220000 )
 
 		if ( decryptable.version == 0 ){
 			return new CryptoHelperObsolete();
