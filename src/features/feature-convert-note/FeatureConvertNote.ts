@@ -1,7 +1,7 @@
 import MeldEncrypt from "../../main.ts";
 import { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings.ts";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature.ts";
-import { Notice, TFile, TextFileView } from "obsidian";
+import { Notice, TFile, TextFileView, WorkspaceLeaf } from "obsidian";
 import PluginPasswordModal from "../../PluginPasswordModal.ts";
 import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
 import { FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.ts";
@@ -12,6 +12,7 @@ import { EncryptedMarkdownView } from "../feature-whole-note-encrypt/EncryptedMa
 export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	
 	plugin: MeldEncrypt;
+	private convertingFiles = new Set<TFile>();
 	
 	async onload(plugin: MeldEncrypt, settings: IMeldEncryptPluginSettings) {
 		this.plugin = plugin;
@@ -120,12 +121,15 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	}
 
 	private async getPasswordAndEncryptFile( file:TFile ) {
+		if ( this.convertingFiles.has(file) ) return;
 
 		if ( !this.checkCanEncryptFile(file) ) {
 			throw new Error( 'Unable to encrypt file' );
 		}
 
+		this.convertingFiles.add(file);
 		try{
+			await this.saveOpenViews(file);
 
 			// try to get password from session password service
 			let password = await SessionPasswordService.getByFile( file );
@@ -135,13 +139,10 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 				const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt Note', true, true, password );
 				password = await pm.openAsync();
 			}
-
-			const encryptedFileContent = await this.encryptFile(file, password);
-
 			await this.closeUpdateRememberPasswordThenReopen(
 				file,
 				ENCRYPTED_FILE_EXTENSION_DEFAULT,
-				encryptedFileContent,
+				() => this.encryptFile(file, password),
 				password
 			);
 			
@@ -153,78 +154,105 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			}else if ( typeof(error) == 'string' ){
 				new Notice(error, 10000);
 			}
+		}finally{
+			this.convertingFiles.delete(file);
 		}
 	}
 
 	private async getPasswordAndDecryptFile( file:TFile ) {
+		if ( this.convertingFiles.has(file) ) return;
 		if ( !this.checkCanDecryptFile(file) ) {
 			throw new Error( 'Unable to decrypt file' );
 		}
 
-		let passwordAndHint = await SessionPasswordService.getByFile( file );
-		if ( passwordAndHint.password != '' ){
-			// try to decrypt using saved password
-			const decryptedContent = await this.decryptFile( file, passwordAndHint.password );
-			if (decryptedContent != null){
-				// update file
-				await this.closeUpdateRememberPasswordThenReopen( file, 'md', decryptedContent, passwordAndHint );
-				return;
-			}
-		}
-		
-		// fetch from user
-		const encryptedFileContent = await this.plugin.app.vault.read( file );
-		const encryptedData = JsonFileEncoding.decode( encryptedFileContent );
-
-
-		const pwm = new PluginPasswordModal(this.plugin.app, 'Decrypt Note', false, false, { password: '', hint: encryptedData.hint } );
+		this.convertingFiles.add(file);
 		try{
-			passwordAndHint = await pwm.openAsync();
-			
-			if (!pwm.resultConfirmed){
-				return;
-			}
-			
-			const content = await this.decryptFile( file, passwordAndHint.password );
-			if ( content == null ){
-				throw new Error('Decryption failed');
+			await this.saveOpenViews(file);
+			let passwordAndHint = await SessionPasswordService.getByFile( file );
+			const cachedContent = passwordAndHint.password != ''
+				? await this.decryptFile( file, passwordAndHint.password )
+				: null;
+
+			if ( cachedContent == null ){
+				const encryptedFileContent = await this.plugin.app.vault.read( file );
+				const encryptedData = JsonFileEncoding.decode( encryptedFileContent );
+				const pwm = new PluginPasswordModal(this.plugin.app, 'Decrypt Note', false, false, { password: '', hint: encryptedData.hint } );
+				passwordAndHint = await pwm.openAsync();
+				if (!pwm.resultConfirmed){
+					return;
+				}
+				if ( await this.decryptFile( file, passwordAndHint.password ) == null ){
+					throw new Error('Decryption failed');
+				}
 			}
 
-			await this.closeUpdateRememberPasswordThenReopen( file, 'md', content, passwordAndHint );
-
+			await this.closeUpdateRememberPasswordThenReopen(
+				file, 'md', () => this.decryptFile( file, passwordAndHint.password ), passwordAndHint
+			);
 			new Notice( '🔓 Note was decrypted 🔓' );
-
 		}catch(error){
 			if ( error instanceof Error ){
 				new Notice(error.message, 10000);
 			}else if ( typeof(error) == 'string' ){
 				new Notice(error, 10000);
 			}
+		}finally{
+			this.convertingFiles.delete(file);
 		}
 	}
 
-	private async closeUpdateRememberPasswordThenReopen( file:TFile, newFileExtension: string, content: string, pw:PasswordAndHint ) {
-		
-		let detachCount = 0;
-
-		this.plugin.app.workspace.iterateAllLeaves( l => {
-			if ( l.view instanceof TextFileView && l.view.file == file ){
-				if ( l.view instanceof EncryptedMarkdownView ){
-					l.view.detachSafely();
-				}else{
-					l.detach();
-				}
-				detachCount++;
+	private async saveOpenViews(file: TFile) {
+		const openViews: { leaf: WorkspaceLeaf; view: TextFileView }[] = [];
+		this.plugin.app.workspace.iterateAllLeaves( leaf => {
+			if ( leaf.view instanceof TextFileView && leaf.view.file == file ){
+				openViews.push({ leaf, view: leaf.view });
 			}
 		});
 
+		// Finish every save before closing any views, so a failed save leaves them open.
+		// Observe all running saves immediately, including failures in later views.
+		await Promise.all(openViews.map(async ({ view }) => {
+			if ( view instanceof EncryptedMarkdownView && view.isSavingInProgress ){
+				await view.saveInProgress;
+			}
+		}));
+		for ( const { view } of openViews ){
+			if ( view instanceof EncryptedMarkdownView ){
+				while ( view.isSavingInProgress ) await view.saveInProgress;
+			}
+			await view.save();
+		}
+		return openViews;
+	}
+
+	private async closeUpdateRememberPasswordThenReopen(
+		file: TFile,
+		newFileExtension: string,
+		convertContent: () => Promise<string | null>,
+		pw: PasswordAndHint
+	) {
+		// The user may have edited the note while entering its password.
+		const openViews = await this.saveOpenViews(file);
+		let closedCount = 0;
 		try{
+			for ( const { leaf } of openViews ){
+				// detach() is not awaitable. Switching views waits for unload-time saves.
+				await leaf.setViewState({ type: 'empty' });
+				closedCount++;
+				leaf.detach();
+			}
+
+			// Read only after unloading: the final save may contain additional edits.
+			const content = await convertContent();
+			if ( content == null ){
+				throw new Error('Decryption failed');
+			}
 			const newFilepath = Utils.getFilePathWithNewExtension(file, newFileExtension);
 			await this.plugin.app.fileManager.renameFile( file, newFilepath );
 			await this.plugin.app.vault.modify( file, content );
 			SessionPasswordService.putByFile( pw, file );
 		}finally{
-			if( detachCount > 0 ){
+			if( closedCount > 0 ){
 				await this.plugin.app.workspace.getLeaf( true ).openFile(file);
 			}
 		}
