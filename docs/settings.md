@@ -25,10 +25,13 @@ The following tables list the available settings and their descriptions:
 
 ### Using an External Password File
 
-1. Create a plain-text file containing your password.
+1. Create a plain-text file containing your password. Prefer storing it outside your vault and outside any sync or backup set containing your encrypted notes.
 2. Enable **Remember password?** and select **External file** under **Remember passwords by:**.
-3. Under **External file paths**, enter one path per line, relative to the vault root. For example, `keys/password.txt` refers to a file in the vault's `keys` folder.
+3. Under **External file paths**, enter one path per line, relative to the vault root. For example, `../secrets/password.txt` refers to a file in a `secrets` folder beside your vault.
 4. Click the checkmark button (**Check paths**) to check whether each path can be read and returns nonempty contents. This does not check whether the password decrypts a note.
+
+Make sure the password file is accessible on each device. Run **Check paths**
+on each device to confirm it can be read.
 
 When a password is needed, the plugin tries the paths in order and uses the
 first readable, nonempty file. It does not try later files if that password
@@ -36,8 +39,8 @@ fails to decrypt a note. The entire file contents become the password,
 including spaces and trailing newlines. If you intend to use an existing
 password, make sure the file contains exactly that password.
 
-The password file contains plaintext and may be synced or backed up with
-your vault. Anyone who can read it has access to the password.
+The password file contains plaintext. Anyone who can read it has access to
+the password.
 
 ## In-place Encryption
 
