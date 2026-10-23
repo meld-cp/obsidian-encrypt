@@ -22,7 +22,7 @@ const versionString = process.env.npm_package_version || '0.0.0';
 
 const distDir = prod
 	? `./dist/${packageName}-${versionString}/${packageName}`
-	: `./Obsidian Encrypt - test-vault/.obsidian/plugins/${packageName}`
+	: `./tests/test-vault/.obsidian/plugins/${packageName}`
 ;
 
 const ctx = await esbuild.context({
