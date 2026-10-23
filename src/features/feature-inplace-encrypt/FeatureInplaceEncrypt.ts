@@ -198,7 +198,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		
 		return new Promise<boolean>( (resolve) => {
 			const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText );
-			decryptModal.canDecryptInPlace = false;
+			decryptModal.readOnly = true;
 			decryptModal.onClose = () =>{
 				resolve(true);
 			}

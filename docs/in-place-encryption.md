@@ -60,3 +60,8 @@ This feature lets you encrypt a selected text within your note.
    > Note: Your previously used password is filled in by default (you can change this in the plugin settings).
 6. Your decrypted text appears in a dialog window. You can save it, copy the text, or click **Decrypt in-place** to decrypt the text directly in the note.
    ![dialog_window](assets/dia_win.png)
+
+### Reading View
+
+Click a visible 🔐 marker to reveal its decrypted text. This popup is read-only and offers **Copy**.
+To edit and save encrypted text, switch to the editor and use the **Decrypt** command.

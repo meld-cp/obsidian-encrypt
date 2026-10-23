@@ -6,6 +6,7 @@ export default class DecryptModal extends Modal {
 	save = false;
 	
 	canDecryptInPlace = true;
+	readOnly = false;
 
 	constructor(
 		app: App,
@@ -28,6 +29,7 @@ export default class DecryptModal extends Modal {
 			.addTextArea( cb=>{
 				cTextArea = cb;
 				cb.setValue(this.text);
+				cb.inputEl.readOnly = this.readOnly;
 				cb.inputEl.setSelectionRange(0,0)
 				cb.inputEl.rows = 10;
 			})
@@ -36,8 +38,8 @@ export default class DecryptModal extends Modal {
 
 		const sActions = new Setting(contentEl);
 
-		sActions
-			.addButton(cb => {
+		if (!this.readOnly) {
+			sActions.addButton(cb => {
 				cb
 					.setButtonText('Save')
 					.onClick( _ =>{
@@ -46,6 +48,7 @@ export default class DecryptModal extends Modal {
 						this.close();
 					});
 			});
+		}
 
 		sActions
 			.addButton( cb =>{
@@ -58,7 +61,7 @@ export default class DecryptModal extends Modal {
 				;
 			})
 		;
-		if (this.canDecryptInPlace){
+		if (!this.readOnly && this.canDecryptInPlace){
 			sActions.addButton( cb =>{
 				cb.setWarning()
 				.setButtonText('Decrypt in-place')
