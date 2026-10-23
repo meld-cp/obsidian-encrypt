@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MarkdownView } from 'obsidian';
 import { FileData, FileDataHelper, JsonFileEncoding } from '../../../src/services/FileDataHelper.ts';
 
 vi.mock('obsidian', () => ({
@@ -83,6 +84,10 @@ describe('EncryptedMarkdownView save upgrades versions', () => {
 		view.dataWasChangedSinceLastSave = false;
 	});
 
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it('should re-encrypt old whole-note data as v3 when saving unchanged plaintext', async () => {
 		await view.save();
 
@@ -126,5 +131,111 @@ describe('EncryptedMarkdownView save upgrades versions', () => {
 		expect(saved.version).toBe('3.0');
 		const decrypted = await FileDataHelper.decrypt(saved, 'pw');
 		expect(decrypted).toBe(jsonLikePlaintext);
+	});
+
+	it('retries edited v3 plaintext after a failed write without requiring another edit', async () => {
+		await view.save();
+		const savedEnvelope = view.encryptedData;
+		// Normal editor typing does not call the encrypted file reader.
+		MarkdownView.prototype.setViewData.call(view, 'unsaved edits', false);
+		const write = vi.spyOn(MarkdownView.prototype, 'save').mockRejectedValueOnce(new Error('Disk full'));
+
+		await expect(view.save()).rejects.toThrow('Disk full');
+
+		expect(view.encryptedData).toBe(savedEnvelope);
+		expect(view.cachedUnencryptedData).toBe('plain text');
+		expect(view.dataWasChangedSinceLastSave).toBe(true);
+		expect(view.isSavingInProgress).toBe(false);
+		expect(view.getViewData()).toBe('unsaved edits');
+
+		await view.save();
+
+		expect(write).toHaveBeenCalledTimes(2);
+		const saved = JsonFileEncoding.decode((view as any).savedData);
+		expect(await FileDataHelper.decrypt(saved, 'pw')).toBe('unsaved edits');
+		expect(view.cachedUnencryptedData).toBe('unsaved edits');
+		expect(view.dataWasChangedSinceLastSave).toBe(false);
+	});
+
+	it('retries an unchanged legacy upgrade after a failed disk write', async () => {
+		const legacyEnvelope = view.encryptedData;
+		const write = vi.spyOn(MarkdownView.prototype, 'save').mockRejectedValueOnce(new Error('Write failed'));
+
+		await expect(view.save()).rejects.toThrow('Write failed');
+
+		expect(view.encryptedData).toBe(legacyEnvelope);
+		expect(view.encryptedData?.version).toBe('2.0');
+		expect(view.dataWasChangedSinceLastSave).toBe(true);
+		await view.save();
+
+		expect(write).toHaveBeenCalledTimes(2);
+		const saved = JsonFileEncoding.decode((view as any).savedData);
+		expect(saved.version).toBe('3.0');
+		expect(await FileDataHelper.decrypt(saved, 'pw')).toBe('plain text');
+	});
+
+	it('keeps the note dirty when encryption fails and retries successfully', async () => {
+		await view.save();
+		const savedEnvelope = view.encryptedData;
+		MarkdownView.prototype.setViewData.call(view, 'edits before encryption failed', false);
+		vi.spyOn(FileDataHelper, 'encrypt').mockRejectedValueOnce(new Error('Encryption failed'));
+		const write = vi.spyOn(MarkdownView.prototype, 'save');
+
+		await expect(view.save()).rejects.toThrow('Encryption failed');
+
+		expect(write).not.toHaveBeenCalled();
+		expect(view.encryptedData).toBe(savedEnvelope);
+		expect(view.cachedUnencryptedData).toBe('plain text');
+		expect(view.dataWasChangedSinceLastSave).toBe(true);
+		expect(view.isSavingInProgress).toBe(false);
+		await view.save();
+
+		const saved = JsonFileEncoding.decode((view as any).savedData);
+		expect(await FileDataHelper.decrypt(saved, 'pw')).toBe('edits before encryption failed');
+	});
+
+	it('keeps new edits made during a disk write for a subsequent save', async () => {
+		await view.save();
+		const savedEnvelope = view.encryptedData;
+		MarkdownView.prototype.setViewData.call(view, 'first edits', false);
+		const originalSave = MarkdownView.prototype.save;
+		let release!: () => void;
+		const pendingWrite = new Promise<void>(resolve => { release = resolve; });
+		let started!: () => void;
+		const writeStarted = new Promise<void>(resolve => { started = resolve; });
+		vi.spyOn(MarkdownView.prototype, 'save').mockImplementationOnce(async function (this: MarkdownView) {
+			started();
+			await pendingWrite;
+			await originalSave.call(this);
+		});
+		const saving = view.save();
+		await writeStarted;
+		expect(view.encryptedData).toBe(savedEnvelope);
+		expect(view.cachedUnencryptedData).toBe('plain text');
+		MarkdownView.prototype.setViewData.call(view, 'edits during write', false);
+		release();
+		await saving;
+
+		const firstSaved = JsonFileEncoding.decode((view as any).savedData);
+		expect(await FileDataHelper.decrypt(firstSaved, 'pw')).toBe('first edits');
+		expect(view.cachedUnencryptedData).toBe('first edits');
+		expect(view.dataWasChangedSinceLastSave).toBe(true);
+		expect(view.getViewData()).toBe('edits during write');
+		await view.save();
+
+		const latestSaved = JsonFileEncoding.decode((view as any).savedData);
+		expect(await FileDataHelper.decrypt(latestSaved, 'pw')).toBe('edits during write');
+		expect(view.dataWasChangedSinceLastSave).toBe(false);
+	});
+
+	it('does not rewrite unchanged v3 data after a successful save', async () => {
+		await view.save();
+		const write = vi.spyOn(MarkdownView.prototype, 'save');
+		const encrypt = vi.spyOn(FileDataHelper, 'encrypt');
+
+		await view.save();
+
+		expect(write).not.toHaveBeenCalled();
+		expect(encrypt).not.toHaveBeenCalled();
 	});
 });

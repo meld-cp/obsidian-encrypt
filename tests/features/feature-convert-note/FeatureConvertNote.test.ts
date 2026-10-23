@@ -197,7 +197,7 @@ describe('note conversion saves and closes source views', () => {
 		expect(events[events.length - 1]).toBe('reopen');
 	});
 
-	it('leaves the original encrypted note open when its save fails', async () => {
+	it('leaves the encrypted note open on save failure and preserves its edits on retry', async () => {
 		await encryptedNote();
 		const originalDisk = disk;
 		const { view, leaf } = addView(true);
@@ -212,6 +212,12 @@ describe('note conversion saves and closes source views', () => {
 		expect(leaf.detach).not.toHaveBeenCalled();
 		expect(openFile).not.toHaveBeenCalled();
 		expect(Notice).toHaveBeenCalledWith('Disk full', 10000);
+
+		await decrypt();
+
+		expect(disk).toBe('unsaved edits');
+		expect(file.extension).toBe('md');
+		expect(leaf.detach).toHaveBeenCalledOnce();
 	});
 
 	it('aborts if the save already in progress fails', async () => {

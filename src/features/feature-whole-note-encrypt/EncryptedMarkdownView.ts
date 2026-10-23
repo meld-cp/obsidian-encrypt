@@ -10,6 +10,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 
 	passwordAndHint : PasswordAndHint | null = null;
 	encryptedData : FileData | null = null;
+	private pendingEncryptedData: FileData | null = null;
 	cachedUnencryptedData : string = '';
 	dataWasChangedSinceLastSave = false;
 	
@@ -173,11 +174,12 @@ export class EncryptedMarkdownView extends MarkdownView {
 		// something is reading the data.. maybe to save it
 
 		if (this.isSavingInProgress) {
-			if ( this.encryptedData == null ) {
+			const data = this.pendingEncryptedData ?? this.encryptedData;
+			if ( data == null ) {
 				throw new Error('encryptedData is unexpectedly null');
 			}
-			// return the encrypted data which should have just been updated in the save method
-			return JsonFileEncoding.encode( this.encryptedData );
+			// Expose the pending ciphertext to the writer without marking it as saved.
+			return JsonFileEncoding.encode( data );
 		}
 		
 		// not saving, so return the unencrypted view data
@@ -303,23 +305,28 @@ export class EncryptedMarkdownView extends MarkdownView {
 				return;
 			}
 
-			this.setUnencryptedViewData(unencryptedDataToSave, false);
+			// Keep the note dirty until both encryption and the disk write succeed.
+			this.dataWasChangedSinceLastSave = true;
 
 			// build up-to-date encrypted data
-			this.encryptedData = await FileDataHelper.encrypt(
+			const encryptedDataToSave = await FileDataHelper.encrypt(
 				this.passwordAndHint.password,
 				this.passwordAndHint.hint,
 				unencryptedDataToSave
 			);
+			this.pendingEncryptedData = encryptedDataToSave;
 
 			// call the real save.. which will call getViewData... getViewData will
 			// decide whether to return encrypted or unencrypted data (encrypted
 			// in this case becase this.isSavingInProgress is true)
 			await super.save(clear);
 
-			this.dataWasChangedSinceLastSave = false;
+			this.encryptedData = encryptedDataToSave;
+			this.cachedUnencryptedData = unencryptedDataToSave;
+			this.dataWasChangedSinceLastSave = this.getUnencryptedViewData() !== unencryptedDataToSave;
 
 		} finally{
+			this.pendingEncryptedData = null;
 			this.isSavingInProgress = false;
 			this.setViewBusy( false );
 		}
