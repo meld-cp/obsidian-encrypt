@@ -354,7 +354,8 @@ class DecryptCommandHandler{
 
                     if (decryptedText!==null){
                         decryptedCount ++;
-                        decryptedLine = decryptedLine.replace( matchedText, decryptedText );
+                        const plaintext = decryptedText;
+                        decryptedLine = decryptedLine.replace( matchedText, () => plaintext );
                     }
 
                 }

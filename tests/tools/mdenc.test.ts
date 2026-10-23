@@ -458,6 +458,50 @@ describe('mdenc CLI tool', () => {
 			expect(content).not.toContain('🔐');
 		});
 
+		it.each(['$$', '$&', '$`', "$'"])('recovers replacement token %j literally in hidden and visible blocks', async token => {
+			const outDir = path.join(tmpDir, 'out');
+			const plaintext = `literal ${token} value`;
+			const hidden = await encryptInPlace(plaintext, 'pw', 3);
+			const visible = hidden.replace(_PREFIX_C, _PREFIX_C_VISIBLE)
+				.replace(_SUFFIX_WITH_COMMENT, _SUFFIX_NO_COMMENT);
+			const source = `Before ${hidden} middle ${visible} After`;
+			const inputFile = path.join(tmpDir, 'note.md');
+			fs.writeFileSync(inputFile, source);
+
+			const result = runMdenc(`decrypt --passwords pw --outdir "${outDir}"`, tmpDir);
+
+			expect(result.status).toBe(0);
+			expect(result.stdout).toContain('Decrypted');
+			expect(fs.readFileSync(path.join(outDir, 'note.md'), 'utf8'))
+				.toBe(`Before ${plaintext} middle ${plaintext} After`);
+			expect(fs.readFileSync(inputFile, 'utf8')).toBe(source);
+		});
+
+		it('preserves mixed replacement tokens, Unicode, and newlines in recovered plaintext', async () => {
+			const outDir = path.join(tmpDir, 'out');
+			const firstText = "$$ $& $` $' $1 $<name>\ncafé 🥑";
+			const secondText = "second $& $$ $' $` block";
+			const first = await encryptInPlace(firstText, 'pw', 3);
+			const second = (await encryptInPlace(secondText, 'pw', 2))
+				.replace(_PREFIX_B, _PREFIX_B_VISIBLE).replace(_SUFFIX_WITH_COMMENT, _SUFFIX_NO_COMMENT);
+			fs.writeFileSync(path.join(tmpDir, 'note.md'), `Before $$ ${first} middle $& ${second} After $'`);
+
+			runMdenc(`decrypt --passwords pw --outdir "${outDir}"`, tmpDir);
+
+			expect(fs.readFileSync(path.join(outDir, 'note.md'), 'utf8'))
+				.toBe(`Before $$ ${firstText} middle $& ${secondText} After $'`);
+		});
+
+		it('inserts empty recovered plaintext without removing the surrounding text', async () => {
+			const outDir = path.join(tmpDir, 'out');
+			const encrypted = await encryptInPlace('', 'pw', 3);
+			fs.writeFileSync(path.join(tmpDir, 'note.md'), `Before ${encrypted} After`);
+
+			runMdenc(`decrypt --passwords pw --outdir "${outDir}"`, tmpDir);
+
+			expect(fs.readFileSync(path.join(outDir, 'note.md'), 'utf8')).toBe('Before  After');
+		});
+
 		it('should handle empty whole-note files', async () => {
 			const dir = path.join(tmpDir, 'decrypt-empty');
 			const outDir = path.join(dir, 'out');
