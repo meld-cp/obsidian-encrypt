@@ -14,6 +14,7 @@ import {
 	_PREFIX_A,
 	_PREFIX_A_VISIBLE,
 	_PREFIX_C,
+	_PREFIX_C_VISIBLE,
 	_PREFIX_OBSOLETE,
 	_PREFIX_OBSOLETE_VISIBLE,
 	_SUFFIX_WITH_COMMENT,
@@ -228,6 +229,84 @@ describe('mdenc CLI tool', () => {
 
 			const { stdout } = runMdenc('test --passwords pw', dir);
 			expect(stdout).toContain('PASSED');
+		});
+
+		it.each([0, 1, 2, 3])('fails for a wrong password on inline version %i', async version => {
+			const encrypted = await encryptInPlace('secret', 'correct-pw', version);
+			fs.writeFileSync(path.join(tmpDir, 'note.md'), encrypted);
+
+			const result = runMdenc('test --passwords wrong-pw another-wrong-pw', tmpDir, false);
+
+			expect(result.status).toBe(1);
+			expect(result.stdout).toContain('FAILED');
+			expect(result.stdout).toContain('line 1, pos 3, unable to decrypt');
+			expect(result.stdout).not.toContain('PASSED');
+		});
+
+		it('checks every block on one line, including visible markers and different passwords', async () => {
+			const first = await encryptInPlace('first secret', 'first-pw', 2);
+			const second = (await encryptInPlace('second secret', 'second-pw', 3))
+				.replace(_PREFIX_C, _PREFIX_C_VISIBLE).replace(_SUFFIX_WITH_COMMENT, _SUFFIX_NO_COMMENT);
+			fs.writeFileSync(path.join(tmpDir, 'note.md'), `${first} between ${second}`);
+
+			const result = runMdenc('test --passwords first-pw second-pw', tmpDir);
+
+			expect(result.status).toBe(0);
+			expect(result.stdout.match(/^PASSED =>/gm)).toHaveLength(2);
+			expect(result.stdout).toContain('password #1');
+			expect(result.stdout).toContain('password #2');
+			expect(result.stdout).not.toContain('FAILED');
+		});
+
+		it('fails if a later block on the same line cannot be decrypted', async () => {
+			const good = await encryptInPlace('good secret', 'pw', 3);
+			const bad = await encryptInPlace('unrecoverable secret', 'other-pw', 3);
+			const content = `${good} between ${bad}`;
+			fs.writeFileSync(path.join(tmpDir, 'note.md'), content);
+
+			const result = runMdenc('test --passwords pw', tmpDir, false);
+
+			expect(result.status).toBe(1);
+			expect(result.stdout.match(/^PASSED =>/gm)).toHaveLength(1);
+			expect(result.stdout.match(/^FAILED =>/gm)).toHaveLength(1);
+			expect(result.stdout).toContain(`line 1, pos ${content.indexOf('🔐', good.length) + 1}, unable to decrypt`);
+		});
+
+		it('reports inline failures with the check alias and --fails while suppressing passes', async () => {
+			const good = await encryptInPlace('good secret', 'pw', 3);
+			const bad = await encryptInPlace('bad secret', 'other-pw', 3);
+			fs.writeFileSync(path.join(tmpDir, 'note.md'), `${good} ${bad} ${good}`);
+
+			const result = runMdenc('check --passwords pw --fails', tmpDir, false);
+
+			expect(result.status).toBe(1);
+			expect(result.stdout.match(/^FAILED =>/gm)).toHaveLength(1);
+			expect(result.stdout).not.toContain('PASSED');
+		});
+
+		it('continues checking later lines after a block fails', async () => {
+			const bad = await encryptInPlace('bad secret', 'other-pw', 3);
+			const good = await encryptInPlace('good secret', 'pw', 3);
+			fs.writeFileSync(path.join(tmpDir, 'note.md'), `${bad}\n${good}`);
+
+			const result = runMdenc('test --passwords pw', tmpDir, false);
+
+			expect(result.status).toBe(1);
+			expect(result.stdout).toContain('line 1, pos 3, unable to decrypt');
+			expect(result.stdout).toContain('line 2, pos 3, password #1');
+		});
+
+		it('reports a malformed block after a successful block on the same line', async () => {
+			const good = await encryptInPlace('good secret', 'pw', 3);
+			const malformed = `${_PREFIX_C}${_HINT}unfinished hint${_SUFFIX_WITH_COMMENT}`;
+			fs.writeFileSync(path.join(tmpDir, 'note.md'), `${good} ${malformed}`);
+
+			const result = runMdenc('test --passwords pw', tmpDir, false);
+
+			expect(result.status).toBe(1);
+			expect(result.stdout).toContain('PASSED');
+			expect(result.stdout).toContain('FAILED');
+			expect(result.stdout).toContain('cannot decrypt');
 		});
 
 		it('should test multiple passwords and use first match', async () => {

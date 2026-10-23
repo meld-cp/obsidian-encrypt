@@ -190,8 +190,12 @@ class TestCommandHandler {
                     }
                 }
 
-                if (wasDecrypted){
-                    break;
+                if (!wasDecrypted){
+                    yield {
+                        listing,
+                        success: false,
+                        message: `${matchLoc}, unable to decrypt`
+                    };
                 }
 
             }
