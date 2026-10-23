@@ -28,19 +28,27 @@ Place `mdenc.mjs` somewhere easy to find, for example:
 -   **Windows:** `C:\Tools\mdenc\`
 -   **macOS/Linux:** `~/Tools/mdenc/`
 
-## 3. Open a command line
+## 3. Open a command line in your vault
 
-### Windows
+The tool scans the current directory and its subdirectories. Open Command
+Prompt or Terminal and change into the vault you want to process, rather
+than the folder containing the script. Replace the example vault path below
+with your own.
+
+### Windows (Command Prompt)
 
 ``` text
-cd C:\Tools\mdenc
+cd /d "C:\Users\YourName\Documents\My Vault"
 ```
 
 ### macOS/Linux
 
 ``` text
-cd ~/Tools/mdenc
+cd "$HOME/Documents/My Vault"
 ```
+
+Keep the script in the location chosen in step 2. Run it using its full path
+as shown below; you do not need to copy it into your vault.
 
 ## 4. Verify Node.js
 
@@ -50,28 +58,49 @@ node --version
 
 You should see a version number.
 
-## 5. Run the script
+## 5. View the help
+
+### Windows
 
 ``` text
-node mdenc.mjs
+node "C:\Tools\mdenc\mdenc.mjs" --help
 ```
 
-Running the script **without any parameters** displays the built-in help
-and usage instructions.
-
-## 6. Run with parameters
+### macOS/Linux
 
 ``` text
-node mdenc.mjs <options>
+node "$HOME/Tools/mdenc/mdenc.mjs" --help
 ```
 
-Replace `<options>` with the command shown in the built-in help.
+These examples use the script locations from step 2. Adjust the script path
+if you saved it elsewhere.
+
+## 6. Run a command
+
+For example, list encrypted artifacts in your vault:
+
+### Windows
+
+``` text
+node "C:\Tools\mdenc\mdenc.mjs" list
+```
+
+### macOS/Linux
+
+``` text
+node "$HOME/Tools/mdenc/mdenc.mjs" list
+```
+
+For other commands, append the command and options shown in the built-in
+help to the same script path. For example, use `test --help` or
+`decrypt --help` to see the options for those commands.
 
 ## Troubleshooting
 
 -   **`node` is not recognized** -- Restart your terminal, or reinstall
     Node.js.
--   **Cannot find `mdenc.mjs`** -- Make sure you changed into the folder
-    containing the script.
+-   **Cannot find `mdenc.mjs`** -- Check that the full script path in your
+    command matches where you saved the file.
 -   **Permission denied (macOS/Linux)** -- Run the script with
-    `node mdenc.mjs` rather than executing it directly.
+    `node` followed by its full path, as shown above, rather than executing
+    it directly.
