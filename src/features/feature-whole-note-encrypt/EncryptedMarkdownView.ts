@@ -1,8 +1,9 @@
-import { MarkdownView, Notice, TFile, ViewStateResult } from "obsidian";
+import { MarkdownView, Notice, TFile, ViewStateResult, resolveSubpath } from "obsidian";
 import { FileData, FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.ts";
 import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
 import PluginPasswordModal from "../../PluginPasswordModal.ts";
 import { ENCRYPTED_FILE_EXTENSIONS } from "../../services/Constants.ts";
+import { getDecryptedMarkdownMetadata } from "../../services/DecryptedMarkdownMetadata.ts";
 
 export class EncryptedMarkdownView extends MarkdownView {
 
@@ -13,6 +14,8 @@ export class EncryptedMarkdownView extends MarkdownView {
 	private pendingEncryptedData: FileData | null = null;
 	private viewDataRequest = 0;
 	private isChangingPassword = false;
+	private isUnlocking = false;
+	private pendingNavigation: Record<string, unknown> | null = null;
 	cachedUnencryptedData : string = '';
 	dataWasChangedSinceLastSave = false;
 	
@@ -50,7 +53,32 @@ export class EncryptedMarkdownView extends MarkdownView {
 		)
 	}
 
+	override setEphemeralState(state: unknown): void {
+		if (!state || typeof state !== 'object' || !('subpath' in state)
+			|| typeof state.subpath !== 'string' || !state.subpath || state.subpath.startsWith('#^')) {
+			super.setEphemeralState(state);
+			return;
+		}
+		if (this.isUnlocking) {
+			this.pendingNavigation = { ...state };
+			return;
+		}
+		if (!this.isSavingEnabled) {
+			super.setEphemeralState(state);
+			return;
+		}
+		const target = resolveSubpath(getDecryptedMarkdownMetadata(this.getUnencryptedViewData()), state.subpath);
+		// MarkdownView normally resolves subpaths from MetadataCache. Encrypted files
+		// have no plaintext cache, so supply the same locations from the unlocked view.
+		super.setEphemeralState(target ? {
+			...state, subpath: undefined, line: target.start.line,
+			startLoc: target.start, endLoc: target.end ?? null,
+		} : state);
+	}
+
 	override async onLoadFile(file: TFile): Promise<void> {
+		this.isUnlocking = true;
+		this.pendingNavigation = null;
 		// Invalidate decrypts started for the previously loaded file.
 		const request = ++this.viewDataRequest;
 		const isCurrentRequest = () => request === this.viewDataRequest;
@@ -126,7 +154,13 @@ export class EncryptedMarkdownView extends MarkdownView {
 
 		}finally{
 			//console.debug('onLoadFile done');
-			if (isCurrentRequest()) this.setViewBusy( false );
+			if (isCurrentRequest()) {
+				this.isUnlocking = false;
+				const navigation = this.pendingNavigation;
+				this.pendingNavigation = null;
+				this.setViewBusy(false);
+				if (navigation && this.isSavingEnabled) this.setEphemeralState(navigation);
+			}
 		}
 
 	}
@@ -150,6 +184,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 	}
 
 	override async onUnloadFile(file: TFile): Promise<void> {
+		this.pendingNavigation = null;
 		
 		if ( this.passwordAndHint == null || this.encryptedData == null ) {
 			return;

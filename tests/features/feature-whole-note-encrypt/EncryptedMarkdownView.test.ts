@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MarkdownView } from 'obsidian';
+import { MarkdownView, resolveSubpath } from 'obsidian';
 import { FileData, FileDataHelper, JsonFileEncoding } from '../../../src/services/FileDataHelper.ts';
 import { SessionPasswordService } from '../../../src/services/SessionPasswordService.ts';
+import PluginPasswordModal from '../../../src/PluginPasswordModal.ts';
 
 vi.mock('obsidian', () => ({
+	resolveSubpath: vi.fn(),
 	MarkdownView: class {
 		public contentEl = { classList: { toggle: vi.fn() } };
 		public leaf: { detach: () => void };
@@ -34,6 +36,8 @@ vi.mock('obsidian', () => ({
 		async onRename(): Promise<void> {}
 
 		async setState(): Promise<void> {}
+
+		setEphemeralState(_state: unknown): void {}
 
 		async save(): Promise<void> {
 			this.savedData = this.getViewData();
@@ -321,5 +325,114 @@ describe('EncryptedMarkdownView file loading', () => {
 		expect(view.encryptedData?.encodedData).toBe('newer B');
 		expect(view.file).toBe(fileB);
 		expect(SessionPasswordService.putByFile).toHaveBeenCalledTimes(1);
+	});
+});
+
+
+describe('encrypted heading navigation', () => {
+	let view: EncryptedMarkdownView;
+	let navigate: ReturnType<typeof vi.spyOn>;
+
+	beforeEach(() => {
+		view = new EncryptedMarkdownView({ detach: vi.fn(), app: {} } as any);
+		view.isSavingEnabled = true;
+		view.file = { path: 'navigation.mdenc', extension: 'mdenc' } as any;
+		MarkdownView.prototype.setViewData.call(view, '# First\n\n## Target', false);
+		navigate = vi.spyOn(MarkdownView.prototype, 'setEphemeralState');
+		vi.mocked(resolveSubpath).mockReset();
+	});
+	afterEach(() => vi.restoreAllMocks());
+
+	it('resolves local headings and delegates navigation without mutating the request', () => {
+		const start = { line: 2, col: 0, offset: 9 };
+		vi.mocked(resolveSubpath).mockReturnValue({ start, end: null } as any);
+		const state = { subpath: '#Target', focus: true };
+		view.setEphemeralState(state);
+		expect(resolveSubpath).toHaveBeenCalledWith(expect.objectContaining({
+			headings: expect.arrayContaining([expect.objectContaining({ heading: 'Target' })]),
+		}), '#Target');
+		expect(navigate).toHaveBeenCalledWith({ subpath: undefined, focus: true, line: 2, startLoc: start, endLoc: null });
+		expect(state).toEqual({ subpath: '#Target', focus: true });
+	});
+
+	it('uses current unsaved plaintext even while getViewData exposes ciphertext to the writer', () => {
+		MarkdownView.prototype.setViewData.call(view, '# Edited', false);
+		view.isSavingInProgress = true;
+		view.setEphemeralState({ subpath: '#Edited' });
+		expect(vi.mocked(resolveSubpath).mock.calls[0][0].headings?.[0].heading).toBe('Edited');
+	});
+
+	it.each([{ scroll: 5 }, { subpath: '#Missing' }, { subpath: '#^block' }, null])('preserves unrelated or unresolved state: %j', state => {
+		view.setEphemeralState(state);
+		expect(navigate).toHaveBeenCalledWith(state);
+	});
+
+	it('does not parse locked content', () => {
+		view.isSavingEnabled = false;
+		view.setEphemeralState({ subpath: '#Target' });
+		expect(resolveSubpath).not.toHaveBeenCalled();
+	});
+});
+
+
+describe('navigation while unlocking', () => {
+	afterEach(() => vi.restoreAllMocks());
+
+	it.each([false, true])('replays navigation only when its file finishes unlocking (switch files: %s)', async switchFiles => {
+		let finishRead!: (text: string) => void;
+		const app = { workspace: { layoutReady: true }, vault: {
+			read: () => new Promise<string>(resolve => { finishRead = resolve; }),
+		} };
+		const view = new EncryptedMarkdownView({ app, detach: vi.fn() } as any);
+		vi.spyOn(SessionPasswordService, 'getByFile').mockResolvedValue({ password: 'pw', hint: '' });
+		vi.spyOn(SessionPasswordService, 'putByFile').mockImplementation(() => {});
+		vi.spyOn(FileDataHelper, 'decrypt').mockResolvedValue('# Target');
+		const navigate = vi.spyOn(MarkdownView.prototype, 'setEphemeralState');
+		vi.mocked(resolveSubpath).mockReset();
+		const file = { path: 'first.mdenc' } as any;
+		const first = view.onLoadFile(file);
+		const finishFirst = finishRead;
+		view.setEphemeralState({ subpath: '#Target' });
+		expect(navigate).not.toHaveBeenCalled();
+		const second = switchFiles ? view.onLoadFile({ path: 'second.mdenc' } as any) : null;
+		const encoded = JSON.stringify({ version: '2.0', hint: '', encodedData: 'cipher' });
+		finishFirst(encoded);
+		if (second) finishRead(encoded);
+		await Promise.all([first, second]);
+		expect(resolveSubpath).toHaveBeenCalledTimes(switchFiles ? 0 : 1);
+		expect(navigate).toHaveBeenCalledTimes(switchFiles ? 0 : 1);
+	});
+
+	it('discards deferred navigation when unlocking is cancelled', async () => {
+		const app = { workspace: { layoutReady: true }, vault: {
+			read: async () => JSON.stringify({ version: '2.0', hint: '', encodedData: 'cipher' }),
+		} };
+		const view = new EncryptedMarkdownView({ app, detach: vi.fn() } as any);
+		let cancel!: (value: null) => void;
+		vi.spyOn(SessionPasswordService, 'getByFile').mockResolvedValue({ password: '', hint: '' });
+		vi.spyOn(PluginPasswordModal.prototype, 'open2Async').mockImplementation(() => new Promise(resolve => { cancel = resolve; }));
+		const navigate = vi.spyOn(MarkdownView.prototype, 'setEphemeralState');
+		const loading = view.onLoadFile({ path: 'cancelled.mdenc' } as any);
+		await vi.waitFor(() => expect(cancel).toBeTypeOf('function'));
+		view.setEphemeralState({ subpath: '#Target' });
+		cancel(null);
+		await loading;
+		expect(navigate).not.toHaveBeenCalled();
+		expect(view.isSavingEnabled).toBe(false);
+		expect(view.leaf.detach).toHaveBeenCalled();
+	});
+
+	it('discards deferred navigation after a failed load', async () => {
+		let failRead!: (error: Error) => void;
+		const app = { workspace: { layoutReady: true }, vault: {
+			read: () => new Promise<string>((_resolve, reject) => { failRead = reject; }),
+		} };
+		const view = new EncryptedMarkdownView({ app, detach: vi.fn() } as any);
+		const navigate = vi.spyOn(MarkdownView.prototype, 'setEphemeralState');
+		const loading = view.onLoadFile({ path: 'failed.mdenc' } as any);
+		view.setEphemeralState({ subpath: '#Target' });
+		failRead(new Error('read failed'));
+		await expect(loading).rejects.toThrow('read failed');
+		expect(navigate).not.toHaveBeenCalled();
 	});
 });

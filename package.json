@@ -43,5 +43,8 @@
 		"eslint-plugin-obsidianmd": {
 			"obsidian": "$obsidian"
 		}
+	},
+	"dependencies": {
+		"@lezer/markdown": "^1.8.1"
 	}
 }

@@ -94,6 +94,45 @@ export async function runScenarios({ pluginId, version, expectedVault, fixture, 
 			await wait(async () => file.extension === 'mdenc' && await diskFormat(file) === '3.0', 'Encrypt conversion did not write v3');
 			await wait(() => activeEncrypted()?.file === file, 'Converted encrypted note did not reopen');
 		});
+		await step('heading navigation in plain and encrypted notes', async () => {
+			const headingWait = async (check, message) => {
+				for (let attempt = 0; attempt < 50; attempt++) {
+					const result = await check();
+					if (result) return result;
+					await new Promise(resolve => setTimeout(resolve, 100));
+				}
+				throw new Error(message);
+			};
+			const text = '## Table of Contents\n[[#subtitle|Go to subtitle]]\n\n'
+				+ Array.from({ length: 100 }, (_, index) => `Paragraph ${index}\n`).join('\n')
+				+ '\n### subtitle\nContent...';
+			const plain = await app.vault.create('smoke-headings.md', text);
+			view = await headingWait(activeEncrypted, 'Converted encrypted note is not ready');
+			const encrypted = view.file;
+			view.editor.setValue(text);
+			await save(view);
+			const leaf = app.workspace.getLeaf(true);
+			for (const file of [plain, encrypted]) {
+				await leaf.openFile(file);
+				const headingView = leaf.view;
+				for (const mode of ['preview', 'source']) {
+					await headingView.setState({ ...headingView.getState(), mode, source: false }, {});
+					headingView.setEphemeralState({ line: 0, scroll: 0 });
+					await headingWait(() => headingView.currentMode.getScroll() < 1, `${file.extension} ${mode}: heading test did not return to the top`);
+					if (mode === 'preview') {
+						const link = await headingWait(() => headingView.containerEl.querySelector('a.internal-link[data-href="#subtitle"]'), 'Heading link did not render');
+						link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: link.ownerDocument.defaultView }));
+						await headingWait(() => headingView.currentMode.getScroll() > 100, `${file.extension}: clicking a heading link did not scroll`);
+					}
+					headingView.setEphemeralState({ line: 0, scroll: 0 });
+					await headingWait(() => headingView.currentMode.getScroll() < 1, `${file.extension} ${mode}: heading test did not reset`);
+					// openFile is also how Obsidian delivers incoming subpath navigation.
+					await leaf.openFile(file, { eState: { subpath: '#subtitle' } });
+					await headingWait(() => headingView.currentMode.getScroll() > 100, `${file.extension}: incoming heading navigation failed in ${mode}`);
+				}
+			}
+			assert(!app.metadataCache.getFileCache(encrypted)?.headings?.length, 'Encrypted headings leaked into shared metadata');
+		});
 		await step('inline encrypt and edit while retaining the hint and markers', async () => {
 			const file = await app.vault.create('smoke-inline.md', fixture.inlineText);
 			const leaf = app.workspace.getLeaf(true);

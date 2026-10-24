@@ -39,7 +39,7 @@ function seedMetadataAndAssets() {
 	return paths;
 }
 const gitState = (_command, args) => Buffer.from(args[0] === 'rev-parse' ? 'test-commit\n' : ' M test\n');
-const successfulChecks = () => Array.from({ length: 7 }, (_, index) => ({ name: `check ${index}`, status: 'passed' }));
+const successfulChecks = () => Array.from({ length: 8 }, (_, index) => ({ name: `check ${index}`, status: 'passed' }));
 
 describe('smoke fixtures and isolation', () => {
 	it('keeps legacy golden fixtures readable with the current readers', async () => {

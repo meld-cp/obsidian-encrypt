@@ -46,6 +46,8 @@ Changes since v2.4.5.
 
 ### Bug Fixes
 
+* Fixed heading-link navigation in unlocked whole-note encrypted files ([#214](https://github.com/meld-cp/obsidian-encrypt/issues/214)), using view-local heading metadata and Obsidian navigation.
+
 * Fixed undo wiping decrypted whole-note contents ([#241](https://github.com/meld-cp/obsidian-encrypt/issues/241), [#242](https://github.com/meld-cp/obsidian-encrypt/pull/242)).
 * Fixed overlapping saves during note unloading that could write plaintext to an encrypted file. Closing a note now waits for its save to succeed.
 * Preserved unsaved edits when encryption or disk writes fail, including edits made while a save is running.
