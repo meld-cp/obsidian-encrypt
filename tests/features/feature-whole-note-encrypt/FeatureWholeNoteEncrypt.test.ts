@@ -86,7 +86,7 @@ describe('new encrypted note password handling', () => {
 	});
 
 	it('prompts when the external password file is empty', async () => {
-		fetchPassword.mockResolvedValue({ text: async () => '' });
+		fetchPassword.mockResolvedValue({ ok: true, status: 200, text: async () => '' });
 		await createNote();
 
 		expect(modal.openAsync).toHaveBeenCalledOnce();
@@ -119,7 +119,7 @@ describe('new encrypted note password handling', () => {
 	});
 
 	it('uses a valid external password without prompting', async () => {
-		fetchPassword.mockResolvedValue({ text: async () => 'external-password' });
+		fetchPassword.mockResolvedValue({ ok: true, status: 200, text: async () => 'external-password' });
 		await createNote();
 
 		expect(modal.constructor).not.toHaveBeenCalled();
