@@ -1,3 +1,5 @@
+import { base64ToBytes, bytesToBase64 } from './Base64.ts';
+
 export const algorithmObsolete = {
 	name: 'AES-GCM',
 	iv: new Uint8Array([196, 190, 240, 190, 188, 78, 41, 132, 15, 220, 84, 211]),
@@ -37,24 +39,13 @@ export class CryptoHelperObsolete {
 			algorithmObsolete, key, bytesToEncrypt
 		));
 
-		//convert array to base64
-		const base64Text = btoa(String.fromCharCode(...encryptedBytes));
-
-		return base64Text;
-	}
-
-	private stringToArray(str: string): Uint8Array {
-		const result = [];
-		for (let i = 0; i < str.length; i++) {
-			result.push(str.charCodeAt(i));
-		}
-		return new Uint8Array(result);
+		return bytesToBase64(encryptedBytes);
 	}
 
 	public async decryptFromBase64(base64Encoded: string, password: string): Promise<string|null> {
 		try {
 			// convert base 64 to array
-			const bytesToDecrypt = this.stringToArray(atob(base64Encoded));
+			const bytesToDecrypt = base64ToBytes(base64Encoded);
 
 			const key = await this.buildKey(password);
 

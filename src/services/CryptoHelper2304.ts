@@ -1,4 +1,5 @@
 import { ICryptoHelper } from "./ICryptoHelper.ts";
+import { base64ToBytes, bytesToBase64 } from './Base64.ts';
 
 export class CryptoHelper2304 implements ICryptoHelper {
 	public vectorSize: number;
@@ -79,31 +80,10 @@ export class CryptoHelper2304 implements ICryptoHelper {
 		return finalBytes;
 	}
 
-	private convertToString( bytes : Uint8Array ): string {
-		let result = '';
-		for (let idx = 0; idx < bytes.length; idx++) {
-			// append to result
-			result += String.fromCharCode(bytes[idx]);
-		}
-		return result;
-	}
-
 	public async encryptToBase64(text: string, password: string): Promise<string> {
 
 		const finalBytes = await this.encryptToBytes(text, password);
-
-		//convert array to base64
-		const base64Text = btoa( this.convertToString(finalBytes) );
-
-		return base64Text;
-	}
-
-	private stringToArray(str: string): Uint8Array {
-		const result = [];
-		for (let i = 0; i < str.length; i++) {
-			result.push(str.charCodeAt(i));
-		}
-		return new Uint8Array(result);
+		return bytesToBase64(finalBytes);
 	}
 
 	private async decryptFromBytes(
@@ -155,7 +135,7 @@ export class CryptoHelper2304 implements ICryptoHelper {
 
 	public async decryptFromBase64( base64Encoded: string, password: string ): Promise<string|null> {
 		try {
-			const bytesToDecode = this.stringToArray(atob(base64Encoded));
+			const bytesToDecode = base64ToBytes(base64Encoded);
 			return await this.decryptFromBytes( bytesToDecode, password );
 		} catch (e) {
 			console.error(e);

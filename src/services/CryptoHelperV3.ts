@@ -1,4 +1,7 @@
 import type { ICryptoHelper } from './ICryptoHelper.ts';
+import { base64ToBytes, bytesToBase64 as encodeBase64 } from './Base64.ts';
+
+export { encodeBase64 };
 
 export interface CryptoEnvelopeV3 {
 	version: '3.0';
@@ -12,19 +15,11 @@ export const V3_DEFAULT_ITERATIONS = 220000;
 export const V3_MIN_ITERATIONS = 220000;
 export const V3_MAX_ITERATIONS = 2000000;
 
-export function encodeBase64(bytes: Uint8Array): string {
-	let binary = '';
-	for (let offset = 0; offset < bytes.length; offset += 8192) {
-		binary += String.fromCharCode(...bytes.subarray(offset, offset + 8192));
-	}
-	return btoa(binary);
-}
-
 export function decodeBase64(value: unknown): Uint8Array {
 	if (typeof value !== 'string' || value.length % 4 !== 0 || /[^A-Za-z0-9+/=]/.test(value)) {
 		throw new Error('Invalid v3 Base64');
 	}
-	const bytes = Uint8Array.from(atob(value), character => character.charCodeAt(0));
+	const bytes = base64ToBytes(value);
 	if (encodeBase64(bytes) !== value) throw new Error('Noncanonical v3 Base64');
 	return bytes;
 }
