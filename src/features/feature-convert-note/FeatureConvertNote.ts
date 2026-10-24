@@ -60,7 +60,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	
 	onunload(): void { }
 
-	buildSettingsUi(containerEl: HTMLElement, saveSettingCallback: () => Promise<void>): void { }
+	getSettingDefinitions(): import("obsidian").SettingDefinitionItem[] { return []; }
 
 	private checkCanEncryptFile( file:TFile | null ) : boolean {
 		if ( file == null ){

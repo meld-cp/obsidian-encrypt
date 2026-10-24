@@ -4,8 +4,5 @@ import { IMeldEncryptPluginSettings } from "../settings/MeldEncryptPluginSetting
 export interface IMeldEncryptPluginFeature {
 	onload(plugin: MeldEncrypt, settings: IMeldEncryptPluginSettings): Promise<void>;
 	onunload(): void;
-	buildSettingsUi(
-		containerEl: HTMLElement,
-		saveSettingCallback : () => Promise<void>
-	) : void;
+	getSettingDefinitions(saveSettingCallback: () => Promise<void>): import("obsidian").SettingDefinitionItem[];
 }

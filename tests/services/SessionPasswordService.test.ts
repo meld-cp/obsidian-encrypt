@@ -1,15 +1,20 @@
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 vi.mock('obsidian', () => ({
 	DataAdapter: class {},
+	FileSystemAdapter: class { getBasePath() { return ''; } },
+	Platform: { isDesktop: false, isDesktopApp: false },
 	Notice: vi.fn(),
 	TFile: class {},
 }));
 
 import { SessionPasswordService, PasswordAndHint } from '../../src/services/SessionPasswordService.ts';
-import { Notice, DataAdapter } from 'obsidian';
+import { Notice, DataAdapter, FileSystemAdapter, Platform } from 'obsidian';
 
-const originalFetch = global.fetch;
+const readPassword = vi.fn();
 
 function makeFile(path: string, basename: string, parentPath: string) {
 	return {
@@ -22,7 +27,7 @@ function makeFile(path: string, basename: string, parentPath: string) {
 
 function makeMockAdapter(): DataAdapter {
 	return {
-		getResourcePath: (path: string) => `/${path}`,
+		read: readPassword,
 	} as unknown as DataAdapter;
 }
 
@@ -31,6 +36,8 @@ describe('SessionPasswordService', () => {
 
 	beforeEach(() => {
 		SessionPasswordService.clear();
+		Platform.isDesktop = false;
+		Platform.isDesktopApp = false;
 		SessionPasswordService.setActive(true);
 		SessionPasswordService.setAutoExpire(null);
 		SessionPasswordService.setLevel(SessionPasswordService.LevelVault);
@@ -40,7 +47,7 @@ describe('SessionPasswordService', () => {
 	});
 
 	afterEach(() => {
-		global.fetch = originalFetch;
+		readPassword.mockReset();
 		vi.useRealTimers();
 		vi.clearAllMocks();
 	});
@@ -328,16 +335,49 @@ describe('SessionPasswordService', () => {
 	});
 
 	describe('getByPathAsync with external file', () => {
+		it.each([false, true])('passes parent-directory paths intact to adapters (desktop=%s)', async desktop => {
+			Platform.isDesktop = desktop;
+			Platform.isDesktopApp = desktop;
+			SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
+			SessionPasswordService.setExternalFilePaths(['../denied.txt', '../secrets/password.txt']);
+			readPassword.mockRejectedValueOnce(new Error('Access denied')).mockResolvedValueOnce(' password\n');
+			expect((await SessionPasswordService.getByPathAsync('note.mdenc')).password).toBe(' password\n');
+			expect(readPassword.mock.calls).toEqual([['../denied.txt'], ['../secrets/password.txt']]);
+			readPassword.mockResolvedValueOnce(' password\n');
+			expect(await SessionPasswordService.canFetchContents('../secrets/password.txt')).toBe(true);
+		});
+
+		it('reads desktop absolute and parent-directory paths from the filesystem', async () => {
+			const root = await mkdtemp(join(tmpdir(), 'password-paths-'));
+			try {
+				await mkdir(join(root, 'vault'));
+				await writeFile(join(root, 'password.txt'), ' secret\n');
+				const adapter = Object.create(FileSystemAdapter.prototype) as FileSystemAdapter;
+				vi.spyOn(adapter, 'getBasePath').mockReturnValue(join(root, 'vault'));
+				Platform.isDesktop = true;
+				Platform.isDesktopApp = true;
+				SessionPasswordService.init(adapter);
+				SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
+				for (const path of ['../password.txt', join(root, 'password.txt')]) {
+					SessionPasswordService.setExternalFilePaths([path]);
+					expect((await SessionPasswordService.getByPathAsync('note.mdenc')).password).toBe(' secret\n');
+					expect(await SessionPasswordService.canFetchContents(path)).toBe(true);
+				}
+			} finally {
+				await rm(root, { recursive: true, force: true });
+			}
+		});
+
 		it('should show Notice when external file not found', async () => {
 			SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
 			SessionPasswordService.setExternalFilePaths(['nonexistent.txt']);
 
-			global.fetch = vi.fn().mockRejectedValue(new Error('Not found'));
+			readPassword.mockReset().mockRejectedValue(new Error('Not found'));
 
 			const result = await SessionPasswordService.getByPathAsync('/path');
 			expect(result).toEqual(SessionPasswordService.blankPasswordAndHint);
-			expect(global.fetch).toHaveBeenCalledWith('/nonexistent.txt');
-			expect(global.fetch).toHaveBeenCalledTimes(1);
+			expect(readPassword).toHaveBeenCalledWith('nonexistent.txt');
+			expect(readPassword).toHaveBeenCalledTimes(1);
 			expect(Notice).toHaveBeenCalledWith('External password file not found', 10000);
 		});
 
@@ -345,47 +385,47 @@ describe('SessionPasswordService', () => {
 			SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
 			SessionPasswordService.setExternalFilePaths(['missing.txt', 'found.txt']);
 
-			global.fetch = vi.fn()
+			readPassword.mockReset()
 				.mockRejectedValueOnce(new Error('Not found'))
-				.mockResolvedValueOnce({ ok: true, status: 200, text: () => Promise.resolve('external-password') });
+				.mockResolvedValueOnce('external-password');
 
 			const result = await SessionPasswordService.getByPathAsync('/path');
 			expect(result.password).toBe('external-password');
 			expect(result.hint).toBe('');
-			expect(global.fetch).toHaveBeenNthCalledWith(1, '/missing.txt');
-			expect(global.fetch).toHaveBeenNthCalledWith(2, '/found.txt');
-			expect(global.fetch).toHaveBeenCalledTimes(2);
+			expect(readPassword).toHaveBeenNthCalledWith(1, 'missing.txt');
+			expect(readPassword).toHaveBeenNthCalledWith(2, 'found.txt');
+			expect(readPassword).toHaveBeenCalledTimes(2);
 		});
 
 		it('should show Notice when external file is empty', async () => {
 			SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
 			SessionPasswordService.setExternalFilePaths(['empty.txt']);
 
-			global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, text: () => Promise.resolve('') });
+			readPassword.mockReset().mockResolvedValue('');
 
 			const result = await SessionPasswordService.getByPathAsync('/path');
 			expect(result).toEqual(SessionPasswordService.blankPasswordAndHint);
-			expect(global.fetch).toHaveBeenCalledWith('/empty.txt');
-			expect(global.fetch).toHaveBeenCalledTimes(1);
+			expect(readPassword).toHaveBeenCalledWith('empty.txt');
+			expect(readPassword).toHaveBeenCalledTimes(1);
 			expect(Notice).toHaveBeenCalledWith('External password file not found', 10000);
 		});
 
-		it('should skip an unsuccessful response and try the next external file', async () => {
+		it('should skip an unreadable file and try the next external file', async () => {
 			SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
 			SessionPasswordService.setExternalFilePaths(['missing.txt', 'found.txt']);
-			global.fetch = vi.fn()
-				.mockResolvedValueOnce({ ok: false, status: 404, text: () => Promise.resolve('not found') })
-				.mockResolvedValueOnce({ ok: true, status: 200, text: () => Promise.resolve('external-password') });
+			readPassword.mockReset()
+				.mockRejectedValueOnce(new Error('Not found'))
+				.mockResolvedValueOnce('external-password');
 
 			const result = await SessionPasswordService.getByPathAsync('/path');
 
 			expect(result.password).toBe('external-password');
-			expect(global.fetch).toHaveBeenCalledTimes(2);
+			expect(readPassword).toHaveBeenCalledTimes(2);
 		});
 
-		it('should report an unsuccessful response as an unreadable external file', async () => {
-			SessionPasswordService.init({ getResourcePath: () => '/missing.txt' } as unknown as DataAdapter);
-			global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404, text: () => Promise.resolve('not found') });
+		it('should report an unreadable external file', async () => {
+			SessionPasswordService.init(makeMockAdapter());
+			readPassword.mockReset().mockRejectedValue(new Error('Not found'));
 
 			expect(await SessionPasswordService.canFetchContents('missing.txt')).toBe(false);
 		});

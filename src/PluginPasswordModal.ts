@@ -51,7 +51,7 @@ export default class PluginPasswordModal extends Modal {
 		const result = await this.open2Async();
 		if (result === null) {
 			// Preserve the existing cancellation contract for callers of openAsync().
-			// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+			// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- Preserve the public cancellation contract that rejects without a value.
 			return Promise.reject();
 		}
 		return result;

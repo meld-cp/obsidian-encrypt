@@ -2,11 +2,11 @@ import * as yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { CryptoHelperFactory } from '../services/CryptoHelperFactory.ts';
-import { FileDataHelper, JsonFileEncoding } from "../services/FileDataHelper.ts";
-import * as Constants from '../services/Constants.ts';
-import * as InPlaceConstants from '../features/feature-inplace-encrypt/FeatureInplaceConstants.ts';
-import { FeatureInplaceTextAnalysis } from '../features/feature-inplace-encrypt/featureInplaceTextAnalysis.ts';
+import { CryptoHelperFactory } from '../../src/services/CryptoHelperFactory.ts';
+import { FileDataHelper, JsonFileEncoding } from "../../src/services/FileDataHelper.ts";
+import * as Constants from '../../src/services/Constants.ts';
+import * as InPlaceConstants from '../../src/features/feature-inplace-encrypt/FeatureInplaceConstants.ts';
+import { FeatureInplaceTextAnalysis } from '../../src/features/feature-inplace-encrypt/featureInplaceTextAnalysis.ts';
 
 interface Listing {
     featureType: 'InPlace' | 'WholeNote';
@@ -490,7 +490,7 @@ const optListingFormat : yargs.Options = {
 
 
 
-yargs.default(hideBin(process.argv))
+await yargs.default(hideBin(process.argv))
     .scriptName('mdenc')
     .usage( 'Usage: $0 [command] [options]' )
 
@@ -506,7 +506,7 @@ yargs.default(hideBin(process.argv))
             type: 'boolean',
             default: false
         }
-    } ), (argv) => new TestCommandHandler().argHandler( argv.passwords as string[], argv.fails as boolean ) )
+    } ), (argv) => new TestCommandHandler().argHandler( argv.passwords as string[], argv.fails ) )
     
     .command('decrypt', 'decrypt notes to plain text given a password list and an output directory',  (yargs) => yargs.option(  {
         passwords: optPasswordList,
@@ -522,7 +522,7 @@ yargs.default(hideBin(process.argv))
             type: 'boolean',
             default: false
         }
-    } ), (argv) => new DecryptCommandHandler().argHandler( argv.passwords as string[], argv.outdir as string, argv.dryrun !== false ) ) 
+    } ), (argv) => new DecryptCommandHandler().argHandler( argv.passwords as string[], argv.outdir, argv.dryrun !== false ) )
     
     .demandCommand()
     .help()
@@ -532,7 +532,11 @@ yargs.default(hideBin(process.argv))
         ['$0 test --passwords pw1 pw2', 'check that all notes can be decrypted with the given password list'],
         ['$0 decrypt --pw pw1 pw2 --outdir \\path\\to\\output\\', 'decrypt notes to an output directory'],
       ])
-    .parse()
+    .parseAsync()
+    .catch((error: unknown) => {
+        console.error(error instanceof Error ? error.message : String(error));
+        process.exitCode = 1;
+    })
 ;
  
 

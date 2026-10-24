@@ -1,4 +1,4 @@
-import { Editor, EditorPosition, Notice, Setting, MarkdownPostProcessorContext, MarkdownView } from "obsidian";
+import { Editor, EditorPosition, Notice, MarkdownPostProcessorContext, MarkdownView } from "obsidian";
 import DecryptModal from "./DecryptModal.ts";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature.ts";
 import MeldEncrypt from "../../main.ts";
@@ -238,60 +238,51 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		);
 	}
 
-	public buildSettingsUi(
-		containerEl: HTMLElement,
-		saveSettingCallback : () => Promise<void>
-	): void {
-		new Setting(containerEl)
-			.setHeading()
-			.setName('In-place encryption')
-		;
-
-		// Selection encrypt feature settings below
-		new Setting(containerEl)
-			.setName('Expand selection to whole line?')
-			.setDesc('Partial selections will get expanded to the whole line.')
-			.addToggle( toggle =>{
-				toggle
-					.setValue(this.featureSettings.expandToWholeLines)
-					.onChange( async value =>{
-						this.featureSettings.expandToWholeLines = value;
-						await saveSettingCallback();
-					})
-			})
-		;
-
-		new Setting(containerEl)
-			.setName('Search limit for markers')
-			.setDesc('How far to look for markers when encrypting/decrypting.')
-			.addText( text => {
-				text
-					.setValue( this.featureSettings.markerSearchLimit.toString() )
-					.onChange( async value => {
-						const num = parseInt(value);
-						if ( !isNaN(num) ){
-							this.featureSettings.markerSearchLimit = num;
+	public getSettingDefinitions(saveSettingCallback: () => Promise<void>): import("obsidian").SettingDefinitionItem[] {
+		return [{
+			type: 'group',
+			heading: 'In-place encryption',
+			items: [
+				{
+					name: 'Expand selection to whole line?',
+					desc: 'Partial selections will get expanded to the whole line.',
+					render: row => {
+						row.addToggle(toggle => toggle.setValue(this.featureSettings.expandToWholeLines).onChange(async value => {
+							this.featureSettings.expandToWholeLines = value;
 							await saveSettingCallback();
-						}
-					})
-				;
-				text.inputEl.type = 'number';
-				text.inputEl.min = '1000';
-				text.inputEl.max = '9999999';
-			})
-
-		new Setting(containerEl)
-			.setName('By default, show encrypted marker when reading')
-			.setDesc('When encrypting inline text, should the default be to have a visible marker in reading view?')
-			.addToggle( toggle =>{
-				toggle
-					.setValue(this.featureSettings.showMarkerWhenReadingDefault)
-					.onChange( async value =>{
-						this.featureSettings.showMarkerWhenReadingDefault = value;
-						await saveSettingCallback();
-					})
-			})
-		;
+						}));
+					},
+				},
+				{
+					name: 'Search limit for markers',
+					desc: 'How far to look for markers when encrypting/decrypting.',
+					render: row => {
+						row.addText(text => {
+							text.setValue(this.featureSettings.markerSearchLimit.toString()).onChange(async value => {
+								const num = parseInt(value);
+								if (!isNaN(num)) {
+									this.featureSettings.markerSearchLimit = num;
+									await saveSettingCallback();
+								}
+							});
+							text.inputEl.type = 'number';
+							text.inputEl.min = '1000';
+							text.inputEl.max = '9999999';
+						});
+					},
+				},
+				{
+					name: 'By default, show encrypted marker when reading',
+					desc: 'When encrypting inline text, should the default be to have a visible marker in reading view?',
+					render: row => {
+						row.addToggle(toggle => toggle.setValue(this.featureSettings.showMarkerWhenReadingDefault).onChange(async value => {
+							this.featureSettings.showMarkerWhenReadingDefault = value;
+							await saveSettingCallback();
+						}));
+					},
+				},
+			],
+		}];
 	}
 
 	private processEncryptCommand(

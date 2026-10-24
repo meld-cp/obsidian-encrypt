@@ -221,13 +221,8 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 
 	}
 
-	// eslint-disable-next-line obsidianmd/detach-leaves
-	onunload() {
-		this.plugin.app.workspace.detachLeavesOfType(EncryptedMarkdownView.VIEW_TYPE);
-	}
+	onunload() {}
 
-	buildSettingsUi(containerEl: HTMLElement, saveSettingCallback: () => Promise<void>): void {
-		//throw new Error("Method not implemented.");
-	}
+	getSettingDefinitions(): import("obsidian").SettingDefinitionItem[] { return []; }
 
 }

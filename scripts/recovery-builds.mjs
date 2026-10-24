@@ -5,7 +5,7 @@ export const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 export function mdencBuildOptions(production, root = repositoryRoot) {
 	return {
 		absWorkingDir: root,
-		entryPoints: ['src/tools/mdenc.ts'],
+		entryPoints: ['tools/src/mdenc.ts'],
 		platform: 'node',
 		bundle: true,
 		format: 'esm',

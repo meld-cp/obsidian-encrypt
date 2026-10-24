@@ -1,3 +1,1 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface IFeatureWholeNoteEncryptSettings {
-}
+export type IFeatureWholeNoteEncryptSettings = Record<string, never>;

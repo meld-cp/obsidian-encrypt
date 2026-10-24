@@ -9,6 +9,8 @@ const modal = vi.hoisted(() => ({ constructor: vi.fn(), openAsync: vi.fn() }));
 
 vi.mock('obsidian', () => ({
 	MarkdownView: class {},
+	Platform: { isDesktop: false, isDesktopApp: false },
+	FileSystemAdapter: class {},
 	Notice: vi.fn(),
 	TFile: class {},
 	TFolder: class {},
@@ -24,6 +26,8 @@ vi.mock('../../../src/PluginPasswordModal.ts', () => ({
 
 vi.mock('../../../src/features/feature-whole-note-encrypt/EncryptedMarkdownView.ts', () => ({
 	EncryptedMarkdownView: class {},
+	Platform: { isDesktop: false, isDesktopApp: false },
+	FileSystemAdapter: class {},
 }));
 
 describe('new encrypted note password handling', () => {
@@ -35,7 +39,6 @@ describe('new encrypted note password handling', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.stubGlobal('window', { moment: () => ({ format: () => 'new-note.mdenc' }) });
-		vi.stubGlobal('fetch', fetchPassword);
 		fetchPassword.mockRejectedValue(new Error('Password file unavailable'));
 		modal.openAsync.mockResolvedValue({ password: 'entered-password', hint: 'entered hint' });
 		SessionPasswordService.clear();
@@ -43,7 +46,7 @@ describe('new encrypted note password handling', () => {
 		SessionPasswordService.setAutoExpire(null);
 		SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
 		SessionPasswordService.setExternalFilePaths(['password.txt']);
-		SessionPasswordService.init({ getResourcePath: (path: string) => path } as DataAdapter);
+		SessionPasswordService.init({ read: fetchPassword } as unknown as DataAdapter);
 		feature = new FeatureWholeNoteEncrypt();
 		feature.plugin = {
 			app: {
@@ -58,6 +61,13 @@ describe('new encrypted note password handling', () => {
 		SessionPasswordService.clear();
 		SessionPasswordService.setLevel(SessionPasswordService.LevelVault);
 		SessionPasswordService.setExternalFilePaths([]);
+	});
+
+	it('does not detach workspace leaves when the plugin unloads', () => {
+		const detachLeavesOfType = vi.fn();
+		Object.assign(feature.plugin.app.workspace, { detachLeavesOfType });
+		feature.onunload();
+		expect(detachLeavesOfType).not.toHaveBeenCalled();
 	});
 
 	function createNote() {
@@ -86,7 +96,7 @@ describe('new encrypted note password handling', () => {
 	});
 
 	it('prompts when the external password file is empty', async () => {
-		fetchPassword.mockResolvedValue({ ok: true, status: 200, text: async () => '' });
+		fetchPassword.mockResolvedValue('');
 		await createNote();
 
 		expect(modal.openAsync).toHaveBeenCalledOnce();
@@ -119,7 +129,7 @@ describe('new encrypted note password handling', () => {
 	});
 
 	it('uses a valid external password without prompting', async () => {
-		fetchPassword.mockResolvedValue({ ok: true, status: 200, text: async () => 'external-password' });
+		fetchPassword.mockResolvedValue('external-password');
 		await createNote();
 
 		expect(modal.constructor).not.toHaveBeenCalled();

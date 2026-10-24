@@ -127,7 +127,7 @@ Nothing is committed, pushed, tagged, or published by the command.
 * `FeatureInplaceEncrypt.encryptSelection()` is the shared writer for new inline text and edited text saved from the decryption dialog. It validates hints, encrypts with the default format, formats markers, and replaces the selection. Re-saving preserves the existing password, hint, and marker visibility.
 * `FeatureWholeNoteEncryptV2.addEncryptedNoteMenuItems()` defines the shared **Change password** and **Lock & close** actions. Keep eligibility checks in the editor and file menu handlers; the file menu requires the selected file to match the active encrypted view.
 * `src/services/Base64.ts` provides chunked byte encoding and decoding with `atob`'s legacy tolerance. Keep v3's canonical Base64 validation in the `decodeBase64()` function in `CryptoHelperV3.ts`; do not apply those stricter rules to legacy readers. The v3 module retains its `encodeBase64` export.
-* `src/tools/mdenc.ts` shares original-input block scanning and password attempts between checking and recovery. Build recovered output from source spans without rescanning or replacing text inside recovered plaintext. An inline note must decrypt completely before its output is written; checking continues to report later blocks after a failure.
+* `tools/src/mdenc.ts` shares original-input block scanning and password attempts between checking and recovery. Build recovered output from source spans without rescanning or replacing text inside recovered plaintext. An inline note must decrypt completely before its output is written; checking continues to report later blocks after a failure.
 
 ## Manually Installing the Plugin
 

@@ -1,4 +1,4 @@
-import { DataAdapter, Notice, TFile } from "obsidian";
+import { DataAdapter, FileSystemAdapter, Platform, Notice, TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache.ts";
 
 export type PasswordAndHint = {
@@ -217,14 +217,17 @@ export class SessionPasswordService{
 		if (SessionPasswordService.vaultFileAdapter == null){
 			throw new Error('SessionPasswordService.vaultFileAdapter == null');
 		}
-		const resUrl = SessionPasswordService.vaultFileAdapter.getResourcePath( vaultRelativePath );
-		// Local adapter resource URLs use app-specific protocols, which requestUrl cannot read.
-		// eslint-disable-next-line no-restricted-globals
-		const res = await fetch ( resUrl );
-		if (!res.ok){
-			throw new Error(`Unable to read external password file (HTTP ${res.status})`);
+		const adapter = SessionPasswordService.vaultFileAdapter;
+		let contents: string;
+		if (Platform.isDesktop && Platform.isDesktopApp && adapter instanceof FileSystemAdapter) {
+			// Desktop filesystem paths may be absolute or relative to the vault, including ../.
+			// eslint-disable-next-line import/no-nodejs-modules -- Dynamic imports are guarded by Platform.isDesktop and only read desktop filesystem paths.
+			const [{ readFile }, path] = await Promise.all([import('node:fs/promises'), import('node:path')]);
+			contents = await readFile(path.resolve(adapter.getBasePath(), vaultRelativePath), 'utf8');
+		} else {
+			// Keep parent segments intact: mobile adapters decide which paths are accessible.
+			contents = await adapter.read(vaultRelativePath);
 		}
-		const contents = await res.text();
 		if (contents.length == 0){
 			throw new Error('File contents empty');
 		}
