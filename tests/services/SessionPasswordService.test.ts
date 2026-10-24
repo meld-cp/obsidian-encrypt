@@ -347,7 +347,7 @@ describe('SessionPasswordService', () => {
 
 			global.fetch = vi.fn()
 				.mockRejectedValueOnce(new Error('Not found'))
-				.mockResolvedValueOnce({ text: () => Promise.resolve('external-password') });
+				.mockResolvedValueOnce({ ok: true, status: 200, text: () => Promise.resolve('external-password') });
 
 			const result = await SessionPasswordService.getByPathAsync('/path');
 			expect(result.password).toBe('external-password');
@@ -361,13 +361,33 @@ describe('SessionPasswordService', () => {
 			SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
 			SessionPasswordService.setExternalFilePaths(['empty.txt']);
 
-			global.fetch = vi.fn().mockResolvedValue({ text: () => Promise.resolve('') });
+			global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, text: () => Promise.resolve('') });
 
 			const result = await SessionPasswordService.getByPathAsync('/path');
 			expect(result).toEqual(SessionPasswordService.blankPasswordAndHint);
 			expect(global.fetch).toHaveBeenCalledWith('/empty.txt');
 			expect(global.fetch).toHaveBeenCalledTimes(1);
 			expect(Notice).toHaveBeenCalledWith('External password file not found', 10000);
+		});
+
+		it('should skip an unsuccessful response and try the next external file', async () => {
+			SessionPasswordService.setLevel(SessionPasswordService.LevelExternalFile);
+			SessionPasswordService.setExternalFilePaths(['missing.txt', 'found.txt']);
+			global.fetch = vi.fn()
+				.mockResolvedValueOnce({ ok: false, status: 404, text: () => Promise.resolve('not found') })
+				.mockResolvedValueOnce({ ok: true, status: 200, text: () => Promise.resolve('external-password') });
+
+			const result = await SessionPasswordService.getByPathAsync('/path');
+
+			expect(result.password).toBe('external-password');
+			expect(global.fetch).toHaveBeenCalledTimes(2);
+		});
+
+		it('should report an unsuccessful response as an unreadable external file', async () => {
+			SessionPasswordService.init({ getResourcePath: () => '/missing.txt' } as unknown as DataAdapter);
+			global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404, text: () => Promise.resolve('not found') });
+
+			expect(await SessionPasswordService.canFetchContents('missing.txt')).toBe(false);
 		});
 	});
 });

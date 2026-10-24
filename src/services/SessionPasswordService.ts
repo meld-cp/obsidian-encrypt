@@ -221,6 +221,9 @@ export class SessionPasswordService{
 		// Local adapter resource URLs use app-specific protocols, which requestUrl cannot read.
 		// eslint-disable-next-line no-restricted-globals
 		const res = await fetch ( resUrl );
+		if (!res.ok){
+			throw new Error(`Unable to read external password file (HTTP ${res.status})`);
+		}
 		const contents = await res.text();
 		if (contents.length == 0){
 			throw new Error('File contents empty');
