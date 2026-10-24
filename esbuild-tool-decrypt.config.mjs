@@ -1,23 +1,8 @@
-import esbuild from "esbuild";
-import process from "process";
-import copyStaticFiles from 'esbuild-copy-static-files';
+import esbuild from 'esbuild';
+import { copyFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { offlineBuildOptions, repositoryRoot } from './scripts/recovery-builds.mjs';
 
-const prod = (process.argv[2] === 'production');
-
-esbuild.build({
-	entryPoints: ['src/tools/offline-decrypt.ts'],
-	bundle: true,
-	format: 'iife',
-	target: 'es2018',
-	logLevel: "info",
-	sourcemap: prod ? false : 'inline',
-	treeShaking: prod,
-	minify: prod,
-	outfile: './tools/offline-decrypt.js',
-	plugins:[
-		copyStaticFiles({
-			src: './src/tools/decrypt.html',
-			dest: './tools/decrypt.html',
-		}),
-	]
-}).catch(() => process.exit(1));
+const production = process.argv[2] === 'production';
+await esbuild.build(offlineBuildOptions(production));
+copyFileSync(join(repositoryRoot, 'src/tools/decrypt.html'), join(repositoryRoot, 'tools/decrypt.html'));

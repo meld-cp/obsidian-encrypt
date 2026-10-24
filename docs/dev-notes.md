@@ -14,8 +14,8 @@ To release a new version:
 2. Run `npm run version` to update `manifest.json` & `versions.json`.
   	* `manifest.json`: holds the new version number and the minimum Obsidian version required for your latest release.
 	* `versions.json`: holds the history of version numbers and their minimum Obsidian version, so older versions of Obsidian can download an older version of your plugin that's compatible.
-3. Rebuild tracked decrypt tools as described under [Validation](#validation) when their source or shared dependencies changed, then run `npm test` and `npm run lint`. Resolve any failures before continuing.
-4. Run `npm run build` to type-check the source and generate fresh production artifacts. Resolve any build errors before continuing.
+3. Run `npm run release:check` as described under [Validation](#validation). Resolve any failures before continuing.
+4. Review the generated `dist/release-check/report.json` and `SHA256SUMS`. A passed local check produces freshly verified production assets; it does not replace the desktop and mobile checks below.
 5. Test the packaged plugin on desktop and mobile, including the minimum supported Obsidian version. Check that the following files were generated for the version in `package.json` (replace `<version>` with that version):
    * `dist/meld-encrypt-<version>.zip`
    * `dist/meld-encrypt-<version>/meld-encrypt/manifest.json`
@@ -44,22 +44,46 @@ To add your plugin to the community plugin list:
 
 ## Validation
 
-When changing encryption helpers, inline parsing, or decrypt-tool source, rebuild
-the tracked tool bundles before running tests. CLI and offline-decryptor tests
-execute those bundles, so testing without rebuilding can exercise stale code.
+Install dependencies with `npm ci`, then run:
+
+```bash
+npm run release:check
+```
+
+The command checks matching versions in the package, lockfile, manifest, and
+compatibility map; verifies Git, `zip`, `unzip`, and installed dependencies;
+rebuilds recovery bundles in memory; runs type checking, the full test suite,
+and lint once each; and builds and verifies the release assets. ZIP integrity,
+exact contents, and byte equality with the standalone files are checked.
+The current version's production output directory and ZIP are replaced before
+building; other versions' output is preserved.
+
+Tracked files are never rewritten. If recovery bundles are stale, the check
+stops before testing them and lists the affected files. Regenerate them with:
 
 ```bash
 npm run build-tool-mdenc
 npm run dev-tool-mdenc
 npm run build-tool-decrypt
-npm test
-npm run lint
-npm run build
-git diff --check
 ```
 
-The tool builds update `tools/mdenc.mjs`, `tools/mdenc-debug.mjs`, and
-`tools/offline-decrypt.js`; include changed bundles with their source changes.
+Review the changes to `tools/mdenc.mjs`, `tools/mdenc-debug.mjs`,
+`tools/offline-decrypt.js`, and `tools/decrypt.html`, then rerun `release:check`.
+CLI and offline-decryptor tests execute these tracked files, so they must match
+fresh builds before tests run. The existing build commands still write their
+outputs normally.
+
+Every check run replaces `dist/release-check/report.json` with the version,
+Git commit, working-tree state, stage results, timings, and any failure details.
+A successful run also writes `dist/release-check/SHA256SUMS`, containing hashes
+of the ZIP and three standalone release assets; paths are relative to the
+repository root. Verify them with `sha256sum -c dist/release-check/SHA256SUMS`.
+Failure returns a nonzero exit status, marks later stages skipped, and removes
+old checksum output. Uncommitted changes are allowed and recorded in the report.
+
+This is local automated validation. It does not launch Obsidian or perform
+smoke tests, commit, push, tag, or publish. Desktop/mobile and update checks
+remain separate release steps. Run `git diff --check` before committing.
 For documentation-only changes, check the diff, referenced paths, and claims
 against the implementation; rebuilding unchanged bundles is unnecessary.
 

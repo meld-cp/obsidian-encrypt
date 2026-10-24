@@ -14,7 +14,9 @@
 		"build-tool-decrypt": "tsc -noEmit -skipLibCheck && node esbuild-tool-decrypt.config.mjs production",
 		"dev-tool-mdenc": "tsc -noEmit -skipLibCheck && node esbuild-tool-mdenc.config.mjs",
 		"build-tool-mdenc": "tsc -noEmit -skipLibCheck && node esbuild-tool-mdenc.config.mjs production",
-		"lint": "eslint 'src/**/*.ts' --ignore-pattern 'src/tools/**' --max-warnings 0"
+		"lint": "eslint 'src/**/*.ts' --ignore-pattern 'src/tools/**' --max-warnings 0",
+		"typecheck": "tsc -noEmit -skipLibCheck",
+		"release:check": "node scripts/release-check.mjs"
 	},
 	"keywords": [],
 	"author": "meld-cp",
