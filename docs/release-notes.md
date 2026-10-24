@@ -24,7 +24,7 @@ Changes since v2.4.5.
 
 ### Compatibility
 
-* Requires Obsidian 1.1.13 or later.
+* Requires Obsidian 1.13.0 or later.
 * New encryption uses the v3 format. Existing encrypted notes remain readable, but saving a legacy whole note upgrades it to v3; inline blocks upgrade when edited and saved through the decryption dialog. Update the plugin on all devices before saving: earlier plugin versions cannot decrypt v3 content.
 * Command IDs have changed to follow Obsidian plugin conventions. Existing custom hotkeys may need to be reassigned.
 

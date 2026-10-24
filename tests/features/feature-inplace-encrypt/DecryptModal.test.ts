@@ -27,7 +27,7 @@ vi.mock('obsidian', () => {
 		label = '';
 		click: () => unknown = () => {};
 		setButtonText(label: string) { this.label = label; return this; }
-		setWarning() { return this; }
+		setDestructive() { return this; }
 		onClick(callback: () => unknown) { this.click = callback; return this; }
 	}
 	return {
