@@ -9,7 +9,7 @@ import FeatureWholeNoteEncryptV2 from './features/feature-whole-note-encrypt/Fea
 
 export default class MeldEncrypt extends Plugin {
 
-	private settings: IMeldEncryptPluginSettings;
+	private pluginSettings: IMeldEncryptPluginSettings;
 
 	private enabledFeatures : IMeldEncryptPluginFeature[] = [];
 
@@ -30,7 +30,7 @@ export default class MeldEncrypt extends Plugin {
 			new MeldEncryptSettingsTab(
 				this.app,
 				this,
-				this.settings,
+				this.pluginSettings,
 				this.enabledFeatures
 			)
 		);
@@ -48,7 +48,7 @@ export default class MeldEncrypt extends Plugin {
 
 		// load features
 		for (const f of this.enabledFeatures) {
-			await f.onload( this, this.settings );
+			await f.onload( this, this.pluginSettings );
 		}
 
 	}
@@ -80,21 +80,21 @@ export default class MeldEncrypt extends Plugin {
 		}
 
 		const savedSettings = await this.loadData() as Partial<IMeldEncryptPluginSettings> | null;
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, savedSettings);
+		this.pluginSettings = Object.assign({}, DEFAULT_SETTINGS, savedSettings);
 
 		// apply settings
-		SessionPasswordService.setActive( this.settings.rememberPassword );
+		SessionPasswordService.setActive( this.pluginSettings.rememberPassword );
 		SessionPasswordService.setAutoExpire(
-			this.settings.rememberPasswordTimeout == 0
+			this.pluginSettings.rememberPasswordTimeout == 0
 			? null
-			: this.settings.rememberPasswordTimeout
+			: this.pluginSettings.rememberPasswordTimeout
 		);
-		SessionPasswordService.setLevel( this.settings.rememberPasswordLevel );
-		SessionPasswordService.setExternalFilePaths( this.settings.rememberPasswordExternalFilePaths );
+		SessionPasswordService.setLevel( this.pluginSettings.rememberPasswordLevel );
+		SessionPasswordService.setExternalFilePaths( this.pluginSettings.rememberPasswordExternalFilePaths );
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		await this.saveData(this.pluginSettings);
 	}
 
 }

@@ -63,6 +63,8 @@ export default class DecryptModal extends Modal {
 		;
 		if (!this.readOnly && this.canDecryptInPlace){
 			sActions.addButton( cb =>{
+				// Keep compatibility with manifest.json minAppVersion; setDestructive needs 1.13.0.
+				// eslint-disable-next-line @typescript-eslint/no-deprecated
 				cb.setWarning()
 				.setButtonText('Decrypt in-place')
 				.onClick( _ =>{
