@@ -1,4 +1,4 @@
-import { App, Modal, Setting } from 'obsidian';
+import { App, Modal } from 'obsidian';
 import { PasswordForm } from './services/PasswordForm.ts';
 import type { PasswordAndHint } from './services/SessionPasswordService.ts';
 
@@ -21,7 +21,7 @@ export default class PluginPasswordModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 		this.invalidate();
-		new Setting(contentEl).setHeading().setName(this.title);
+		this.setTitle(this.title);
 
 		const initialValue = this.defaultPassword ?? { password: '', hint: '' };
 		const form = new PasswordForm({

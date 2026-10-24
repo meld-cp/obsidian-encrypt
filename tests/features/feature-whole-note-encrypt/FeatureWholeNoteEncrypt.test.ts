@@ -89,7 +89,7 @@ describe('new encrypted note password handling', () => {
 
 		expect(fetchPassword).toHaveBeenCalledOnce();
 		expect(modal.constructor).toHaveBeenCalledWith(
-			expect.anything(), 'Please provide a password for encryption', true, true,
+			expect.anything(), 'Encrypt note', true, true,
 			expect.objectContaining({ password: '' }),
 		);
 		await expectCreatedWith('entered-password');

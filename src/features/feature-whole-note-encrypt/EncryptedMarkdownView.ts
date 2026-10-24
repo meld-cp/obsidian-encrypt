@@ -113,7 +113,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 				// prompt for password
 				passwordAndHint = await new PluginPasswordModal(
 					this.app,
-					`Decrypting "${file.basename}"`,
+					`Decrypt "${file.basename}"`,
 					false,
 					false,
 					{ password: '', hint: encryptedData.hint }

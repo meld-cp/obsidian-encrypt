@@ -189,7 +189,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			// prompt for password
 			const pwm = new PluginPasswordModal(
 				this.plugin.app,
-				'Please provide a password for encryption',
+				'Encrypt note',
 				true,
 				true,
 				pwh ?? await SessionPasswordService.getByPathAsync( newFilepath )

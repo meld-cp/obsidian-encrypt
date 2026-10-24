@@ -73,6 +73,7 @@ vi.mock('obsidian', () => {
 			modalEl = { classList: { add() {} } };
 			contentEl = { empty: () => { ui.rows = []; }, classList: { add() {} } };
 			titleEl = { setText() {} };
+			setTitle(_title: string) { return this; }
 			onOpen() {}
 			onClose() {}
 			open() { ui.modal = this as unknown as PasswordModal; this.onOpen(); }
@@ -121,7 +122,7 @@ describe('inline password hint validation', () => {
 	afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 	function hintRow() { return ui.rows.find(row => row.name === 'Optional password hint')!; }
-	function confirm() { ui.rows.find(row => row.button?.label === 'Confirm')!.button!.click(); }
+	function confirm() { ui.rows.find(row => ['Encrypt', 'Decrypt'].includes(row.button?.label ?? ''))!.button!.click(); }
 
 	it.each(invalidHints)('rejects hint %j without changing the selection or cached password', async hint => {
 		const cache = vi.spyOn(SessionPasswordService, 'putByPath');

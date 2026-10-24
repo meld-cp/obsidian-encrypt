@@ -57,6 +57,7 @@ vi.mock('obsidian', () => {
 	return {
 		TextComponent: TextInput,
 		Modal: class {
+			setTitle(_title: string) { return this; }
 			modalEl = { classList: { add() {} } };
 			contentEl = { empty: () => { ui.rows = []; }, classList: { add() {} } };
 			onOpen() {}
@@ -96,7 +97,7 @@ vi.mock('obsidian', () => {
 
 function row(name: string) { return ui.rows.find(item => item.name.toLowerCase() === name.toLowerCase())!; }
 function input(name: string) { return row(name).input!; }
-function confirm() { ui.rows.flatMap(item => item.buttons).find(button => button.label === 'Confirm')!.click(); }
+function confirm() { ui.rows.flatMap(item => item.buttons).find(button => ['Encrypt', 'Decrypt'].includes(button.label))!.click(); }
 
 beforeEach(() => {
 	ui.rows = []; ui.focused = null; ui.closed = 0;
@@ -115,13 +116,13 @@ describe.each(['whole-note', 'inline'] as const)('%s password dialog', kind => {
 
 	it('rejects mismatched confirmation and accepts corrected credentials', () => {
 		const dialog = modal(); dialog.open();
-		input('Password:').change('secret');
-		input('Confirm Password:').change('different');
+		input('Password').change('secret');
+		input('Confirm password').change('different');
 		confirm();
 		expect(dialog.resultConfirmed).toBe(false);
 		expect(ui.closed).toBe(0);
-		expect(row('Confirm Password:').description).toBe("Passwords don't match");
-		input('Confirm Password:').change('secret');
+		expect(row('Confirm password').description).toBe("Passwords don't match");
+		input('Confirm password').change('secret');
 		input('Optional password hint').change('current hint');
 		confirm();
 		expect(ui.closed).toBe(1);
@@ -136,9 +137,9 @@ describe.each(['whole-note', 'inline'] as const)('%s password dialog', kind => {
 
 	it('moves through fields with Enter without confirming a cancelled dialog', () => {
 		const dialog = modal(); dialog.open();
-		input('Password:').change('secret'); input('Password:').enter();
-		expect(ui.focused).toBe(input('Confirm Password:'));
-		input('Confirm Password:').change('secret'); input('Confirm Password:').enter();
+		input('Password').change('secret'); input('Password').enter();
+		expect(ui.focused).toBe(input('Confirm password'));
+		input('Confirm password').change('secret'); input('Confirm password').enter();
 		expect(ui.focused).toBe(input('Optional password hint'));
 		expect(dialog.resultConfirmed).toBe(false);
 		dialog.close();
@@ -147,7 +148,7 @@ describe.each(['whole-note', 'inline'] as const)('%s password dialog', kind => {
 
 	it('submits a completed hint with Enter', () => {
 		const dialog = modal(true, false, 'secret'); dialog.open();
-		input('Password:').enter();
+		input('Password').enter();
 		expect(ui.focused).toBe(input('Optional password hint'));
 		input('Optional password hint').change('hint'); input('Optional password hint').enter();
 		expect(dialog.resultConfirmed).toBe(true);
@@ -156,21 +157,21 @@ describe.each(['whole-note', 'inline'] as const)('%s password dialog', kind => {
 
 	it('decrypts with Enter while confirmation and hint editing are hidden', () => {
 		const dialog = modal(false, false, '', 'existing 🔐 hint'); dialog.open();
-		expect(row('Confirm Password:').visible).toBe(false);
+		expect(row('Confirm password').visible).toBe(false);
 		expect(row('Optional password hint').visible).toBe(false);
-		input('Password:').change('secret'); input('Password:').enter();
+		input('Password').change('secret'); input('Password').enter();
 		expect(dialog.resultConfirmed).toBe(true);
 		expect(ui.closed).toBe(1);
 	});
 
 	it.each(['', 'remembered'])('preserves initial focus for password %j', password => {
 		modal(true, true, password).open(); vi.runAllTimers();
-		expect(ui.focused).toBe(input(kind === 'whole-note' && password ? 'Confirm Password:' : 'Password:'));
+		expect(ui.focused).toBe(input(kind === 'whole-note' && password ? 'Confirm password' : 'Password'));
 	});
 
 	it('focuses a visible password field when confirmation is disabled', () => {
 		modal(false, false, 'remembered').open(); vi.runAllTimers();
-		expect(ui.focused).toBe(input('Password:'));
+		expect(ui.focused).toBe(input('Password'));
 	});
 });
 
@@ -194,8 +195,8 @@ it('returns the inline visibility and text controls on submission', () => {
 it('resolves the nullable whole-note API to null when cancelled after keyboard navigation', async () => {
 	const dialog = new PluginPasswordModal({} as App, 'Password', true, true, null);
 	const result = dialog.open2Async();
-	input('Password:').change('secret');
-	input('Confirm Password:').change('secret'); input('Confirm Password:').enter();
+	input('Password').change('secret');
+	input('Confirm password').change('secret'); input('Confirm password').enter();
 	dialog.close();
 	expect(await result).toBeNull();
 });

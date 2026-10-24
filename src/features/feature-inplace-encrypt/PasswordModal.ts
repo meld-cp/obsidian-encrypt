@@ -30,7 +30,7 @@ export default class PasswordModal extends Modal {
 
 		let showInReadingView = this.showInReadingView;
 		let textToEncrypt = '';
-		new Setting(contentEl).setHeading().setName(this.isEncrypting ? 'Encrypting' : 'Decrypting');
+		this.setTitle(this.isEncrypting ? 'Encrypt text' : 'Decrypt text');
 
 		const form = new PasswordForm({
 			container: contentEl,

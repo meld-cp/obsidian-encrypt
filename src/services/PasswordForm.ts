@@ -28,7 +28,7 @@ export class PasswordForm {
 
 		UiHelper.buildPasswordSetting({
 			container: options.container,
-			name: 'Password:',
+			name: 'Password',
 			placeholder: options.isEncrypting || !this.hint ? '' : `Hint: ${this.hint}`,
 			initialValue: this.password,
 			tabIndex: options.tabIndexes?.password,
@@ -53,7 +53,7 @@ export class PasswordForm {
 
 		this.confirmationSetting = UiHelper.buildPasswordSetting({
 			container: options.container,
-			name: 'Confirm Password:',
+			name: 'Confirm password',
 			tabIndex: options.tabIndexes?.confirmation,
 			autoFocus: focusConfirmation,
 			onChangeCallback: value => {
@@ -98,7 +98,7 @@ export class PasswordForm {
 	public addConfirmButton(): void {
 		new Setting(this.options.container).addButton(button => {
 			if (this.options.tabIndexes) button.buttonEl.tabIndex = this.options.tabIndexes.submit;
-			button.setButtonText('Confirm').onClick(() => this.submit());
+			button.setButtonText(this.options.isEncrypting ? 'Encrypt' : 'Decrypt').onClick(() => this.submit());
 		});
 	}
 

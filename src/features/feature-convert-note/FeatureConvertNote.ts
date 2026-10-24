@@ -136,7 +136,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 			if ( password.password == '' ){
 				// ask for password
-				const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt Note', true, true, password );
+				const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt note', true, true, password );
 				password = await pm.openAsync();
 			}
 			await this.closeUpdateRememberPasswordThenReopen(
@@ -176,7 +176,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			if ( cachedContent == null ){
 				const encryptedFileContent = await this.plugin.app.vault.read( file );
 				const encryptedData = JsonFileEncoding.decode( encryptedFileContent );
-				const pwm = new PluginPasswordModal(this.plugin.app, 'Decrypt Note', false, false, { password: '', hint: encryptedData.hint } );
+				const pwm = new PluginPasswordModal(this.plugin.app, 'Decrypt note', false, false, { password: '', hint: encryptedData.hint } );
 				passwordAndHint = await pwm.openAsync();
 				if (!pwm.resultConfirmed){
 					return;
