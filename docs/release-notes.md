@@ -16,7 +16,7 @@ Please report any bugs or features requests [here](https://github.com/meld-cp/ob
 
 The full change log can be found on the [releases](https://github.com/meld-cp/obsidian-encrypt/releases) page.
 
-## Unreleased
+## v3.0.1
 
 ### Compatibility
 
@@ -26,12 +26,17 @@ The full change log can be found on the [releases](https://github.com/meld-cp/ob
 
 * Added a local release validation command and optional desktop smoke checks in a disposable vault, including heading navigation in Reading view and Live Preview.
 * Updated the Obsidian SDK and development dependencies, including security fixes.
+* Added searchable settings for password remembering and inline encryption.
+* Added installation and basic usage instructions to the README, and documented expected standalone CLI review warnings.
+* External password files support vault-relative paths (including `../`) on all platforms subject to filesystem permissions, and absolute paths on desktop.
 
 ### Bug Fixes
 
 * Fixed heading-link navigation in unlocked whole-note encrypted files ([#214](https://github.com/meld-cp/obsidian-encrypt/issues/214)), using view-local heading metadata and Obsidian navigation.
 * Prevented stale asynchronous file loads and decryptions from overwriting newer encrypted-note contents.
-* Rejected failed external password file responses instead of treating their response bodies as passwords.
+* Read external password files directly through filesystem APIs or the vault adapter, preserving file contents and falling back past missing, inaccessible, or empty files.
+* Stopped detaching encrypted-note tabs during plugin unload; the explicit lock-and-close command remains available.
+* Added explicit asynchronous error handling to the standalone recovery CLI.
 
 ## v3.0.0
 
