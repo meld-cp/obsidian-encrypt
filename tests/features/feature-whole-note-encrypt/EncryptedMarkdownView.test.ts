@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MarkdownView } from 'obsidian';
 import { FileData, FileDataHelper, JsonFileEncoding } from '../../../src/services/FileDataHelper.ts';
+import { SessionPasswordService } from '../../../src/services/SessionPasswordService.ts';
 
 vi.mock('obsidian', () => ({
 	MarkdownView: class {
@@ -26,7 +27,7 @@ vi.mock('obsidian', () => ({
 
 		async onOpen(): Promise<void> {}
 
-		async onLoadFile(): Promise<void> {}
+		async onLoadFile(file: any): Promise<void> { this.file = file; }
 
 		async onUnloadFile(): Promise<void> {}
 
@@ -255,5 +256,70 @@ describe('EncryptedMarkdownView save upgrades versions', () => {
 
 		expect(write).not.toHaveBeenCalled();
 		expect(encrypt).not.toHaveBeenCalled();
+	});
+});
+
+describe('EncryptedMarkdownView file loading', () => {
+	afterEach(() => vi.restoreAllMocks());
+
+	it('ignores an older file read that completes after a newer load', async () => {
+		const fileA = { path: 'a.mdenc', basename: 'a', extension: 'mdenc' } as any;
+		const fileB = { path: 'b.mdenc', basename: 'b', extension: 'mdenc' } as any;
+		const resolveRead = new Map<string, (content: string) => void>();
+		const app = {
+			workspace: { layoutReady: true },
+			vault: {
+				read: (file: { path: string }) => new Promise<string>(resolve => resolveRead.set(file.path, resolve)),
+			},
+		};
+		const view = new EncryptedMarkdownView({ app, detach: vi.fn() } as any);
+		vi.spyOn(SessionPasswordService, 'getByFile').mockResolvedValue({ password: 'pw', hint: '' });
+		vi.spyOn(SessionPasswordService, 'putByFile').mockImplementation(() => {});
+		vi.spyOn(FileDataHelper, 'decrypt').mockImplementation(async data => data.encodedData);
+		const encoded = (text: string) => JSON.stringify({ version: '2.0', hint: '', encodedData: text });
+
+		const loadA = view.onLoadFile(fileA);
+		const loadB = view.onLoadFile(fileB);
+		resolveRead.get(fileB.path)!(encoded('newer B'));
+		await vi.waitFor(() => expect(view.cachedUnencryptedData).toBe('newer B'));
+		resolveRead.get(fileA.path)!(encoded('stale A'));
+		await Promise.all([loadA, loadB]);
+
+		expect(view.cachedUnencryptedData).toBe('newer B');
+		expect(view.getViewData()).toBe('newer B');
+		expect(view.encryptedData?.encodedData).toBe('newer B');
+		expect(view.file).toBe(fileB);
+		expect(SessionPasswordService.putByFile).toHaveBeenCalledTimes(1);
+	});
+
+	it('ignores an older decryption that completes after a newer load', async () => {
+		const fileA = { path: 'a.mdenc', basename: 'a', extension: 'mdenc' } as any;
+		const fileB = { path: 'b.mdenc', basename: 'b', extension: 'mdenc' } as any;
+		const app = {
+			workspace: { layoutReady: true },
+			vault: { read: async (file: { path: string }) => JSON.stringify({
+				version: '2.0', hint: '', encodedData: file.path === fileA.path ? 'stale A' : 'newer B',
+			}) },
+		};
+		const view = new EncryptedMarkdownView({ app, detach: vi.fn() } as any);
+		let resolveStaleDecrypt!: (plaintext: string) => void;
+		vi.spyOn(SessionPasswordService, 'getByFile').mockResolvedValue({ password: 'pw', hint: '' });
+		vi.spyOn(SessionPasswordService, 'putByFile').mockImplementation(() => {});
+		vi.spyOn(FileDataHelper, 'decrypt').mockImplementation(async data => data.encodedData === 'stale A'
+			? new Promise(resolve => { resolveStaleDecrypt = resolve; })
+			: data.encodedData);
+
+		const loadA = view.onLoadFile(fileA);
+		await vi.waitFor(() => expect(resolveStaleDecrypt).toBeTypeOf('function'));
+		const loadB = view.onLoadFile(fileB);
+		await vi.waitFor(() => expect(view.cachedUnencryptedData).toBe('newer B'));
+		resolveStaleDecrypt('stale A');
+		await Promise.all([loadA, loadB]);
+
+		expect(view.cachedUnencryptedData).toBe('newer B');
+		expect(view.getViewData()).toBe('newer B');
+		expect(view.encryptedData?.encodedData).toBe('newer B');
+		expect(view.file).toBe(fileB);
+		expect(SessionPasswordService.putByFile).toHaveBeenCalledTimes(1);
 	});
 });

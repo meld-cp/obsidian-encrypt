@@ -52,9 +52,11 @@ export class EncryptedMarkdownView extends MarkdownView {
 
 	override async onLoadFile(file: TFile): Promise<void> {
 		// Invalidate decrypts started for the previously loaded file.
-		this.viewDataRequest++;
+		const request = ++this.viewDataRequest;
+		const isCurrentRequest = () => request === this.viewDataRequest;
 		//console.debug('onLoadFile', {file});
 		this.setViewBusy( true );
+		this.isSavingEnabled = false;
 		try{
 
 			this.setUnencryptedViewData('', true);
@@ -65,40 +67,49 @@ export class EncryptedMarkdownView extends MarkdownView {
 			};
 
 			const fileContents = await this.app.vault.read( file );
-			this.encryptedData = JsonFileEncoding.decode( fileContents );
+			if (!isCurrentRequest()) return;
+			const encryptedData = JsonFileEncoding.decode( fileContents );
 
-			this.passwordAndHint = await SessionPasswordService.getByFile( file );
-			this.passwordAndHint.hint = this.encryptedData.hint;
+			const cachedPasswordAndHint = await SessionPasswordService.getByFile( file );
+			if (!isCurrentRequest()) return;
+			let passwordAndHint: PasswordAndHint | null = { ...cachedPasswordAndHint, hint: encryptedData.hint };
 
 			// try to decrypt the file content
 			let decryptedText: string|null = null;
 
-			if ( this.passwordAndHint.password.length > 0 ) {
-				decryptedText = await FileDataHelper.decrypt( this.encryptedData, this.passwordAndHint.password );
+			if ( passwordAndHint.password.length > 0 ) {
+				decryptedText = await FileDataHelper.decrypt( encryptedData, passwordAndHint.password );
+				if (!isCurrentRequest()) return;
 			}
 			while( decryptedText == null ){
 				// prompt for password
-				this.passwordAndHint = await new PluginPasswordModal(
+				passwordAndHint = await new PluginPasswordModal(
 					this.app,
 					`Decrypting "${file.basename}"`,
 					false,
 					false,
-					{ password: '', hint: this.encryptedData.hint }
+					{ password: '', hint: encryptedData.hint }
 				).open2Async();
+				if (!isCurrentRequest()) return;
 
-				if ( this.passwordAndHint == null ) {
+				if ( passwordAndHint == null ) {
 					// user cancelled
 					this.leaf.detach();
 					return;
 				}
 
-				decryptedText = await FileDataHelper.decrypt( this.encryptedData, this.passwordAndHint.password );
+				decryptedText = await FileDataHelper.decrypt( encryptedData, passwordAndHint.password );
+				if (!isCurrentRequest()) return;
 				if ( decryptedText == null ) {
 					new Notice('Decryption failed');
 				}
 			}
 
-			SessionPasswordService.putByFile( this.passwordAndHint, file );
+			if (passwordAndHint == null) return;
+			if (!isCurrentRequest()) return;
+			this.encryptedData = encryptedData;
+			this.passwordAndHint = passwordAndHint;
+			SessionPasswordService.putByFile( passwordAndHint, file );
 
 			this.setUnencryptedViewData( decryptedText, true );
 			
@@ -107,13 +118,15 @@ export class EncryptedMarkdownView extends MarkdownView {
 				this.origFile = file;
 				await super.onLoadFile(file);
 			}finally{
-				this.isLoadingFileInProgress = false;
-				this.isSavingEnabled = true; // allow saving after the file is loaded with a password
+				if (isCurrentRequest()) {
+					this.isLoadingFileInProgress = false;
+					this.isSavingEnabled = true; // allow saving after the file is loaded with a password
+				}
 			}
 
 		}finally{
 			//console.debug('onLoadFile done');
-			this.setViewBusy( false );
+			if (isCurrentRequest()) this.setViewBusy( false );
 		}
 
 	}
