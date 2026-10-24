@@ -116,11 +116,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 	}
 
 	private setViewBusy( busy: boolean ) {
-		if ( busy ) {
-			this.contentEl.style.cursor = 'wait';
-		} else {
-			this.contentEl.style.cursor = 'auto';
-		}
+		this.contentEl.classList.toggle('meld-encrypt-busy', busy);
 	}
 
 	public detachSafely(){

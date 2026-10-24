@@ -14,24 +14,27 @@ To release a new version:
 2. Run `npm run version` to update `manifest.json` & `versions.json`.
   	* `manifest.json`: holds the new version number and the minimum Obsidian version required for your latest release.
 	* `versions.json`: holds the history of version numbers and their minimum Obsidian version, so older versions of Obsidian can download an older version of your plugin that's compatible.
-3. Rebuild tracked decrypt tools as described under [Validation](#validation) when their source or shared dependencies changed, then run `npm test`. Resolve any failures before continuing.
+3. Rebuild tracked decrypt tools as described under [Validation](#validation) when their source or shared dependencies changed, then run `npm test` and `npm run lint`. Resolve any failures before continuing.
 4. Run `npm run build` to type-check the source and generate fresh production artifacts. Resolve any build errors before continuing.
-5. Check that the following files were generated for the version in `package.json` (replace `<version>` with that version):
+5. Test the packaged plugin on desktop and mobile, including the minimum supported Obsidian version. Check that the following files were generated for the version in `package.json` (replace `<version>` with that version):
    * `dist/meld-encrypt-<version>.zip`
    * `dist/meld-encrypt-<version>/meld-encrypt/manifest.json`
    * `dist/meld-encrypt-<version>/meld-encrypt/main.js`
    * `dist/meld-encrypt-<version>/meld-encrypt/styles.css`
-6. Create a new GitHub release using your new version number as the **Tag version**. Use the exact version number, and don't include a prefix `v`. See the following example: [obsidian-sample-plugin](https://github.com/obsidianmd/obsidian-sample-plugin/releases).
-7. Upload the ZIP and the three individual plugin files from step 5 as binary attachments. Use the freshly built files for this version.
-8. Publish the release.
+6. Finalize the release notes, commit all release changes, and merge `next` into `main`. Push `main`, then create and push an annotated tag matching the version at that commit.
+7. Create a new GitHub release using your new version number as the **Tag version**. Use the exact version number, and don't include a prefix `v`. See the following example: [obsidian-sample-plugin](https://github.com/obsidianmd/obsidian-sample-plugin/releases).
+8. Upload the ZIP and the three individual plugin files from step 5 as binary attachments. Use the freshly built files for this version.
+9. Verify the attached assets and publish the release as the latest stable version. Confirm that Obsidian detects and installs the update.
+
+The production build requires the `zip` command. Verify archives with `unzip -t`; a successful bundle alone does not prove packaging succeeded.
 
 ## Adding Your Plugin to the Community Plugin List
 
-To add your plugin to the community plugib list: 
+To add your plugin to the community plugin list:
 
 1. Publish an initial version.
 2. Make sure you have a `README.md` file in the root of your repository.
-3. Make a pull request at [obsidian-releases](https://github.com/obsidianmd/obsidian-releases) to add your plugin.
+3. Submit through the [Obsidian Community directory](https://community.obsidian.md), following [Obsidian’s release guide](https://docs.obsidian.md/Plugins/Releasing/Submit%20your%20plugin). Only the initial release needs submission.
 
 ## How to Use
 
@@ -50,6 +53,7 @@ npm run build-tool-mdenc
 npm run dev-tool-mdenc
 npm run build-tool-decrypt
 npm test
+npm run lint
 npm run build
 git diff --check
 ```
@@ -76,7 +80,7 @@ If the `your-plugin-id` folder does not exist, create it before copying the file
 ## API Documentation
 
 For detailed API Documentation, see the [Obsidian API repository](https://github.com/obsidianmd/obsidian-api).
-## Encryption format v3 (unreleased)
+## Encryption format v3 (released in 3.0.0)
 
 New whole-note files and inline gamma (`γ`) blocks use one authenticated encryption
 format with two representations. Whole-note JSON stores readable parameters:

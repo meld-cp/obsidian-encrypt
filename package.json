@@ -1,6 +1,6 @@
 {
 	"name": "meld-encrypt",
-	"version": "2.4.5",
+	"version": "3.0.0",
 	"description": "Hide secrets in your vault.",
 	"main": "main.js",
 	"type": "module",
@@ -13,7 +13,8 @@
 		"dev-tool-decrypt": "tsc -noEmit -skipLibCheck && node esbuild-tool-decrypt.config.mjs",
 		"build-tool-decrypt": "tsc -noEmit -skipLibCheck && node esbuild-tool-decrypt.config.mjs production",
 		"dev-tool-mdenc": "tsc -noEmit -skipLibCheck && node esbuild-tool-mdenc.config.mjs",
-		"build-tool-mdenc": "tsc -noEmit -skipLibCheck && node esbuild-tool-mdenc.config.mjs production"
+		"build-tool-mdenc": "tsc -noEmit -skipLibCheck && node esbuild-tool-mdenc.config.mjs production",
+		"lint": "eslint 'src/**/*.ts' --ignore-pattern 'src/tools/**' --max-warnings 0"
 	},
 	"keywords": [],
 	"author": "meld-cp",

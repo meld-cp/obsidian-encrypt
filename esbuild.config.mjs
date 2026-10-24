@@ -3,6 +3,7 @@ import process from "process";
 import { builtinModules } from 'node:module';
 import copyStaticFiles from 'esbuild-copy-static-files';
 import { spawnSync } from 'child_process';
+import { rmSync } from 'node:fs';
 
 const banner =
 `/*
@@ -67,23 +68,21 @@ const ctx = await esbuild.context({
 });
 
 if (prod) {
-	console.log(`Building production bundle ${packageName} v${versionString} ...`);
-	const result = await ctx.rebuild();
-	if ( result.errors.length == 0 ){
-		console.log( `Zip it up to dist/${packageName}-${versionString}.zip` );
-		spawnSync(
-			'tar', [
-				'-cav',
-				'-f', `./dist/${packageName}-${versionString}.zip`,
-				'-C', `./dist/${packageName}-${versionString}`,
-				packageName
-			],
-			{
-				stdio: 'inherit'
-			}
-		);
+	try {
+		console.log(`Building production bundle ${packageName} v${versionString} ...`);
+		await ctx.rebuild();
+		const archive = `${packageName}-${versionString}.zip`;
+		// Remove any previous archive so obsolete files cannot survive an update.
+		rmSync(`./dist/${archive}`, { force: true });
+		const result = spawnSync('zip', ['-r', `../${archive}`, packageName], {
+			cwd: `./dist/${packageName}-${versionString}`,
+			stdio: 'inherit',
+		});
+		if (result.error) throw result.error;
+		if (result.status !== 0) throw new Error(`ZIP packaging failed (${result.signal ?? result.status})`);
+	} finally {
+		await ctx.dispose();
 	}
-	process.exit(0);
 }else{
 	console.log('Building development bundle...');
 	await ctx.watch();

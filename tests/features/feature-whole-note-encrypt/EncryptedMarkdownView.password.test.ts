@@ -8,7 +8,7 @@ import { SessionPasswordService } from '../../../src/services/SessionPasswordSer
 
 vi.mock('obsidian', () => ({
 	MarkdownView: class {
-		contentEl = { style: {} };
+		contentEl = { classList: { toggle: vi.fn() } };
 		viewData = '';
 		savedData: string | undefined;
 		file: TFile | null = null;

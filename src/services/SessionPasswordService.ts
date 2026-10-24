@@ -218,6 +218,8 @@ export class SessionPasswordService{
 			throw new Error('SessionPasswordService.vaultFileAdapter == null');
 		}
 		const resUrl = SessionPasswordService.vaultFileAdapter.getResourcePath( vaultRelativePath );
+		// Local adapter resource URLs use app-specific protocols, which requestUrl cannot read.
+		// eslint-disable-next-line no-restricted-globals
 		const res = await fetch ( resUrl );
 		const contents = await res.text();
 		if (contents.length == 0){

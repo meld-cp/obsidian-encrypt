@@ -4,7 +4,7 @@ import { FileData, FileDataHelper, JsonFileEncoding } from '../../../src/service
 
 vi.mock('obsidian', () => ({
 	MarkdownView: class {
-		public contentEl = { style: {} as Record<string, string> };
+		public contentEl = { classList: { toggle: vi.fn() } };
 		public leaf: { detach: () => void };
 		public app: any;
 		public file: any = null;

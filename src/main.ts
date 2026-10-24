@@ -37,8 +37,8 @@ export default class MeldEncrypt extends Plugin {
 		// End Settings
 
 		this.addCommand({
-			id: 'meld-encrypt-clear-password-cache',
-			name: 'Clear Session Password Cache',
+			id: 'clear-password-cache',
+			name: 'Clear session password cache',
 			icon: 'shield-ellipsis',
 			callback: () => {
 				const itemsCleared = SessionPasswordService.clear();
@@ -79,10 +79,8 @@ export default class MeldEncrypt extends Plugin {
 			}
 		}
 
-		this.settings = Object.assign(
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
+		const savedSettings = await this.loadData() as Partial<IMeldEncryptPluginSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, savedSettings);
 
 		// apply settings
 		SessionPasswordService.setActive( this.settings.rememberPassword );

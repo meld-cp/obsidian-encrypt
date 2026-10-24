@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Notice } from 'obsidian';
 import type { Editor, EditorPosition } from 'obsidian';
 import type MeldEncrypt from '../../../src/main.ts';
 import DecryptModal from '../../../src/features/feature-inplace-encrypt/DecryptModal.ts';
@@ -95,7 +96,7 @@ describe('decrypted text popup modes', () => {
 		};
 	});
 
-	afterEach(() => { vi.unstubAllGlobals(); });
+	afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 	function click(label: string) { return ui.buttons.find(button => button.label === label)!.click(); }
 
@@ -137,11 +138,26 @@ describe('decrypted text popup modes', () => {
 		click('Save');
 		await ui.closeResult;
 
+		await vi.waitFor(() => expect(replaceSelection).toHaveBeenCalled());
 		const saved = new FeatureInplaceTextAnalysis(payload).decryptable!;
 		expect(saved.hint).toBe(encrypted.hint);
 		expect(saved.showInReadingView).toBe(visible);
 		expect(await CryptoHelperFactory.BuildFromDecryptableOrThrow(saved).decryptFromBase64(saved.base64CipherText, 'pw')).toBe(editedText);
 		expect(editor.setSelection).toHaveBeenCalledWith(start, end);
+	});
+
+	it('reports an asynchronous encryption failure without replacing the original ciphertext', async () => {
+		await actions.decryptSelection(editor, encrypted, 'pw', start, end);
+		const failure = new Error('encryption unavailable');
+		vi.spyOn(CryptoHelperFactory.BuildDefault(), 'encryptToBase64').mockRejectedValueOnce(failure);
+		const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+		ui.textarea!.value = 'unsaved edit';
+		click('Save');
+
+		await vi.waitFor(() => expect(Notice).toHaveBeenCalledWith(expect.stringContaining('has not been saved')));
+		expect(log).toHaveBeenCalledWith('Failed to process inline encryption dialog', failure);
+		expect(replaceSelection).not.toHaveBeenCalled();
+		expect(ui.modal?.text).toBe('unsaved edit');
 	});
 
 	it('keeps decrypt-in-place available from the editor', async () => {

@@ -7,8 +7,8 @@ interface IBuildPasswordSettingParams {
 	placeholder?: string;
 	initialValue?:string;
 	tabIndex?:number|undefined;
-	onChangeCallback?: (value:string) => any;
-	onEnterCallback?: (value:string) => any;
+	onChangeCallback?: (value:string) => void;
+	onEnterCallback?: (value:string) => void;
 }
 
 export class UiHelper{
@@ -16,8 +16,10 @@ export class UiHelper{
 	/**
 		Check if the Settings modal is open
 	*/
-	public static isSettingsModalOpen() : boolean{
-		return document.querySelector('.mod-settings') !== null;
+	public static isSettingsModalOpen(ownerDocument: Document) : boolean{
+		// Older supported Obsidian versions do not expose activeDocument.
+		const settingsDocument = typeof activeDocument === 'undefined' ? ownerDocument : activeDocument;
+		return settingsDocument.querySelector('.mod-settings') !== null;
 	}
 
 	public static buildPasswordSetting(

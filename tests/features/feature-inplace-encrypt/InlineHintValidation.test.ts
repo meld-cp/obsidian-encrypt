@@ -215,6 +215,7 @@ describe('inline password hint validation', () => {
 		dialog!.text = 'edited secret';
 		await dialog!.onClose();
 
+		await vi.waitFor(() => expect(replaceSelection).toHaveBeenCalled());
 		const saved = new FeatureInplaceTextAnalysis(payload).decryptable!;
 		expect(await CryptoHelperFactory.BuildFromDecryptableOrThrow(saved).decryptFromBase64(saved.base64CipherText, 'pw')).toBe('edited secret');
 	});

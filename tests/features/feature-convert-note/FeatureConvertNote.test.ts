@@ -12,7 +12,7 @@ vi.mock('obsidian', () => {
 	class TextFileView {
 		file: TFile | null = null;
 		data = '';
-		contentEl = { style: {} };
+		contentEl = { classList: { toggle: vi.fn() } };
 		app: { vault: { modify(file: TFile, data: string): Promise<void> } };
 		constructor(public leaf: WorkspaceLeaf) {
 			this.app = (leaf as unknown as { app: TextFileView['app'] }).app;

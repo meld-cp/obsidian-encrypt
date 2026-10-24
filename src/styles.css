@@ -30,3 +30,16 @@ div[data-type="meld-encrypted-view"] .view-content {
 }
 
 /* END FEATURE ENCRYPTED MD */
+
+.meld-encrypt-busy {
+	cursor: wait;
+}
+
+.meld-encrypt-external-paths {
+	white-space: pre;
+	width: 100%;
+}
+
+.meld-encrypt-external-paths-control {
+	width: 80%;
+}

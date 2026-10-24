@@ -16,9 +16,11 @@ Please report any bugs or features requests [here](https://github.com/meld-cp/ob
 
 The full change log can be found on the [releases](https://github.com/meld-cp/obsidian-encrypt/releases) page.
 
-## Unreleased
+## v3.0.0
 
-Changes on `next` since v2.4.5.
+**Update Meld Encrypt on every device before saving encrypted content. Earlier plugin versions cannot decrypt the new v3 format. Keep a backup before upgrading.**
+
+Changes since v2.4.5.
 
 ### Compatibility
 
@@ -37,6 +39,8 @@ Changes on `next` since v2.4.5.
 * Added automated coverage for encryption formats, password caching, inline text analysis, note saving and conversion, password changes, and recovery tools.
 * Consolidated password forms, inline encryption writing, encrypted-note context-menu actions, CLI block scanning and password attempts, and byte/Base64 conversions into shared helpers.
 * Added regression coverage for password-dialog cancellation and focus, preservation of inline hints and marker visibility, legacy Base64 compatibility, large payloads, and CLI recovery of marker-like plaintext.
+* Release builds now produce a real ZIP archive and report packaging failures.
+* Resolved remaining lint findings, including asynchronous inline-dialog error handling and popout-aware settings detection.
 * Development builds now write to the test vault under `tests/test-vault`.
 * Updated documentation for inline commands and ribbon buttons, plaintext and password storage, external password file setup, running `mdenc` from the vault directory, and release validation and artifact paths.
 

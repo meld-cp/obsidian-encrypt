@@ -298,7 +298,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		checking: boolean,
 		editor: Editor
 	): boolean {
-		if ( checking && UiHelper.isSettingsModalOpen() ){
+		if ( checking && UiHelper.isSettingsModalOpen(this.plugin.app.workspace.containerEl.ownerDocument) ){
 			// Settings is open, ensures this command can show up in other
 			// plugins which list commands e.g. customizable-sidebar
 			return true;
@@ -381,7 +381,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		editor: Editor
 	): boolean {
 
-		if ( checking && UiHelper.isSettingsModalOpen() ){
+		if ( checking && UiHelper.isSettingsModalOpen(this.plugin.app.workspace.containerEl.ownerDocument) ){
 			// Settings is open, ensures this command can show up in other
 			// plugins which list commands e.g. customizable-sidebar
 			return true;
@@ -468,7 +468,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			defaultHint,
 			/*showTextToEncrypt*/ true
 		);
-		pwModal.onClose = async () => {
+		pwModal.onClose = () => this.runModalAction(async () => {
 			if ( !pwModal.resultConfirmed ){
 				return;
 			}
@@ -491,7 +491,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 
 			// remember password
 			if (encrypted) SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
-		}
+		});
 		pwModal.open();
 
 		return false;
@@ -623,7 +623,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			defaultHint
 		);
 
-		pwModal.onClose = async () => {
+		pwModal.onClose = () => this.runModalAction(async () => {
 			if ( !pwModal.resultConfirmed ){
 				return;
 			}
@@ -664,7 +664,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 				}
 				
 			}
-		}
+		});
 		pwModal.open();
 
 		return true;
@@ -713,7 +713,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		} else {
 
 			const decryptModal = new DecryptModal(this.plugin.app, '🔓', decryptedText );
-			decryptModal.onClose = async () => {
+			decryptModal.onClose = () => this.runModalAction(async () => {
 				editor.focus();
 				if (decryptModal.decryptInPlace) {
 					editor.setSelection(selectionStart, selectionEnd);
@@ -728,11 +728,18 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 						decryptable.showInReadingView
 					);
 				}
-			}
+			});
 			decryptModal.open();
 
 		}
 		return true;
+	}
+
+	private runModalAction(action: () => Promise<void>): void {
+		void action().catch((error: unknown) => {
+			console.error('Failed to process inline encryption dialog', error);
+			new Notice('Failed to process inline encryption dialog. Your text has not been saved.');
+		});
 	}
 
 	private encodeEncryption( encryptedText: string, hint: string = '', showInReadingView: boolean ): string {

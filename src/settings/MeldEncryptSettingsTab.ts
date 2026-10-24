@@ -136,8 +136,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 					})
 				;
 				text.inputEl.placeholder = 'Enter one relative path per line';
-				text.inputEl.style.whiteSpace = 'pre';
-				text.inputEl.style.width = '100%';
+				text.inputEl.classList.add('meld-encrypt-external-paths');
 				text.inputEl.rows = 4;
 			})
 			.addButton( btn => {
@@ -158,7 +157,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 				;
 			})
 		;
-		extFilePathsSetting.controlEl.style.width = '80%';
+		extFilePathsSetting.controlEl.classList.add('meld-encrypt-external-paths-control');
 
 		updateRememberPasswordSettingsUi();
 
