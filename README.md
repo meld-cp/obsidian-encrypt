@@ -16,6 +16,38 @@ While you view or edit an encrypted note, the plugin keeps its saved contents en
 
 ---
 
+## Installation
+
+Requires Obsidian **1.13.0 or later**. Meld Encrypt supports desktop and mobile.
+
+1. Open your vault in Obsidian and go to **Settings → Community plugins**.
+2. Turn on community plugins if prompted, then click **Browse**.
+3. Search for **Meld Encrypt**, select it, and click **Install**.
+4. Click **Enable**. Configure password confirmation and password remembering under **Settings → Meld Encrypt**.
+
+## Basic usage
+
+Open the command palette with **Ctrl+P** on Windows/Linux or **Cmd+P** on macOS, or use Obsidian's **Open command palette** action on mobile. Search for the Meld Encrypt commands below.
+
+### Encrypt an entire note
+
+1. Run **Meld Encrypt: Create new encrypted note**.
+2. Enter and confirm a password, optionally add a hint, and click **Confirm**.
+3. Write your note. Its saved contents are encrypted in a `.mdenc` file.
+4. Run **Meld Encrypt: Lock and close all open encrypted notes** when finished.
+5. To read or edit it later, open the encrypted file and enter its password when prompted.
+
+To encrypt an existing Markdown note, right-click it in the file explorer and select **Encrypt note**, or open it and run **Meld Encrypt: Convert to or from an encrypted note**. Using that command on an encrypted note converts it back to plaintext.
+
+### Encrypt selected text
+
+1. Open a Markdown note in the editor and select the text to encrypt. If **Expand selection to whole line?** is enabled under **Settings → Meld Encrypt**, partial selections expand to include the whole line.
+2. Run **Meld Encrypt: Encrypt selection**, enter and confirm a password, and click **Confirm**.
+3. To reveal the text, place the cursor inside the encrypted block and run **Meld Encrypt: Decrypt**. Enter the password when prompted.
+4. Edit the revealed text and click **Save** to re-encrypt your changes. **Decrypt in-place** replaces the encrypted block with plaintext in the note.
+
+See the guides for [whole encrypted notes](https://meld-cp.github.io/obsidian-encrypt/whole-encrypted-notes.html), [selected-text encryption](https://meld-cp.github.io/obsidian-encrypt/in-place-encryption.html), and [settings](https://meld-cp.github.io/obsidian-encrypt/settings.html) for more details.
+
 ## Ongoing Maintenance and Development
 
 If you find this plugin useful please support the ongoing maintenance and development by:
