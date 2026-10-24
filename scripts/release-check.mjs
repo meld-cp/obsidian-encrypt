@@ -188,7 +188,7 @@ export async function runReleaseCheck({ root = repositoryRoot, run = runCommand,
 	report.durationMs = Date.now() - started;
 	writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
 	log(`\n[release:check] ${report.status.toUpperCase()} (${(report.durationMs / 1000).toFixed(1)}s). Report: ${relative(root, reportPath)}`);
-	if (report.status === 'passed') log(`[release:check] SHA-256: ${relative(root, checksumsPath)}\n[release:check] Local validation passed; desktop/mobile smoke checks remain separate.`);
+	if (report.status === 'passed') log(`[release:check] SHA-256: ${relative(root, checksumsPath)}\n[release:check] Local validation passed; the optional desktop smoke check is separate.`);
 	return report;
 }
 

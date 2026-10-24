@@ -16,7 +16,7 @@ To release a new version:
 	* `versions.json`: holds the history of version numbers and their minimum Obsidian version, so older versions of Obsidian can download an older version of your plugin that's compatible.
 3. Run `npm run release:check` as described under [Validation](#validation). Resolve any failures before continuing.
 4. Review the generated `dist/release-check/report.json` and `SHA256SUMS`. A passed local check produces freshly verified production assets; it does not replace the desktop and mobile checks below.
-5. Test the packaged plugin on desktop and mobile, including the minimum supported Obsidian version. Check that the following files were generated for the version in `package.json` (replace `<version>` with that version):
+5. For changes to editors, password dialogs, or save flows, optionally run the [desktop smoke check](#desktop-smoke-check). Routine releases use `release:check`; Android testing is not required. Check that the following files were generated for the version in `package.json` (replace `<version>` with that version):
    * `dist/meld-encrypt-<version>.zip`
    * `dist/meld-encrypt-<version>/meld-encrypt/manifest.json`
    * `dist/meld-encrypt-<version>/meld-encrypt/main.js`
@@ -82,10 +82,44 @@ Failure returns a nonzero exit status, marks later stages skipped, and removes
 old checksum output. Uncommitted changes are allowed and recorded in the report.
 
 This is local automated validation. It does not launch Obsidian or perform
-smoke tests, commit, push, tag, or publish. Desktop/mobile and update checks
-remain separate release steps. Run `git diff --check` before committing.
+smoke tests, commit, push, tag, or publish. Optional desktop smoke and update checks
+remain separate steps. Run `git diff --check` before committing.
 For documentation-only changes, check the diff, referenced paths, and claims
 against the implementation; rebuilding unchanged bundles is unnecessary.
+
+## Desktop Smoke Check
+
+Keep routine validation quick with `npm run release:check`. Android/emulator
+testing is not part of this project's release process.
+
+For editor, password-dialog, or save-flow changes, optionally run:
+
+```bash
+npm run smoke:desktop
+```
+
+This Linux-only command builds the production plugin and runs seven functional
+checks in a fresh vault: plugin loading, whole-note encryption, password changes
+and reopening, conversion of unsaved edits, inline editing with hints and marker
+visibility, and legacy whole-note and inline upgrades. It was verified with
+Obsidian 1.14.4. It is separate from `npm test` and `release:check`.
+
+Use `--obsidian /path/to/Obsidian.AppImage` to choose an executable, or
+`--timeout 60` to override the default 30-second startup/debug-request timeout.
+An installed Obsidian desktop, display access, and a Node version with built-in
+`fetch` and `WebSocket` are required. `--help` lists the options.
+
+`tests/test-vault` stays reserved for manual testing and remains the target of
+`npm run dev`. Automation never reads or changes it. Test notes come from the
+public fixtures in `tests/fixtures/smoke`; generated vaults and profiles live
+under the ignored `dist/smoke` directory.
+
+Each run retains its report, tested asset snapshot, and logs under
+`dist/smoke/desktop-<id>/`. `dist/smoke/desktop-latest.json` points to the latest
+report. Failure returns nonzero and attempts a screenshot. The harness cleans
+up its own app process, vault, and profile on success, failure, or cancellation.
+Cleanup failures mark the run failed and retain the remaining state for inspection.
+Nothing is committed, pushed, tagged, or published by the command.
 
 ## Shared Implementation Paths
 

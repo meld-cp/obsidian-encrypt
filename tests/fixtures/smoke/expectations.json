@@ -1,0 +1,13 @@
+{
+  "password": "smoke-test-password",
+  "changedPassword": "smoke-changed-password",
+  "inlinePassword": "smoke-inline-password",
+  "legacyPassword": "legacy-release-password",
+  "wholeText": "Smoke secret café 🥑\nsecond line",
+  "conversionText": "Unsaved conversion edit café 🥑",
+  "inlineText": "Inline smoke secret café 🥑",
+  "inlineEditedText": "Edited inline smoke secret café 🥑",
+  "inlineHint": "Smoke test hint",
+  "legacyText": "Legacy release secret café 🥑",
+  "legacyEditedText": "Upgraded legacy smoke secret"
+}

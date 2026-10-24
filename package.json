@@ -16,7 +16,8 @@
 		"build-tool-mdenc": "tsc -noEmit -skipLibCheck && node esbuild-tool-mdenc.config.mjs production",
 		"lint": "eslint 'src/**/*.ts' --ignore-pattern 'src/tools/**' --max-warnings 0",
 		"typecheck": "tsc -noEmit -skipLibCheck",
-		"release:check": "node scripts/release-check.mjs"
+		"release:check": "node scripts/release-check.mjs",
+		"smoke:desktop": "node scripts/smoke.mjs"
 	},
 	"keywords": [],
 	"author": "meld-cp",
