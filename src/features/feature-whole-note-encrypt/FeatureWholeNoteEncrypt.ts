@@ -2,6 +2,7 @@ import MeldEncrypt from "../../main.ts";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature.ts";
 import { EncryptedMarkdownView } from "./EncryptedMarkdownView.ts";
 import { MarkdownView, Notice, TFolder, normalizePath, TFile } from "obsidian";
+import type { Menu } from 'obsidian';
 import PluginPasswordModal from "../../PluginPasswordModal.ts";
 import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
 import { FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.ts";
@@ -64,20 +65,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 				return;
 			}
 			if (view instanceof EncryptedMarkdownView){
-				menu.addItem( (item) => {
-					item
-						.setTitle('Change password')
-						.setIcon('key-round')
-						.onClick( async () => { await view.changePassword(); } );
-					}
-				);
-				menu.addItem( (item) => {
-					item
-						.setTitle('Lock & close')
-						.setIcon('lock')
-						.onClick( () => { view.lockAndClose(); } );
-					}
-				);
+				this.addEncryptedNoteMenuItems(menu, view);
 			}
 		}));
 
@@ -94,20 +82,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 				return;
 			}
 
-			menu.addItem( (item) => {
-				item
-					.setTitle('Change password')
-					.setIcon('key-round')
-					.onClick( async () => { await view.changePassword(); } );
-				}
-			);
-			menu.addItem( (item) => {
-				item
-					.setTitle('Lock & close')
-					.setIcon('lock')
-					.onClick( () => { view.lockAndClose(); } );
-				}
-			);
+			this.addEncryptedNoteMenuItems(menu, view);
 		}))
 
 
@@ -160,6 +135,21 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 			} )
 		);
 
+	}
+
+	private addEncryptedNoteMenuItems(menu: Menu, view: EncryptedMarkdownView): void {
+		menu.addItem(item => {
+			item
+				.setTitle('Change password')
+				.setIcon('key-round')
+				.onClick(async () => { await view.changePassword(); });
+		});
+		menu.addItem(item => {
+			item
+				.setTitle('Lock & close')
+				.setIcon('lock')
+				.onClick(() => { view.lockAndClose(); });
+		});
 	}
 
 	private async processLockAndCloseAllEncryptedNotesCommand(): Promise<void> {
