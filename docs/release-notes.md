@@ -16,7 +16,7 @@ Please report any bugs or features requests [here](https://github.com/meld-cp/ob
 
 The full change log can be found on the [releases](https://github.com/meld-cp/obsidian-encrypt/releases) page.
 
-## Unreleased
+## v3.0.2
 
 ### Improvements
 

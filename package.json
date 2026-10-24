@@ -1,6 +1,6 @@
 {
 	"name": "meld-encrypt",
-	"version": "3.0.1",
+	"version": "3.0.2",
 	"description": "Hide secrets in your vault.",
 	"main": "main.js",
 	"type": "module",
