@@ -14,7 +14,7 @@ To release a new version:
 2. Run `npm run version` to update `manifest.json` & `versions.json`.
   	* `manifest.json`: holds the new version number and the minimum Obsidian version required for your latest release.
 	* `versions.json`: holds the history of version numbers and their minimum Obsidian version, so older versions of Obsidian can download an older version of your plugin that's compatible.
-3. Run `npm test` and resolve any failures before continuing.
+3. Rebuild tracked decrypt tools as described under [Validation](#validation) when their source or shared dependencies changed, then run `npm test`. Resolve any failures before continuing.
 4. Run `npm run build` to type-check the source and generate fresh production artifacts. Resolve any build errors before continuing.
 5. Check that the following files were generated for the version in `package.json` (replace `<version>` with that version):
    * `dist/meld-encrypt-<version>.zip`
@@ -38,6 +38,34 @@ To add your plugin to the community plugib list:
 1. Clone this repository.
 2. Run `npm i` or `yarn` to install dependencies.
 3. Run `npm run dev` to start the compiler in watch mode.
+
+## Validation
+
+When changing encryption helpers, inline parsing, or decrypt-tool source, rebuild
+the tracked tool bundles before running tests. CLI and offline-decryptor tests
+execute those bundles, so testing without rebuilding can exercise stale code.
+
+```bash
+npm run build-tool-mdenc
+npm run dev-tool-mdenc
+npm run build-tool-decrypt
+npm test
+npm run build
+git diff --check
+```
+
+The tool builds update `tools/mdenc.mjs`, `tools/mdenc-debug.mjs`, and
+`tools/offline-decrypt.js`; include changed bundles with their source changes.
+For documentation-only changes, check the diff, referenced paths, and claims
+against the implementation; rebuilding unchanged bundles is unnecessary.
+
+## Shared Implementation Paths
+
+* `src/services/PasswordForm.ts` owns password and confirmation fields, hint editing, validation, and Enter-key navigation for both password dialogs. Keep validation separate from submission: navigation must not confirm a result that can still be cancelled. Inline-only hint restrictions are supplied by the inline dialog; its marker-visibility and text controls remain in that dialog.
+* `FeatureInplaceEncrypt.encryptSelection()` is the shared writer for new inline text and edited text saved from the decryption dialog. It validates hints, encrypts with the default format, formats markers, and replaces the selection. Re-saving preserves the existing password, hint, and marker visibility.
+* `FeatureWholeNoteEncryptV2.addEncryptedNoteMenuItems()` defines the shared **Change password** and **Lock & close** actions. Keep eligibility checks in the editor and file menu handlers; the file menu requires the selected file to match the active encrypted view.
+* `src/services/Base64.ts` provides chunked byte encoding and decoding with `atob`'s legacy tolerance. Keep v3's canonical Base64 validation in the `decodeBase64()` function in `CryptoHelperV3.ts`; do not apply those stricter rules to legacy readers. The v3 module retains its `encodeBase64` export.
+* `src/tools/mdenc.ts` shares original-input block scanning and password attempts between checking and recovery. Build recovered output from source spans without rescanning or replacing text inside recovered plaintext. An inline note must decrypt completely before its output is written; checking continues to report later blocks after a failure.
 
 ## Manually Installing the Plugin
 
@@ -117,10 +145,5 @@ are not supported. Physically blank files retain the existing initialization
 behavior, but serialized v3 envelopes always require authenticated ciphertext,
 even for empty text.
 
-Rebuild the tracked decrypt tools after changing the format:
-
-```bash
-npm run build-tool-mdenc
-npm run dev-tool-mdenc
-npm run build-tool-decrypt
-```
+After changing the format or its shared helpers, follow [Validation](#validation)
+to rebuild the tracked decrypt tools and test their generated bundles.

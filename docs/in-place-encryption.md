@@ -9,6 +9,9 @@ nav_order: 2
 
 This feature lets you encrypt a selected text within your note.
 
+Inline password hints cannot contain 💡 or 🔐, because these characters delimit
+the encrypted block and its hint.
+
 ## To Encrypt Selected Text
 
 ### Option 1: Use the Command Palette
@@ -63,3 +66,14 @@ This feature lets you encrypt a selected text within your note.
 
 Click a visible 🔐 marker to reveal its decrypted text. This popup is read-only and offers **Copy**.
 To edit and save encrypted text, switch to the editor and use the **Decrypt** command.
+
+## Saving Edited Text
+
+In the editor's decrypted-text dialog, **Save** re-encrypts your edits using the
+same password, hint, and reading-view marker visibility. Legacy inline blocks
+are upgraded to the current encryption format when saved this way.
+**Decrypt in-place** replaces the block with plaintext in the note.
+
+In the password dialog, Enter moves through the password, confirmation, and
+hint fields as applicable. Moving to the hint field does not accept the dialog;
+closing it before final confirmation discards the result.

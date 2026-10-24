@@ -35,6 +35,8 @@ Changes on `next` since v2.4.5.
 
 * Updated dependencies, TypeScript checks, and linting to address Obsidian community review requirements.
 * Added automated coverage for encryption formats, password caching, inline text analysis, note saving and conversion, password changes, and recovery tools.
+* Consolidated password forms, inline encryption writing, encrypted-note context-menu actions, CLI block scanning and password attempts, and byte/Base64 conversions into shared helpers.
+* Added regression coverage for password-dialog cancellation and focus, preservation of inline hints and marker visibility, legacy Base64 compatibility, large payloads, and CLI recovery of marker-like plaintext.
 * Development builds now write to the test vault under `tests/test-vault`.
 * Updated documentation for inline commands and ribbon buttons, plaintext and password storage, external password file setup, running `mdenc` from the vault directory, and release validation and artifact paths.
 
@@ -52,6 +54,9 @@ Changes on `next` since v2.4.5.
 * Hardened encrypted file and v3 payload validation to reject malformed data and unsupported encryption parameters.
 * Fixed `mdenc` detection of supported inline markers and testing of every encrypted block. The `test` and `decrypt` commands now return a nonzero exit status when any decryption fails.
 * Fixed CLI recovery altering literal plaintext containing replacement sequences such as `$&`.
+* Fixed `mdenc` recovery rescanning decrypted text as ciphertext. Literal 🔐 markers and encrypted-looking text inside recovered plaintext are now preserved, and a failed inline block leaves that note's existing output untouched.
+* Fixed password dialogs treating Enter in the confirmation field as final acceptance before the hint was submitted. Cancelling at that stage now discards the result; remembered passwords no longer focus a hidden confirmation field when confirmation is disabled.
+* Fixed large payloads exceeding the function-argument limit in the obsolete encryption writer by using a shared chunked Base64 encoder. Legacy decoding tolerance and strict v3 validation are preserved.
 * Fixed offline decryptor format detection and handling of invalid encrypted input.
 
 ## v2.4.5

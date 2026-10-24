@@ -95,6 +95,30 @@ For other commands, append the command and options shown in the built-in
 help to the same script path. For example, use `test --help` or
 `decrypt --help` to see the options for those commands.
 
+## Check and recover notes
+
+Replace `<script-path>` with the full script path from the earlier examples,
+and replace the password and output-directory placeholders. Run these commands
+from your vault directory. Choose an output directory outside the source vault.
+
+``` text
+node "<script-path>" check --passwords "<password>"
+node "<script-path>" decrypt --passwords "<password>" --outdir "<output-directory>" --dryrun
+node "<script-path>" decrypt --passwords "<password>" --outdir "<output-directory>"
+```
+
+`check` is an alias for `test`: it checks whole notes and every recognized
+inline block without writing recovered files. You can provide several
+passwords after `--passwords`; they are tried in order. Both checking and
+recovery return a nonzero exit status if any decryption fails. `--dryrun`
+performs decryption checks without writing output.
+
+Recovery replaces only blocks found in the original encrypted input. It
+preserves recovered text literally, including 🔐 markers, encrypted-looking
+text, and sequences such as `$&`. Each inline note is fully decrypted before
+its output is written, so a failed block leaves existing output for that note
+untouched. Other notes may already have been recovered when a failure occurs.
+
 ## Troubleshooting
 
 -   **`node` is not recognized** -- Restart your terminal, or reinstall

@@ -41,9 +41,13 @@ This feature opens a text window and saves your note to an encrypted `.mdenc` fi
 1. Go to **Files** by clicking the **Files** icon ![files](assets/fil_ico.png).  
 2. Select the file with your encrypted note. 
 3. Enter the correct password. 
-4. Click the **Change password** icon ![change_password](assets/cha_pas_ico.png) from the tab menu or select the **Change Password** option from the context menu (to open the context menu click the **More options** icon![more_options](assets/mor_opt_ico.png)). 
+4. Click the **Change password** action ![change_password](assets/cha_pas_ico.png) in the note view, or right-click inside the open encrypted note and select **Change password**.
 5. Enter and confirm a new password and an optional password hint.
 6. Click **Confirm**.
+
+The **Change password** and **Lock & close** actions are also available when
+right-clicking the active encrypted note's file in **Files**. They are shown
+only when that file matches the active encrypted view.
 
 ## To Encrypt or Decrypt an Existing Note
 
