@@ -70,6 +70,7 @@ vi.mock('obsidian', () => {
 		MarkdownView: class {},
 		Notice: vi.fn(),
 		Modal: class {
+			modalEl = { classList: { add() {} } };
 			contentEl = { empty: () => { ui.rows = []; }, classList: { add() {} } };
 			titleEl = { setText() {} };
 			onOpen() {}

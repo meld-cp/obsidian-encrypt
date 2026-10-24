@@ -57,6 +57,7 @@ vi.mock('obsidian', () => {
 	return {
 		TextComponent: TextInput,
 		Modal: class {
+			modalEl = { classList: { add() {} } };
 			contentEl = { empty: () => { ui.rows = []; }, classList: { add() {} } };
 			onOpen() {}
 			onClose() {}

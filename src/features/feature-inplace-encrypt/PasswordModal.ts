@@ -22,6 +22,7 @@ export default class PasswordModal extends Modal {
 	}
 
 	onOpen() {
+		this.modalEl.classList.add('meld-encrypt-password-dialog');
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.classList.add('meld-encrypt-password-modal');

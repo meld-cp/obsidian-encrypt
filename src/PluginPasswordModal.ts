@@ -17,6 +17,7 @@ export default class PluginPasswordModal extends Modal {
 	}
 
 	onOpen() {
+		this.modalEl.classList.add('meld-encrypt-password-dialog');
 		const { contentEl } = this;
 		contentEl.empty();
 		this.invalidate();

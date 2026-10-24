@@ -1,5 +1,34 @@
 /* FEATURE IN LINE */
 
+/* Keep password prompts high on mobile and let long forms scroll.
+   Percentage sizing respects the modal container; dvh also caps the dialog
+   when the webview reports a smaller dynamic viewport. */
+.is-mobile .modal.meld-encrypt-password-dialog {
+	--meld-password-dialog-top: max(8px, var(--safe-area-inset-top, env(safe-area-inset-top, 0px)));
+	align-self: flex-start;
+	margin-top: var(--meld-password-dialog-top);
+	margin-bottom: auto;
+	max-height: calc(100% - var(--meld-password-dialog-top) - 8px);
+	max-height: min(calc(100% - var(--meld-password-dialog-top) - 8px), calc(100dvh - var(--meld-password-dialog-top) - 8px));
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.is-mobile .meld-encrypt-password-dialog .modal-content {
+	min-height: 0;
+	flex: 1 1 auto;
+	overflow-y: auto;
+	padding-top: 0;
+	padding-bottom: max(8px, var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+}
+
+.is-mobile .meld-encrypt-password-dialog .setting-item {
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
 .meld-encrypt-inline-reading-marker {
 	cursor: pointer;
 }
