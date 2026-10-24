@@ -221,7 +221,6 @@ export class SessionPasswordService{
 		let contents: string;
 		if (Platform.isDesktop && Platform.isDesktopApp && adapter instanceof FileSystemAdapter) {
 			// Desktop filesystem paths may be absolute or relative to the vault, including ../.
-			// eslint-disable-next-line import/no-nodejs-modules -- Dynamic imports are guarded by Platform.isDesktop and only read desktop filesystem paths.
 			const [{ readFile }, path] = await Promise.all([import('node:fs/promises'), import('node:path')]);
 			contents = await readFile(path.resolve(adapter.getBasePath(), vaultRelativePath), 'utf8');
 		} else {

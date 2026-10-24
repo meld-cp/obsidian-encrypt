@@ -42,6 +42,31 @@ To add your plugin to the community plugin list:
 2. Run `npm i` or `yarn` to install dependencies.
 3. Run `npm run dev` to start the compiler in watch mode.
 
+## Community review: standalone Node CLI
+
+The community review scans `tools/src/mdenc.ts` even though it is a standalone
+Node.js recovery tool. It is built separately by `scripts/recovery-builds.mjs`
+with `platform: 'node'`; the Obsidian plugin bundle starts at `src/main.ts` and
+does not import the CLI. Moving the source outside `src` does not exclude it
+from community review.
+
+The following CLI-only warnings are expected:
+
+- `node:fs` and `node:path` imports provide local filesystem access for listing,
+  checking, and recovering encrypted notes. The CLI runs directly in Node.js,
+  outside Obsidian, so it cannot depend on Obsidian's `Platform` API. These
+  imports are not loaded by the mobile plugin.
+- Console output is the CLI's user interface: file listings (including CSV,
+  JSON, and tables), check results, and recovery progress/results. It is
+  intentional command output, rather than plugin debug logging.
+
+Keep these warnings documented for reviewers instead of adding forbidden
+rule suppressions or changing the CLI's output formats. Local lint applies
+Obsidian's recommended rules to plugin source and Node/TypeScript rules to
+CLI source. A clean local lint run therefore does not imply that the broader
+community review has no CLI warnings. Plugin-side Node imports must still be
+dynamic and guarded by Obsidian's `Platform.isDesktop` API.
+
 ## Validation
 
 Install dependencies with `npm ci`, then run:
