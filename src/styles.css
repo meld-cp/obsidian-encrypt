@@ -29,6 +29,22 @@
 	padding-bottom: 8px;
 }
 
+/* Obsidian stretches mobile setting controls equally by default. Keep the
+   reveal button touch-sized and give the rest of the row to the input. */
+.is-mobile .meld-encrypt-password-dialog .setting-item-control:has(> input) > button {
+	flex: 0 0 44px;
+	width: 44px;
+	min-width: 44px;
+	min-height: 44px;
+	padding: 0;
+}
+
+.is-mobile .meld-encrypt-password-dialog .setting-item-control > input {
+	flex: 1 1 0;
+	width: 0;
+	min-width: 0;
+}
+
 .meld-encrypt-inline-reading-marker {
 	cursor: pointer;
 }
