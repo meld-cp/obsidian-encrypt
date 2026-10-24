@@ -11,6 +11,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 	passwordAndHint : PasswordAndHint | null = null;
 	encryptedData : FileData | null = null;
 	private pendingEncryptedData: FileData | null = null;
+	private viewDataRequest = 0;
 	private isChangingPassword = false;
 	cachedUnencryptedData : string = '';
 	dataWasChangedSinceLastSave = false;
@@ -50,6 +51,8 @@ export class EncryptedMarkdownView extends MarkdownView {
 	}
 
 	override async onLoadFile(file: TFile): Promise<void> {
+		// Invalidate decrypts started for the previously loaded file.
+		this.viewDataRequest++;
 		//console.debug('onLoadFile', {file});
 		this.setViewBusy( true );
 		try{
@@ -203,6 +206,8 @@ export class EncryptedMarkdownView extends MarkdownView {
 		if ( this.isLoadingFileInProgress ){
 			return;
 		}
+		const request = ++this.viewDataRequest;
+		const file = this.file;
 
 		try{
 			console.debug( 'View is being set with encoded FileData, trying to decode', {data} );
@@ -219,6 +224,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 			}
 			
 			FileDataHelper.decrypt( newEncoded, this.passwordAndHint.password ).then( decryptedText => {
+				if (request !== this.viewDataRequest || this.file !== file) return;
 				if ( decryptedText == null ){
 					console.debug('View was being set with encoded data but the decryption failed, closing view');
 					this.isSavingEnabled = false; // don't overwrite the data when we detach
@@ -227,6 +233,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 				}
 				this.setUnencryptedViewData(decryptedText, clear);
 			}).catch( (reason:unknown) => {
+				if (request !== this.viewDataRequest || this.file !== file) return;
 				console.error('Failed to decrypt the data that was set to the view', reason);
 				new Notice('Failed to decrypt the data that was set to the view');
 			});

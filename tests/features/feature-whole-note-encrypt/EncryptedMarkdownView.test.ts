@@ -157,6 +157,24 @@ describe('EncryptedMarkdownView save upgrades versions', () => {
 		expect(view.dataWasChangedSinceLastSave).toBe(false);
 	});
 
+	it('ignores an older async encrypted-data update that finishes after a newer one', async () => {
+		let resolveOlder!: (value: string | null) => void;
+		vi.spyOn(FileDataHelper, 'decrypt')
+			.mockImplementationOnce(() => new Promise(resolve => { resolveOlder = resolve; }))
+			.mockResolvedValueOnce('newer plaintext');
+		const encoded = JsonFileEncoding.encode(new FileData('2.0', 'hint', 'ciphertext'));
+
+		view.setViewData(encoded, false);
+		view.setViewData(encoded, false);
+		await vi.waitFor(() => expect(view.cachedUnencryptedData).toBe('newer plaintext'));
+
+		resolveOlder('older plaintext');
+		await Promise.resolve();
+
+		expect(view.cachedUnencryptedData).toBe('newer plaintext');
+		expect(view.getViewData()).toBe('newer plaintext');
+	});
+
 	it('retries an unchanged legacy upgrade after a failed disk write', async () => {
 		const legacyEnvelope = view.encryptedData;
 		const write = vi.spyOn(MarkdownView.prototype, 'save').mockRejectedValueOnce(new Error('Write failed'));
