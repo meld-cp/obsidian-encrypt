@@ -16,6 +16,23 @@ Please report any bugs or features requests [here](https://github.com/meld-cp/ob
 
 The full change log can be found on the [releases](https://github.com/meld-cp/obsidian-encrypt/releases) page.
 
+## Unreleased
+
+### Compatibility
+
+* Raised the minimum supported Obsidian version to 1.13.0.
+
+### Improvements
+
+* Added a local release validation command and optional desktop smoke checks in a disposable vault, including heading navigation in Reading view and Live Preview.
+* Updated the Obsidian SDK and development dependencies, including security fixes.
+
+### Bug Fixes
+
+* Fixed heading-link navigation in unlocked whole-note encrypted files ([#214](https://github.com/meld-cp/obsidian-encrypt/issues/214)), using view-local heading metadata and Obsidian navigation.
+* Prevented stale asynchronous file loads and decryptions from overwriting newer encrypted-note contents.
+* Rejected failed external password file responses instead of treating their response bodies as passwords.
+
 ## v3.0.0
 
 **Update Meld Encrypt on every device before saving encrypted content. Earlier plugin versions cannot decrypt the new v3 format. Keep a backup before upgrading.**
@@ -24,7 +41,7 @@ Changes since v2.4.5.
 
 ### Compatibility
 
-* Requires Obsidian 1.13.0 or later.
+* Requires Obsidian 1.1.13 or later.
 * New encryption uses the v3 format. Existing encrypted notes remain readable, but saving a legacy whole note upgrades it to v3; inline blocks upgrade when edited and saved through the decryption dialog. Update the plugin on all devices before saving: earlier plugin versions cannot decrypt v3 content.
 * Command IDs have changed to follow Obsidian plugin conventions. Existing custom hotkeys may need to be reassigned.
 
@@ -45,8 +62,6 @@ Changes since v2.4.5.
 * Updated documentation for inline commands and ribbon buttons, plaintext and password storage, external password file setup, running `mdenc` from the vault directory, and release validation and artifact paths.
 
 ### Bug Fixes
-
-* Fixed heading-link navigation in unlocked whole-note encrypted files ([#214](https://github.com/meld-cp/obsidian-encrypt/issues/214)), using view-local heading metadata and Obsidian navigation.
 
 * Fixed undo wiping decrypted whole-note contents ([#241](https://github.com/meld-cp/obsidian-encrypt/issues/241), [#242](https://github.com/meld-cp/obsidian-encrypt/pull/242)).
 * Fixed overlapping saves during note unloading that could write plaintext to an encrypted file. Closing a note now waits for its save to succeed.
