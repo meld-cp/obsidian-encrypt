@@ -16,6 +16,17 @@ Please report any bugs or features requests [here](https://github.com/meld-cp/ob
 
 The full change log can be found on the [releases](https://github.com/meld-cp/obsidian-encrypt/releases) page.
 
+## Unreleased
+
+### Improvements
+
+* Password dialogs now use Obsidian's native title area, shorter labels, and Encrypt/Decrypt action buttons, with tighter spacing on mobile.
+* Made password preview buttons compact on mobile, leaving more room for password and confirmation inputs.
+
+### Bug Fixes
+
+* Improved whole-note and inline password dialogs on mobile with top positioning, constrained height, and scrollable fields so controls remain reachable when the keyboard is open. Verified on Android; iOS device testing remains pending.
+
 ## v3.0.1
 
 ### Compatibility
