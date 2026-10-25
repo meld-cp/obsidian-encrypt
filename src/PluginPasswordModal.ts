@@ -12,6 +12,7 @@ export default class PluginPasswordModal extends Modal {
 		private isEncrypting: boolean,
 		private confirmPassword: boolean,
 		private defaultPassword: PasswordAndHint | null,
+		private explanation?: string,
 	) {
 		super(app);
 	}
@@ -22,6 +23,7 @@ export default class PluginPasswordModal extends Modal {
 		contentEl.empty();
 		this.invalidate();
 		this.setTitle(this.title);
+		if (this.explanation) contentEl.createEl('p', { text: this.explanation });
 
 		const initialValue = this.defaultPassword ?? { password: '', hint: '' };
 		const form = new PasswordForm({

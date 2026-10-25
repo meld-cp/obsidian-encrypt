@@ -1,4 +1,4 @@
-import { App, Notice, PluginSettingTab, type SettingDefinitionItem } from "obsidian";
+import { App, SecretComponent, Notice, PluginSettingTab, type SettingDefinitionItem } from "obsidian";
 import { IMeldEncryptPluginFeature } from "../features/IMeldEncryptPluginFeature.ts";
 import { SessionPasswordService } from "../services/SessionPasswordService.ts";
 import MeldEncrypt from "../main.ts";
@@ -24,6 +24,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 
 	getSettingDefinitions(): SettingDefinitionItem[] {
 		const settings = this.settings;
+		const keychain = () => settings.rememberPasswordLevel === SessionPasswordService.LevelKeychain;
 		const external = () => settings.rememberPasswordLevel === SessionPasswordService.LevelExternalFile;
 		return [
 			{
@@ -34,7 +35,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 				})); },
 			},
 			{
-				name: 'Remember password?', desc: 'Remember passwords until they expire or Obsidian is closed.',
+				name: 'Remember password?', desc: 'Reuse passwords from the session cache or the selected password provider.',
 				render: row => { row.addToggle(toggle => toggle.setValue(settings.rememberPassword).onChange(async value => {
 					settings.rememberPassword = value;
 					SessionPasswordService.setActive(value);
@@ -50,6 +51,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 					.addOption(SessionPasswordService.LevelParentPath, 'Folder')
 					.addOption(SessionPasswordService.LevelFilename, 'File')
 					.addOption(SessionPasswordService.LevelExternalFile, 'External file')
+					.addOption(SessionPasswordService.LevelKeychain, 'Obsidian keychain')
 					.setValue(settings.rememberPasswordLevel).onChange(async value => {
 						settings.rememberPasswordLevel = value;
 						SessionPasswordService.setLevel(value);
@@ -59,7 +61,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 			},
 			{
 				name: 'Remember password timeout', desc: 'Minutes to remember passwords. Zero means until Obsidian is closed.',
-				visible: () => settings.rememberPassword && !external(),
+				visible: () => settings.rememberPassword && !external() && !keychain(),
 				render: row => { row.addSlider(slider => slider.setLimits(0, 120, 5)
 					.setValue(settings.rememberPasswordTimeout).onChange(async value => {
 						settings.rememberPasswordTimeout = value;
@@ -67,6 +69,18 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})); },
 			},
+			{
+				name: 'Keychain secret',
+				desc: SessionPasswordService.keychainExplanation + ' Manage secrets in Obsidian Settings → Keychain. Configure the secret on each device. Clearing the session cache does not remove it.',
+				visible: () => settings.rememberPassword && keychain(),
+				render: row => { row.addComponent(el => new SecretComponent(this.app, el)
+					.setValue(settings.keychainSecretId).onChange(async value => {
+						settings.keychainSecretId = value ?? '';
+						SessionPasswordService.setKeychain(settings.keychainSecretId, this.app.secretStorage);
+						await this.plugin.saveSettings();
+					})); },
+			},
+
 			{
 				name: 'External file paths',
 				desc: 'One path per line, relative to the vault (including ../). Desktop also supports absolute paths. Access depends on platform permissions.',
@@ -114,6 +128,10 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		tr = tbody.createEl( 'tr' );
 		tr.createEl( 'th', { text: 'External file:', attr: { 'align': 'right', 'style': 'width:12em;'} });
 		tr.createEl( 'td', { text: 'When needed the password/key is read from one of these filepaths.' });
+
+		tr = tbody.createEl('tr');
+		tr.createEl('th', { text: 'Obsidian keychain:' });
+		tr.createEl('td', { text: 'Use one selected secret for whole-note and inline encryption.' });
 
 		return f;
 	}

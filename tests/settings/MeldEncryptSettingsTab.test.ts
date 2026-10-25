@@ -6,15 +6,21 @@ import type { IMeldEncryptPluginSettings } from '../../src/settings/MeldEncryptP
 import MeldEncryptSettingsTab from '../../src/settings/MeldEncryptSettingsTab.ts';
 import FeatureInplaceEncrypt from '../../src/features/feature-inplace-encrypt/FeatureInplaceEncrypt.ts';
 
+const secretControl = vi.hoisted(() => ({ created: vi.fn(), value: '', change: async (_value: string | null) => {} }));
 const service = vi.hoisted(() => ({
-	LevelVault: 'vault', LevelParentPath: 'parent', LevelFilename: 'file', LevelExternalFile: 'externalFile',
-	setActive: vi.fn(), setLevel: vi.fn(), setAutoExpire: vi.fn(), setExternalFilePaths: vi.fn(),
+	LevelVault: 'vault', LevelParentPath: 'parent', LevelFilename: 'file', LevelExternalFile: 'externalFile', LevelKeychain: 'keychain',
+	setKeychain: vi.fn(), setActive: vi.fn(), setLevel: vi.fn(), setAutoExpire: vi.fn(), setExternalFilePaths: vi.fn(),
 	canFetchContents: vi.fn().mockResolvedValue(true),
 }));
 vi.mock('../../src/services/SessionPasswordService.ts', () => ({ SessionPasswordService: service }));
 vi.mock('obsidian', () => ({
+	SecretComponent: class {
+		constructor(...args: unknown[]) { secretControl.created(...args); }
+		setValue(value: string) { secretControl.value = value; return this; }
+		onChange(callback: (value: string | null) => Promise<void>) { secretControl.change = callback; return this; }
+	},
 	Notice: vi.fn(), MarkdownView: class {}, Modal: class {},
-	PluginSettingTab: class { refreshDomState = vi.fn(); },
+	PluginSettingTab: class { constructor(public app: App) {} refreshDomState = vi.fn(); },
 }));
 
 describe('searchable settings', () => {
@@ -26,7 +32,7 @@ describe('searchable settings', () => {
 		const fragment = { createEl: () => fragment, createTBody: () => fragment };
 		vi.stubGlobal('DocumentFragment', class { createEl = fragment.createEl; });
 		settings = {
-			confirmPassword: true, rememberPassword: true, rememberPasswordTimeout: 10,
+			keychainSecretId: '', confirmPassword: true, rememberPassword: true, rememberPasswordTimeout: 10,
 			rememberPasswordLevel: 'vault', rememberPasswordExternalFilePaths: [],
 			featureWholeNoteEncrypt: {},
 			featureInplaceEncrypt: { expandToWholeLines: true, markerSearchLimit: 1000, showMarkerWhenReadingDefault: false },
@@ -55,7 +61,7 @@ describe('searchable settings', () => {
 
 	it('indexes all settings and preserves conditional visibility', () => {
 		expect(tab.getSettingDefinitions().map(item => 'name' in item ? item.name : item.heading)).toEqual([
-			'Confirm password?', 'Remember password?', 'Remember passwords by:', 'Remember password timeout', 'External file paths',
+			'Confirm password?', 'Remember password?', 'Remember passwords by:', 'Remember password timeout', 'Keychain secret', 'External file paths',
 		]);
 		const visible = (name: string) => (row(name).visible as () => boolean)();
 		expect(visible('Remember password timeout')).toBe(true);
@@ -66,6 +72,24 @@ describe('searchable settings', () => {
 		settings.rememberPassword = false;
 		expect(visible('External file paths')).toBe(false);
 		expect(visible('Remember passwords by:')).toBe(false);
+	});
+
+	it('selects and clears a native Keychain ID without persisting its password', async () => {
+		settings.rememberPasswordLevel = 'keychain';
+		const storage = { getSecret: vi.fn().mockReturnValue('password-value') };
+		Object.assign(tab.app, { secretStorage: storage });
+		expect((row('Keychain secret').visible as () => boolean)()).toBe(true);
+		expect((row('Remember password timeout').visible as () => boolean)()).toBe(false);
+		const setting = { addComponent: (callback: (el: HTMLElement) => unknown) => callback({} as HTMLElement) };
+		row('Keychain secret').render(setting as unknown as Setting, {} as never);
+		await secretControl.change('shared-secret');
+		expect(settings.keychainSecretId).toBe('shared-secret');
+		expect(service.setKeychain).toHaveBeenCalledWith('shared-secret', storage);
+		expect(storage.getSecret).not.toHaveBeenCalled();
+		expect(JSON.stringify(settings)).not.toContain('password-value');
+		await secretControl.change(null);
+		expect(settings.keychainSecretId).toBe('');
+		expect(saveSettings).toHaveBeenCalledTimes(2);
 	});
 
 	it('persists controls and applies password service changes', async () => {
@@ -114,7 +138,7 @@ describe('searchable settings', () => {
 		const feature = new FeatureInplaceEncrypt();
 		Object.assign(feature, { featureSettings: settings.featureInplaceEncrypt });
 		tab.features = [feature];
-		const definitions = tab.getSettingDefinitions().slice(5);
+		const definitions = tab.getSettingDefinitions().slice(6);
 		const group = definitions[0] as { heading: string; items: SettingDefinitionItem[] };
 		expect(group.heading).toBe('In-place encryption');
 		expect(group.items).toHaveLength(3);

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { App, Editor, EditorPosition } from 'obsidian';
+import { UiHelper } from '../../../src/services/UiHelper.ts';
 import { Notice } from 'obsidian';
 import type MeldEncrypt from '../../../src/main.ts';
 import PasswordModal from '../../../src/features/feature-inplace-encrypt/PasswordModal.ts';
@@ -65,6 +66,7 @@ vi.mock('obsidian', () => {
 		}
 	}
 	return {
+		Platform: { isDesktop: false, isDesktopApp: false },
 		Setting,
 		TextComponent: TextInput,
 		MarkdownView: class {},
@@ -138,6 +140,26 @@ describe('inline password hint validation', () => {
 		expect(setSelection).not.toHaveBeenCalled();
 		expect(replaceSelection).not.toHaveBeenCalled();
 		expect(cache).not.toHaveBeenCalled();
+	});
+
+	it.each(['vault', 'parentPath', 'filename', 'externalFile', 'keychain'])('prefills inline encryption from %s and cancels without modifying content', async level => {
+		feature.pluginSettings.rememberPassword = true;
+		SessionPasswordService.setActive(true);
+		SessionPasswordService.setLevel(level);
+		SessionPasswordService.clear();
+		SessionPasswordService.setKeychain('shared-secret', { getSecret: () => 'provider-password' });
+		SessionPasswordService.putByPath({ password: 'provider-password', hint: '' }, 'note.md');
+		if (level === 'externalFile') {
+			SessionPasswordService.init({ read: async () => 'provider-password' } as never);
+			SessionPasswordService.setExternalFilePaths(['password.txt']);
+		}
+		ui.rows = [];
+		const fields = vi.spyOn(UiHelper, 'buildPasswordSetting');
+		actions.processSelection(false, editor, 'secret', start, end, 'encrypt');
+		await vi.waitFor(() => expect(fields).toHaveBeenCalledWith(expect.objectContaining({ name: 'Password', initialValue: 'provider-password' })));
+		ui.modal!.close();
+		await ui.closeResult;
+		expect(replaceSelection).not.toHaveBeenCalled();
 	});
 
 	it('also validates hints submitted with Enter', () => {

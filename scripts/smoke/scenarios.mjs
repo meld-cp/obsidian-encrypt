@@ -35,7 +35,9 @@ export async function runScenarios({ pluginId, version, expectedVault, fixture, 
 		fill(inputs[0], value);
 		if (confirm) fill(inputs[1], value);
 		if (hint !== undefined) fill(modal.querySelector('input[placeholder="Password hint"]'), hint);
-		button('Confirm').click();
+		const action = [...modal.querySelectorAll('button')].find(element => ['Encrypt', 'Decrypt'].includes(element.textContent.trim()));
+		assert(action, 'Missing password action');
+		action.click();
 		await wait(() => !modal.isConnected, 'Password dialog did not accept the input');
 	};
 	const command = id => assert(app.commands.executeCommandById(`${pluginId}:${id}`), `Command unavailable: ${id}`);
@@ -58,7 +60,19 @@ export async function runScenarios({ pluginId, version, expectedVault, fixture, 
 			assert(app.plugins.plugins[pluginId]?.manifest.version === version, 'Packaged plugin version is not loaded');
 		});
 		await step('create and edit a v3 whole note', async () => {
+			const plugin = app.plugins.plugins[pluginId];
+			app.secretStorage.setSecret('meld-encrypt-smoke', fixture.password);
+			plugin.pluginSettings.rememberPassword = true;
+			plugin.pluginSettings.rememberPasswordLevel = 'keychain';
+			plugin.pluginSettings.keychainSecretId = 'meld-encrypt-smoke';
+			await plugin.saveSettings();
+			await plugin.loadSettings();
+			await app.setting.open();
+			await app.setting.openTabById(pluginId);
+			await wait(() => [...doc().querySelectorAll('.setting-item')].find(el => el.querySelector('.setting-item-name')?.textContent === 'Keychain secret' && el.querySelector('.setting-item-control')?.textContent.includes('Change')), 'Native Keychain selector did not render');
+			app.setting.close();
 			command('create-new-note');
+			await wait(() => [...doc().querySelectorAll('input[type=password]')].some(el => el.value === fixture.password), 'Keychain password did not prefill');
 			await password(fixture.password);
 			view = await wait(activeEncrypted, 'Encrypted view did not open');
 			await app.fileManager.renameFile(view.file, 'smoke-whole.mdenc');
@@ -83,14 +97,17 @@ export async function runScenarios({ pluginId, version, expectedVault, fixture, 
 			await opening;
 			view = leaf.view;
 			assert(view.editor.getValue() === fixture.wholeText, 'Changed password did not reopen the original plaintext');
+			assert(app.secretStorage.getSecret('meld-encrypt-smoke') === fixture.password, 'Local password change modified the shared secret');
 		});
 		await step('convert unsaved edits and convert back', async () => {
 			const file = view.file;
 			view.editor.setValue(fixture.conversionText);
 			command('convert-to-or-from-encrypted-note');
+			await password(fixture.changedPassword, false);
 			await wait(async () => file.extension === 'md' && await app.vault.read(file) === fixture.conversionText, 'Decrypt conversion lost unsaved edits');
 			await wait(() => app.workspace.activeLeaf?.view?.getViewType() === 'markdown' && app.workspace.activeLeaf.view.file === file, 'Converted Markdown did not reopen');
 			command('convert-to-or-from-encrypted-note');
+			await password(fixture.password);
 			await wait(async () => file.extension === 'mdenc' && await diskFormat(file) === '3.0', 'Encrypt conversion did not write v3');
 			await wait(() => activeEncrypted()?.file === file, 'Converted encrypted note did not reopen');
 		});

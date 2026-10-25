@@ -1,3 +1,4 @@
+import type { IMeldEncryptPluginSettings } from "../../settings/MeldEncryptPluginSettings.ts";
 import MeldEncrypt from "../../main.ts";
 import { IMeldEncryptPluginFeature } from "../IMeldEncryptPluginFeature.ts";
 import { EncryptedMarkdownView } from "./EncryptedMarkdownView.ts";
@@ -14,7 +15,10 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 
 	private statusIndicator: HTMLElement;
 
-	async onload( plugin: MeldEncrypt ) {
+	private settings?: IMeldEncryptPluginSettings;
+
+	async onload( plugin: MeldEncrypt, settings?: IMeldEncryptPluginSettings ) {
+		this.settings = settings;
 		this.plugin = plugin;
 		//this.settings = settings.featureWholeNoteEncrypt;
 		
@@ -177,30 +181,12 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 		const newFilename = window.moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
 		const newFilepath = normalizePath( parentFolder.path + "/" + newFilename );
 		
-		let pwh : PasswordAndHint | undefined;
-		
-		if ( SessionPasswordService.getLevel() == SessionPasswordService.LevelExternalFile ){
-			// if using external file for password, try and get the password
-			pwh = await SessionPasswordService.getByPathAsync( newFilepath );
-		}
-
-		// if the password is unknown, prompt for it
-		if ( !pwh?.password.length ){
-			// prompt for password
-			const pwm = new PluginPasswordModal(
-				this.plugin.app,
-				'Encrypt note',
-				true,
-				true,
-				pwh ?? await SessionPasswordService.getByPathAsync( newFilepath )
-			);
-			
-			try{
-				pwh = await pwm.openAsync();
-			}catch{
-				return; // cancelled
-			}	
-		}
+		const pwm = new PluginPasswordModal(
+			this.plugin.app, 'Encrypt note', true, this.settings?.confirmPassword ?? true,
+			await SessionPasswordService.getByPathAsync(newFilepath)
+		);
+		let pwh: PasswordAndHint;
+		try { pwh = await pwm.openAsync(); } catch { return; }
 
 		if ( !pwh.password.length ){
 			new Notice('A password is required to create an encrypted note');

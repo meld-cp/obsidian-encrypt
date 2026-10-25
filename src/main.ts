@@ -64,6 +64,7 @@ export default class MeldEncrypt extends Plugin {
 		
 		const DEFAULT_SETTINGS: IMeldEncryptPluginSettings = {
 			confirmPassword: true,
+			keychainSecretId: '',
 			rememberPassword: true,
 			rememberPasswordTimeout: 30,
 			rememberPasswordLevel: SessionPasswordService.LevelVault,
@@ -81,6 +82,8 @@ export default class MeldEncrypt extends Plugin {
 
 		const savedSettings = await this.loadData() as Partial<IMeldEncryptPluginSettings> | null;
 		this.pluginSettings = Object.assign({}, DEFAULT_SETTINGS, savedSettings);
+
+		SessionPasswordService.setKeychain(this.pluginSettings.keychainSecretId, this.app.secretStorage);
 
 		// apply settings
 		SessionPasswordService.setActive( this.pluginSettings.rememberPassword );

@@ -426,7 +426,9 @@ export class EncryptedMarkdownView extends MarkdownView {
 				`Change password for "${file.basename}"`,
 				true,
 				true,
-				await SessionPasswordService.getByFile( file )
+				await SessionPasswordService.getByFile( file ),
+				SessionPasswordService.getLevel() === SessionPasswordService.LevelKeychain
+					? SessionPasswordService.keychainExplanation : undefined
 			);
 			const newPwh = await pwm.openAsync();
 

@@ -16,6 +16,14 @@ Please report any bugs or features requests [here](https://github.com/meld-cp/ob
 
 The full change log can be found on the [releases](https://github.com/meld-cp/obsidian-encrypt/releases) page.
 
+## Unreleased
+
+### Improvements
+
+* Added an opt-in Obsidian Keychain password provider for whole-note and inline encryption, using Obsidian's native secret selector and storing only the secret ID in plugin settings.
+* Explicit encryption now always shows a password dialog across all providers, with the provider password prefilled and available to override.
+* Password changes remain local to the affected content; explanatory text clarifies that shared Keychain secrets and other encrypted content are unchanged.
+
 ## v3.0.2
 
 ### Improvements

@@ -436,54 +436,56 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 			return true;
 		}
 
-		// Fetch password from user
+		this.runModalAction(async () => {
+			// Fetch password from user
 
-		// determine default password and hint
-		let defaultPassword = '';
-		let defaultHint = '';
-		if ( this.pluginSettings.rememberPassword ){
-			const bestGuessPasswordAndHint = SessionPasswordService.getByPath( activeFile.path );
+			// determine default password and hint
+			let defaultPassword = '';
+			let defaultHint = '';
+			if ( this.pluginSettings.rememberPassword ){
+				const bestGuessPasswordAndHint = await SessionPasswordService.getByPathAsync( activeFile.path );
 
-			defaultPassword = bestGuessPasswordAndHint.password;
-			defaultHint = bestGuessPasswordAndHint.hint;
-		}
-
-		const confirmPassword = this.pluginSettings.confirmPassword;
-
-		const pwModal = new PasswordModal(
-			this.plugin.app,
-			true,
-			confirmPassword,
-			/*defaultShowInReadingView*/ this.featureSettings.showMarkerWhenReadingDefault,
-			defaultPassword,
-			defaultHint,
-			/*showTextToEncrypt*/ true
-		);
-		pwModal.onClose = () => this.runModalAction(async () => {
-			if ( !pwModal.resultConfirmed ){
-				return;
+				defaultPassword = bestGuessPasswordAndHint.password;
+				defaultHint = bestGuessPasswordAndHint.hint;
 			}
-			const pw = pwModal.resultPassword ?? ''
-			const hint = pwModal.resultHint;
-			const textToEncrypt = pwModal.resultTextToEncrypt ?? '';
 
-			const encryptable = new Encryptable();
-			encryptable.text = textToEncrypt;
-			encryptable.hint = hint;
+			const confirmPassword = this.pluginSettings.confirmPassword;
 
-			const encrypted = await this.encryptSelection(
-				editor,
-				encryptable,
-				pw,
-				pos,
-				pos,
-				pwModal.resultShowInReadingView ?? this.featureSettings.showMarkerWhenReadingDefault
+			const pwModal = new PasswordModal(
+				this.plugin.app,
+				true,
+				confirmPassword,
+				/*defaultShowInReadingView*/ this.featureSettings.showMarkerWhenReadingDefault,
+				defaultPassword,
+				defaultHint,
+				/*showTextToEncrypt*/ true
 			);
+			pwModal.onClose = () => this.runModalAction(async () => {
+				if ( !pwModal.resultConfirmed ){
+					return;
+				}
+				const pw = pwModal.resultPassword ?? ''
+				const hint = pwModal.resultHint;
+				const textToEncrypt = pwModal.resultTextToEncrypt ?? '';
 
-			// remember password
-			if (encrypted) SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
+				const encryptable = new Encryptable();
+				encryptable.text = textToEncrypt;
+				encryptable.hint = hint;
+
+				const encrypted = await this.encryptSelection(
+					editor,
+					encryptable,
+					pw,
+					pos,
+					pos,
+					pwModal.resultShowInReadingView ?? this.featureSettings.showMarkerWhenReadingDefault
+				);
+
+				// remember password
+				if (encrypted) SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
+			});
+			pwModal.open();
 		});
-		pwModal.open();
 
 		return false;
 	}
@@ -591,72 +593,78 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		}
 
 		
-		// Fetch password from user
+		this.runModalAction(async () => {
+			// Fetch password from user
 
-		// determine default password and hint
-		let defaultPassword = '';
-		let defaultHint = selectionAnalysis.decryptable?.hint;
-		if ( this.pluginSettings.rememberPassword ){
-			const bestGuessPasswordAndHint = SessionPasswordService.getByPath( activeFile.path );
+			// determine default password and hint
+			let defaultPassword = '';
+			let defaultHint = selectionAnalysis.decryptable?.hint;
+			if ( this.pluginSettings.rememberPassword ){
+				const bestGuessPasswordAndHint = await SessionPasswordService.getByPathAsync( activeFile.path );
 
-			defaultPassword = bestGuessPasswordAndHint.password;
-			defaultHint = defaultHint ?? bestGuessPasswordAndHint.hint;
-		}
-
-		const confirmPassword = selectionAnalysis.canEncrypt && this.pluginSettings.confirmPassword;
-
-		const pwModal = new PasswordModal(
-			this.plugin.app,
-			selectionAnalysis.canEncrypt,
-			confirmPassword,
-			/*defaultShowInReadingView*/ this.featureSettings.showMarkerWhenReadingDefault,
-			defaultPassword,
-			defaultHint
-		);
-
-		pwModal.onClose = () => this.runModalAction(async () => {
-			if ( !pwModal.resultConfirmed ){
-				return;
+				defaultPassword = bestGuessPasswordAndHint.password;
+				defaultHint = defaultHint ?? bestGuessPasswordAndHint.hint;
 			}
-			const pw = pwModal.resultPassword ?? ''
-			const hint = pwModal.resultHint;
 
-			if (selectionAnalysis.canEncrypt) {
+			if (!selectionAnalysis.canEncrypt && selectionAnalysis.decryptable && defaultPassword) {
+				if (await this.decryptSelection(editor, selectionAnalysis.decryptable, defaultPassword, finalSelectionStart, finalSelectionEnd, true)) return;
+			}
 
-				const encryptable = new Encryptable();
-				encryptable.text = selectionText;
-				encryptable.hint = hint;
+			const confirmPassword = selectionAnalysis.canEncrypt && this.pluginSettings.confirmPassword;
 
-				const encrypted = await this.encryptSelection(
-					editor,
-					encryptable,
-					pw,
-					finalSelectionStart,
-					finalSelectionEnd,
-					pwModal.resultShowInReadingView ?? this.featureSettings.showMarkerWhenReadingDefault
-				);
+			const pwModal = new PasswordModal(
+				this.plugin.app,
+				selectionAnalysis.canEncrypt,
+				confirmPassword,
+				/*defaultShowInReadingView*/ this.featureSettings.showMarkerWhenReadingDefault,
+				defaultPassword,
+				defaultHint
+			);
 
-				// remember password
-				if (encrypted) SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
-
-			} else if ( selectionAnalysis.decryptable ) {
-
-				const decryptSuccess = await this.decryptSelection(
-					editor,
-					selectionAnalysis.decryptable,
-					pw,
-					finalSelectionStart,
-					finalSelectionEnd,
-				);
-
-				// remember password?
-				if ( decryptSuccess ) {
-					SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
+			pwModal.onClose = () => this.runModalAction(async () => {
+				if ( !pwModal.resultConfirmed ){
+					return;
 				}
+				const pw = pwModal.resultPassword ?? ''
+				const hint = pwModal.resultHint;
+
+				if (selectionAnalysis.canEncrypt) {
+
+					const encryptable = new Encryptable();
+					encryptable.text = selectionText;
+					encryptable.hint = hint;
+
+					const encrypted = await this.encryptSelection(
+						editor,
+						encryptable,
+						pw,
+						finalSelectionStart,
+						finalSelectionEnd,
+						pwModal.resultShowInReadingView ?? this.featureSettings.showMarkerWhenReadingDefault
+					);
+
+					// remember password
+					if (encrypted) SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
+
+				} else if ( selectionAnalysis.decryptable ) {
+
+					const decryptSuccess = await this.decryptSelection(
+						editor,
+						selectionAnalysis.decryptable,
+						pw,
+						finalSelectionStart,
+						finalSelectionEnd,
+					);
+
+					// remember password?
+					if ( decryptSuccess ) {
+						SessionPasswordService.putByPath( { password:pw, hint: hint }, activeFile.path );
+					}
 				
-			}
+				}
+			});
+			pwModal.open();
 		});
-		pwModal.open();
 
 		return true;
 	}
@@ -691,7 +699,8 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		decryptable: Decryptable,
 		password: string,
 		selectionStart: EditorPosition,
-		selectionEnd: EditorPosition
+		selectionEnd: EditorPosition,
+		silentFailure = false
 	) : Promise<boolean> {
 
 		// decrypt
@@ -699,7 +708,7 @@ export default class FeatureInplaceEncrypt implements IMeldEncryptPluginFeature{
 		const crypto = CryptoHelperFactory.BuildFromDecryptableOrThrow(decryptable);
 		const decryptedText = await crypto.decryptFromBase64(decryptable.base64CipherText, password);
 		if (decryptedText === null) {
-			new Notice('❌ Decryption failed!');
+			if (!silentFailure) new Notice('❌ Decryption failed!');
 			return false;
 		} else {
 

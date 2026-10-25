@@ -128,12 +128,23 @@ describe('new encrypted note password handling', () => {
 		expect(openFile).not.toHaveBeenCalled();
 	});
 
-	it('uses a valid external password without prompting', async () => {
+	it('prefills a valid external password and allows an override', async () => {
 		fetchPassword.mockResolvedValue('external-password');
 		await createNote();
 
-		expect(modal.constructor).not.toHaveBeenCalled();
-		await expectCreatedWith('external-password');
+		expect(modal.constructor).toHaveBeenCalledWith(expect.anything(), 'Encrypt note', true, true, { password: 'external-password', hint: '' });
+		expect(modal.openAsync).toHaveBeenCalledOnce();
+		await expectCreatedWith('entered-password');
+	});
+
+	it.each(['vault', 'parentPath', 'filename', 'keychain'])('always prompts with a known %s password and permits cancellation', async level => {
+		SessionPasswordService.setLevel(level);
+		SessionPasswordService.setKeychain('shared-secret', { getSecret: () => 'known-password' });
+		SessionPasswordService.putByPath({ password: 'known-password', hint: '' }, 'folder/new-note.mdenc');
+		modal.openAsync.mockRejectedValue(undefined);
+		await createNote();
+		expect(modal.constructor).toHaveBeenCalledWith(expect.anything(), 'Encrypt note', true, true, { password: 'known-password', hint: '' });
+		expect(create).not.toHaveBeenCalled();
 	});
 
 	it('still prompts for a password outside external-file mode', async () => {

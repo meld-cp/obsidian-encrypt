@@ -1,4 +1,5 @@
 import { App, Modal, Setting } from 'obsidian';
+import { SessionPasswordService } from '../../services/SessionPasswordService.ts';
 import { PasswordForm } from '../../services/PasswordForm.ts';
 import { getInlineHintError } from './InlineHintValidation.ts';
 
@@ -31,6 +32,9 @@ export default class PasswordModal extends Modal {
 		let showInReadingView = this.showInReadingView;
 		let textToEncrypt = '';
 		this.setTitle(this.isEncrypting ? 'Encrypt text' : 'Decrypt text');
+		if (this.isEncrypting && SessionPasswordService.getLevel() === SessionPasswordService.LevelKeychain) {
+			new Setting(contentEl).setDesc(SessionPasswordService.keychainExplanation);
+		}
 
 		const form = new PasswordForm({
 			container: contentEl,

@@ -12,10 +12,12 @@ import { EncryptedMarkdownView } from "../feature-whole-note-encrypt/EncryptedMa
 export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	
 	plugin: MeldEncrypt;
+	private pluginSettings: IMeldEncryptPluginSettings;
 	private convertingFiles = new Set<TFile>();
 	
 	async onload(plugin: MeldEncrypt, settings: IMeldEncryptPluginSettings) {
 		this.plugin = plugin;
+		this.pluginSettings = settings;
 
 		this.plugin.addCommand({
 			id: 'convert-to-or-from-encrypted-note',
@@ -134,11 +136,8 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			// try to get password from session password service
 			let password = await SessionPasswordService.getByFile( file );
 
-			if ( password.password == '' ){
-				// ask for password
-				const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt note', true, true, password );
-				password = await pm.openAsync();
-			}
+			const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt note', true, this.pluginSettings?.confirmPassword ?? true, password );
+			password = await pm.openAsync();
 			await this.closeUpdateRememberPasswordThenReopen(
 				file,
 				ENCRYPTED_FILE_EXTENSION_DEFAULT,

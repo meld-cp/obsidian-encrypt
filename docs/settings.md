@@ -19,9 +19,25 @@ The following tables list the available settings and their descriptions:
 |--|--|
 | Confirm password | Confirm password when encrypting (recommended). |
 | Remember password | Remember the last used passwords when encrypting or decrypting. Passwords are remembered until they timeout or Obsidian is closed. |
-| Remember password by | Remember password by category: Vault, Folder, File, or External File. |
-| Remember password timeout | Remember the password for a specified number of minutes or until Obsidian is closed. This setting is hidden in External file mode. |
+| Remember password by | Remember password by category: Vault, Folder, File, External File, or Obsidian Keychain. |
+| Remember password timeout | Remember the password for a specified number of minutes or until Obsidian is closed. This setting is hidden in External file and Keychain modes. |
 | External file paths | In External file mode, enter one path per line, relative to the vault root (including `../`), or an absolute path on desktop. |
+
+### Encryption dialogs
+
+Explicit encryption always opens a password dialog, including new encrypted notes, conversions, and inline encryption. The selected provider prefills the masked password; you can override it for this operation, confirm it when **Confirm password** is enabled, and add an optional hint. Cancelling leaves content unchanged. Saving an already unlocked encrypted note does not prompt again.
+
+### Using Obsidian Keychain
+
+1. Enable **Remember password?** and select **Obsidian Keychain** under **Remember passwords by:**.
+2. Use **Keychain secret** to select an existing secret or create one using Obsidian's native control. One selected secret serves both whole-note and inline encryption.
+3. Manage secret values in **Obsidian Settings → Keychain**. To use another ID, select or create another secret in Meld Encrypt's settings.
+
+Only the secret ID is saved in plugin settings. Secrets are local to the device and vault; configure the secret on each device. Other plugins can access secrets through Obsidian's shared secret storage. Clearing the session password cache does not remove the secret or prevent subsequent retrieval.
+
+Changing a password affects only this note or inline block. It does not update your Keychain secret or other encrypted content. Changing the Keychain secret does not re-encrypt existing content; content using an older password will still require that password.
+
+Missing, empty, unavailable, or incorrect secrets fall back to manual password entry during decryption. Manual entry never updates the stored secret. Keep access to old passwords for existing content and backups.
 
 ### Using an External Password File
 

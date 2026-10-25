@@ -1,4 +1,4 @@
-import { DataAdapter, FileSystemAdapter, Platform, Notice, TFile } from "obsidian";
+import { type SecretStorage, DataAdapter, FileSystemAdapter, Platform, Notice, TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache.ts";
 
 export type PasswordAndHint = {
@@ -23,11 +23,22 @@ export class SessionPasswordService{
 	public static LevelParentPath = 'parentPath';
 	public static LevelVault = 'vault';
 	public static LevelExternalFile = 'externalFile';
+	public static LevelKeychain = 'keychain';
+	public static readonly keychainExplanation = 'Changing a password affects only this note or inline block. It does not update your Keychain secret or other encrypted content. Changing the Keychain secret does not re-encrypt existing content; content using an older password will still require that password.';
+	private static secretStorage: Pick<SecretStorage, 'getSecret'> | undefined;
+	private static secretId = '';
+
+	public static setKeychain(secretId: string, storage?: Pick<SecretStorage, 'getSecret'>) {
+		this.secretId = secretId;
+		this.secretStorage = storage;
+		this.clear();
+	}
 	private static allLevels = [
 		SessionPasswordService.LevelFilename,
 		SessionPasswordService.LevelParentPath,
 		SessionPasswordService.LevelVault,
-		SessionPasswordService.LevelExternalFile
+		SessionPasswordService.LevelExternalFile,
+		SessionPasswordService.LevelKeychain
 	];
 	private static level = SessionPasswordService.LevelVault;
 
@@ -68,6 +79,7 @@ export class SessionPasswordService{
 		}
 		if ( SessionPasswordService.allLevels.includes(level) ){
 			SessionPasswordService.level = level;
+			this.clear();
 			return;
 		}
 		SessionPasswordService.level = SessionPasswordService.LevelFilename;
@@ -167,8 +179,8 @@ export class SessionPasswordService{
 	}
 
 	private static putByKey( key: string, pw: PasswordAndHint ) : void {
-		if (SessionPasswordService.level == SessionPasswordService.LevelExternalFile){
-			// not supported
+		if (SessionPasswordService.level == SessionPasswordService.LevelExternalFile || SessionPasswordService.level == SessionPasswordService.LevelKeychain){
+			// Providers are read-only; manual passwords must not replace shared secrets.
 			return;
 		}
 		this.cache.put( key, pw );
@@ -179,6 +191,14 @@ export class SessionPasswordService{
 	}
 
 	public static async getByKeyAsync( key: string, defaultValue: PasswordAndHint ): Promise<PasswordAndHint> {
+		if (this.level === this.LevelKeychain) {
+			try {
+				const password = this.secretId ? this.secretStorage?.getSecret(this.secretId) : null;
+				return password ? { password, hint: '' } : defaultValue;
+			} catch {
+				return defaultValue;
+			}
+		}
 		if ( SessionPasswordService.level == SessionPasswordService.LevelExternalFile ){
 			// get from external file, return contents of first path that exists
 	

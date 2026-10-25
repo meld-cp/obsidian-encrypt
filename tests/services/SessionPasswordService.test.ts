@@ -52,6 +52,49 @@ describe('SessionPasswordService', () => {
 		vi.clearAllMocks();
 	});
 
+	describe('Keychain provider', () => {
+		const getSecret = vi.fn();
+		beforeEach(() => {
+			getSecret.mockReset().mockReturnValue('stored-password');
+			SessionPasswordService.setKeychain('shared-secret', { getSecret });
+			SessionPasswordService.setLevel(SessionPasswordService.LevelKeychain);
+		});
+
+		it('retrieves the current value for both file and path lookups without caching it', async () => {
+			expect(await SessionPasswordService.getByPathAsync('note.md')).toEqual({ password: 'stored-password', hint: '' });
+			getSecret.mockReturnValue('changed-password');
+			expect((await SessionPasswordService.getByFile(makeFile('note.mdenc', 'note', ''))).password).toBe('changed-password');
+			expect(getSecret).toHaveBeenCalledWith('shared-secret');
+		});
+
+		it('does not replace the secret with local passwords or remove it when clearing', async () => {
+			SessionPasswordService.putByPath(pw, 'note.md');
+			expect(SessionPasswordService.clear()).toBe(0);
+			expect((await SessionPasswordService.getByPathAsync('other.md')).password).toBe('stored-password');
+		});
+
+		it.each([null, ''])('returns manual fallback for an empty or missing secret: %s', async value => {
+			getSecret.mockReturnValue(value);
+			expect(await SessionPasswordService.getByPathAsync('note.md')).toEqual(SessionPasswordService.blankPasswordAndHint);
+		});
+
+		it('handles unavailable storage and read errors without exposing secret values', async () => {
+			getSecret.mockImplementation(() => { throw new Error('unavailable'); });
+			expect(await SessionPasswordService.getByPathAsync('note.md')).toEqual(SessionPasswordService.blankPasswordAndHint);
+			SessionPasswordService.setKeychain('shared-secret');
+			expect(await SessionPasswordService.getByPathAsync('note.md')).toEqual(SessionPasswordService.blankPasswordAndHint);
+		});
+
+		it('does not retrieve secrets while disabled or with no selected ID', async () => {
+			SessionPasswordService.setActive(false);
+			await SessionPasswordService.getByPathAsync('note.md');
+			SessionPasswordService.setActive(true);
+			SessionPasswordService.setKeychain('', { getSecret });
+			await SessionPasswordService.getByPathAsync('note.md');
+			expect(getSecret).not.toHaveBeenCalled();
+		});
+	});
+
 	describe('setActive', () => {
 		it('should return blank password when inactive', async () => {
 			SessionPasswordService.setActive(false);
