@@ -32,7 +32,7 @@ Open the command palette with **Ctrl+P** on Windows/Linux or **Cmd+P** on macOS,
 ### Encrypt an entire note
 
 1. Run **Meld Encrypt: Create new encrypted note**.
-2. Enter and confirm a password, optionally add a hint, and click **Confirm**.
+2. Enter and confirm a password, optionally add a hint, and click **Encrypt**.
 3. Write your note. Its saved contents are encrypted in a `.mdenc` file.
 4. Run **Meld Encrypt: Lock and close all open encrypted notes** when finished.
 5. To read or edit it later, open the encrypted file and enter its password when prompted.
@@ -42,7 +42,7 @@ To encrypt an existing Markdown note, right-click it in the file explorer and se
 ### Encrypt selected text
 
 1. Open a Markdown note in the editor and select the text to encrypt. If **Expand selection to whole line?** is enabled under **Settings → Meld Encrypt**, partial selections expand to include the whole line.
-2. Run **Meld Encrypt: Encrypt selection**, enter and confirm a password, and click **Confirm**.
+2. Run **Meld Encrypt: Encrypt selection**, enter and confirm a password, and click **Encrypt**.
 3. To reveal the text, place the cursor inside the encrypted block and run **Meld Encrypt: Decrypt**. Enter the password when prompted.
 4. Edit the revealed text and click **Save** to re-encrypt your changes. **Decrypt in-place** replaces the encrypted block with plaintext in the note.
 

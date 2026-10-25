@@ -48,7 +48,7 @@ The Reading View popup is read-only. To edit encrypted text and save it encrypte
 
 ### Offline browser decryptor
 
-1. Download **decrypt.html** and **offline-decrypt.js** from the same [Meld Encrypt release](https://github.com/meld-cp/obsidian-encrypt/releases). Save both files in the same folder with those exact names.
+1. Download [**decrypt.html**](https://github.com/meld-cp/obsidian-encrypt/blob/main/tools/decrypt.html) and [**offline-decrypt.js**](https://github.com/meld-cp/obsidian-encrypt/blob/main/tools/offline-decrypt.js) from the repository using **Download raw file** on each page. Save both files together at the same time, in the same folder with those exact names. Do not save the GitHub preview pages.
 2. Open `decrypt.html` in a modern browser. Both files work locally without Obsidian or a network connection.
 3. For a whole encrypted note, open a copy of the `.mdenc` file in a text editor and paste its entire contents into **Encrypted Text**. For inline text, paste one complete encrypted block, including its markers.
 4. Enter the correct **Password** and choose **Decrypt**.

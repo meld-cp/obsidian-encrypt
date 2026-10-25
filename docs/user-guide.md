@@ -7,11 +7,11 @@ has_children: true
 
 # User Guide 
 
-Obsidian Encrypt offers two encryption modes:
+Meld Encrypt offers two encryption modes:
 
-* **Whole Encrypted Notes** mode encrypts an entire note file. The contents are completely inaccessible without a password.
+* [**Whole Encrypted Notes**](whole-encrypted-notes.md) encrypts the note text in a `.mdenc` file. The filename and optional password hint remain readable.
 
-* **In-Place Encryption** mode encrypts only selected parts of text within an existing note, allowing you to protect sensitive sections while keeping the rest readable.
+* [**In-Place Encryption**](in-place-encryption.md) mode encrypts only selected parts of text within an existing note, allowing you to protect sensitive sections while keeping the rest readable.
 
 The following sections will guide you through how to use each mode.
 

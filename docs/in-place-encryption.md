@@ -23,7 +23,7 @@ the encrypted block and its hint.
 4. Open the **Command palette** by clicking the **Open command palette** icon ![command_palette](assets/cmd_pal_ico.png).
 5. Type or scroll to **Encrypt selection**, then select it.
 6. Enter and confirm a password. You can add an optional password hint.
-7. Click **Confirm**.
+7. Click **Encrypt**.
 
 ### Option 2: Use the Encrypt selection Ribbon Button
 
@@ -33,7 +33,7 @@ the encrypted block and its hint.
     > Note: A partial selection will be expanded to include the whole line if the **Expand selection to whole line** setting is enabled.
 4. Click the **Encrypt selection** ribbon button.
 5. Enter and confirm a password. You can add an optional password hint.
-6. Click **Confirm**.
+6. Click **Encrypt**.
 
 ## To Reveal or Decrypt Selected Text 
 
