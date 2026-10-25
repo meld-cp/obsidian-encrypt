@@ -28,6 +28,7 @@ While you view or edit an encrypted note, the plugin keeps its saved contents en
 - [Whole Encrypted Notes](whole-encrypted-notes.md): create, edit, lock, and convert notes.
 - [In-Place Encryption](in-place-encryption.md): protect selected text inside a note.
 - [Settings](settings.md): password remembering, external files, Keychain, and inline options.
+- [Encryption and Security](encryption-and-security.md): algorithms, readable metadata, password handling, and security limits.
 - [Troubleshooting](troubleshooting-and-recovery.md): password prompts and missing markers.
 - [Recovery without Obsidian](troubleshooting-and-recovery.md#recovery-without-obsidian): offline browser and command-line tools.
 

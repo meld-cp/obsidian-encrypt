@@ -69,5 +69,5 @@ Report any bugs or features requests [here](https://github.com/meld-cp/obsidian-
 
 ## Documentation
 
-See the [documentation homepage](https://meld-cp.github.io/obsidian-encrypt/), [Getting Started](https://meld-cp.github.io/obsidian-encrypt/getting-started.html), and [Troubleshooting and Recovery](https://meld-cp.github.io/obsidian-encrypt/troubleshooting-and-recovery.html), including standalone decryption without Obsidian.
+See the [documentation homepage](https://meld-cp.github.io/obsidian-encrypt/), [Getting Started](https://meld-cp.github.io/obsidian-encrypt/getting-started.html), [Encryption and Security](https://meld-cp.github.io/obsidian-encrypt/encryption-and-security.html), and [Troubleshooting and Recovery](https://meld-cp.github.io/obsidian-encrypt/troubleshooting-and-recovery.html), including standalone decryption without Obsidian.
 
