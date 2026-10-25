@@ -42,7 +42,8 @@ the encrypted block and its hint.
 1. Go to **Files** by clicking the **Files** icon ![files](assets/fil_ico.png). 
 2. Select the note with the encrypted text. 
 3. Place your cursor anywhere on the encrypted text.
-   ![encrypted_text](assets/enc_text.png)
+   ![Example encrypted block in the editor](assets/enc_text.png)
+   The screenshot shows a legacy block; current blocks use a newer format with the same cursor-based workflow.
 4. Open the **Command palette** by clicking the **Open command palette** icon ![command_palette](assets/cmd_pal_ico.png).
 5. Type or scroll to **Decrypt**, then select it.
 6. Enter the correct password. 
@@ -55,7 +56,8 @@ the encrypted block and its hint.
 1. Go to **Files** by clicking the **Files** icon ![files](assets/fil_ico.png). 
 2. Select the note with the encrypted text. 
 3. Place your cursor anywhere on the encrypted text.
-   ![encrypted_text](assets/enc_text.png)
+   ![Example encrypted block in the editor](assets/enc_text.png)
+   The screenshot shows a legacy block; current blocks use a newer format with the same cursor-based workflow.
 4. Click the **Decrypt at Cursor** ribbon button.
 5. Enter the correct password. 
    > Note: Your previously used password is filled in by default (you can change this in the plugin settings).

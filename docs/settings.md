@@ -18,10 +18,26 @@ The following tables list the available settings and their descriptions:
 | Setting | Description |
 |--|--|
 | Confirm password | Confirm password when encrypting (recommended). |
-| Remember password | Remember the last used passwords when encrypting or decrypting. Passwords are remembered until they timeout or Obsidian is closed. |
+| Remember password | Reuse session passwords or the selected external-file/Keychain provider. Enabled by default. |
 | Remember password by | Remember password by category: Vault, Folder, File, External File, or Obsidian Keychain. |
-| Remember password timeout | Remember the password for a specified number of minutes or until Obsidian is closed. This setting is hidden in External file and Keychain modes. |
+| Remember password timeout | Session inactivity timeout in minutes (default **30**). **0** means until Obsidian closes. Hidden in External file and Keychain modes. |
 | External file paths | In External file mode, enter one path per line, relative to the vault root (including `../`), or an absolute path on desktop. |
+
+### Choosing a password scope
+
+These settings reuse passwords; they do not change passwords on existing notes or require all notes to share one password.
+
+| Mode | Example |
+|--|--|
+| Vault (default) | A password used for `Personal/Diary.mdenc` is offered for `Work/Plans.mdenc` too. The last remembered password is reused across the vault. |
+| Folder | `Personal/Diary.mdenc` and `Personal/Budget.mdenc` share a remembered password. `Personal/Archive/Old.mdenc` has a separate folder entry; subfolders do not inherit it. |
+| File | Each full file path has its own remembered password. Inline blocks in the same Markdown file share that file's entry; this is not a separate cache for each block. |
+| External file | Read one shared password from the first readable, nonempty configured file. See the instructions below. |
+| Obsidian Keychain | Read one shared password from the selected secret. Configure it on each device. |
+
+In session modes, reading or remembering a password resets a shared timeout for the cache. After that interval without password-cache activity, the next lookup clears expired entries. This is not a separate timer for each note and does not lock an already open encrypted note. Use **Meld Encrypt: Lock and close all open encrypted notes** to close unlocked notes.
+
+Turning off **Remember password?** clears the session cache and stops password reuse. External files and Keychain secrets are not deleted.
 
 ### Encryption dialogs
 
@@ -64,7 +80,8 @@ the password.
 
 | Setting | Description |
 |--|--|
-| Expand selection to whole line | Partial selections will get expanded to the whole line.|
-| Search limit for markers | How far to look for markers when encrypting or decrypting. |
-| By default, show encrypted marker when reading | When encrypting inline text, determines whether a visible marker is shown in Reading View by default.|
+| Expand selection to whole line | Include the entire line when encrypting a partial selection. Off by default. |
+| Search limit for markers | Maximum text distance to search backward for an opening marker and forward for a closing marker around the cursor. Default **10000** (text offsets, not lines). Increase for very large encrypted blocks if cursor-based detection fails, or select the complete block explicitly. Larger limits may make searches slower. |
+| By default, show encrypted marker when reading | Default visibility of the clickable 🔐 marker for new inline encryption. On by default. Change it in the encryption dialog for an individual block; changing this setting does not update existing blocks. |
 
+For password prompts, unreadable provider files, or missing inline markers, see [Troubleshooting and Recovery](troubleshooting-and-recovery.md).
