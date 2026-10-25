@@ -24,7 +24,8 @@ export class SessionPasswordService{
 	public static LevelVault = 'vault';
 	public static LevelExternalFile = 'externalFile';
 	public static LevelKeychain = 'keychain';
-	public static readonly keychainExplanation = 'Changing a password affects only this note or inline block. It does not update your Keychain secret or other encrypted content. Changing the Keychain secret does not re-encrypt existing content; content using an older password will still require that password.';
+	public static readonly keychainSettingsExplanation = 'The selected secret supplies the default password for encryption and decryption. Changing it does not update existing encrypted content. Changing a note or block’s password does not update the secret.';
+	public static readonly keychainPasswordChangeExplanation = 'This change affects only this note or inline block. Your Keychain secret and other encrypted content stay unchanged.';
 	private static secretStorage: Pick<SecretStorage, 'getSecret'> | undefined;
 	private static secretId = '';
 

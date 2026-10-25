@@ -71,7 +71,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 			},
 			{
 				name: 'Keychain secret',
-				desc: SessionPasswordService.keychainExplanation + ' Manage secrets in Obsidian Settings → Keychain. Configure the secret on each device. Clearing the session cache does not remove it.',
+				desc: SessionPasswordService.keychainSettingsExplanation + ' Manage secrets in Obsidian Settings → Keychain. Configure the secret on each device. Clearing the session cache does not remove it.',
 				visible: () => settings.rememberPassword && keychain(),
 				render: row => { row.addComponent(el => new SecretComponent(this.app, el)
 					.setValue(settings.keychainSecretId).onChange(async value => {

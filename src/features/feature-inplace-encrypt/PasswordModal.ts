@@ -33,7 +33,7 @@ export default class PasswordModal extends Modal {
 		let textToEncrypt = '';
 		this.setTitle(this.isEncrypting ? 'Encrypt text' : 'Decrypt text');
 		if (this.isEncrypting && SessionPasswordService.getLevel() === SessionPasswordService.LevelKeychain) {
-			new Setting(contentEl).setDesc(SessionPasswordService.keychainExplanation);
+			new Setting(contentEl).setDesc(SessionPasswordService.keychainPasswordChangeExplanation);
 		}
 
 		const form = new PasswordForm({

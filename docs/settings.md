@@ -35,7 +35,7 @@ Explicit encryption always opens a password dialog, including new encrypted note
 
 Only the secret ID is saved in plugin settings. Secrets are local to the device and vault; configure the secret on each device. Other plugins can access secrets through Obsidian's shared secret storage. Clearing the session password cache does not remove the secret or prevent subsequent retrieval.
 
-Changing a password affects only this note or inline block. It does not update your Keychain secret or other encrypted content. Changing the Keychain secret does not re-encrypt existing content; content using an older password will still require that password.
+The selected secret supplies the default password for encryption and decryption. Changing it does not update existing encrypted content. Changing a note or block’s password does not update the secret. Content encrypted with an older password still requires that password.
 
 Missing, empty, unavailable, or incorrect secrets fall back to manual password entry during decryption. Manual entry never updates the stored secret. Keep access to old passwords for existing content and backups.
 

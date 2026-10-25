@@ -428,7 +428,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 				true,
 				await SessionPasswordService.getByFile( file ),
 				SessionPasswordService.getLevel() === SessionPasswordService.LevelKeychain
-					? SessionPasswordService.keychainExplanation : undefined
+					? SessionPasswordService.keychainPasswordChangeExplanation : undefined
 			);
 			const newPwh = await pwm.openAsync();
 
