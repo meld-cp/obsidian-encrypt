@@ -115,23 +115,23 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		
 		let tr = tbody.createEl( 'tr' );
 		tr.createEl( 'th', { text: 'Vault:', attr: { 'align': 'right'} });
-		tr.createEl( 'td', { text: 'Typically, you\'ll use the same password every time.' });
+		tr.createEl( 'td', { text: 'Reuse the last password across the vault.' });
 		
 		tr = tbody.createEl( 'tr' );
 		tr.createEl( 'th', { text: 'Folder:', attr: { 'align': 'right'} });
-		tr.createEl( 'td', { text: 'Typically, you\'ll use the same password for each note within a folder.' });
+		tr.createEl( 'td', { text: 'Remember a separate password for each folder.' });
 		
 		tr = tbody.createEl( 'tr' );
 		tr.createEl( 'th', { text: 'File:', attr: { 'align': 'right'} });
-		tr.createEl( 'td', { text: 'Typically, each note will have a unique password.' });
+		tr.createEl( 'td', { text: 'Remember a separate password for each file.' });
 		
 		tr = tbody.createEl( 'tr' );
 		tr.createEl( 'th', { text: 'External file:', attr: { 'align': 'right', 'style': 'width:12em;'} });
-		tr.createEl( 'td', { text: 'When needed the password/key is read from one of these filepaths.' });
+		tr.createEl( 'td', { text: 'Read the password from the first readable, nonempty file.' });
 
 		tr = tbody.createEl('tr');
 		tr.createEl('th', { text: 'Obsidian keychain:' });
-		tr.createEl('td', { text: 'Use one selected secret for whole-note and inline encryption.' });
+		tr.createEl('td', { text: 'Read the password from the selected secret.' });
 
 		return f;
 	}
