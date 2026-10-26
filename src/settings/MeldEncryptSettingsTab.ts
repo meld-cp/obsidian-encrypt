@@ -3,6 +3,7 @@ import { IMeldEncryptPluginFeature } from "../features/IMeldEncryptPluginFeature
 import { SessionPasswordService } from "../services/SessionPasswordService.ts";
 import MeldEncrypt from "../main.ts";
 import { IMeldEncryptPluginSettings } from "./MeldEncryptPluginSettings.ts";
+import { RIBBON_ICON_TITLES } from './RibbonIcons.ts';
 
 export default class MeldEncryptSettingsTab extends PluginSettingTab {
 	plugin: MeldEncrypt;
@@ -104,6 +105,17 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 				},
 			},
 			...this.features.flatMap(feature => feature.getSettingDefinitions(() => this.plugin.saveSettings())),
+			{
+				type: 'group',
+				heading: 'Ribbon icons',
+				items: RIBBON_ICON_TITLES.map(title => ({
+					name: title,
+					desc: 'Show this ribbon icon. Commands remain available when hidden.',
+					render: row => { row.addToggle(toggle => toggle
+						.setValue(!settings.hiddenRibbonIcons?.includes(title))
+						.onChange(value => this.plugin.setRibbonIconVisible(title, value))); },
+				})),
+			},
 		];
 	}
 

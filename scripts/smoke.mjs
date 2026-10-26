@@ -57,7 +57,7 @@ export async function runSmoke(options, { root = repositoryRoot, startPlatform =
 		log('[smoke] Running encryption, password, conversion, and legacy checks');
 		const result = await session.evaluate(`(${runScenarios.toString()})(${JSON.stringify({ pluginId: metadata.name, version: metadata.version, expectedVault: launched.expectedVault, fixture: fixture.expectations, timeout: Math.min(options.timeout, 30000) })})`);
 		report.checks = result?.checks ?? [];
-		if (result?.status !== 'passed' || report.checks.length !== 8 || report.checks.some(check => check.status !== 'passed')) throw new Error(result?.error ?? 'Smoke scenarios did not all complete');
+		if (result?.status !== 'passed' || report.checks.length !== 9 || report.checks.some(check => check.status !== 'passed')) throw new Error(result?.error ?? 'Smoke scenarios did not all complete');
 		report.status = 'passed';
 	} catch (error) {
 		report.error = error.message;
@@ -86,7 +86,7 @@ export async function runSmoke(options, { root = repositoryRoot, startPlatform =
 		report.durationMs = Date.now() - started;
 		saveReport();
 	}
-	log(`[smoke] ${report.status.toUpperCase()}: ${report.checks.filter(check => check.status === 'passed').length}/8 checks. Report: ${report.reportPath}`);
+	log(`[smoke] ${report.status.toUpperCase()}: ${report.checks.filter(check => check.status === 'passed').length}/9 checks. Report: ${report.reportPath}`);
 	if (report.error) log(`[smoke] ${report.stage}: ${report.error}`);
 	if (report.cleanupErrors) log(`[smoke] Cleanup errors: ${report.cleanupErrors.join('; ')}`);
 	return report;
@@ -96,7 +96,7 @@ const usage = `Usage:
   npm run smoke:desktop -- [--obsidian <executable>] [--timeout <seconds>]
 
 Optional desktop smoke test for editor, password-dialog, or save-flow changes.
-Requires a Linux desktop and Obsidian. Builds the current plugin, runs eight
+Requires a Linux desktop and Obsidian. Builds the current plugin, runs nine
 checks in a disposable vault, and cleans up its own profile and app process.
 Reports, tested assets, and logs remain under dist/smoke. Default timeout: 30s.
 tests/test-vault is reserved for manual testing and is never used here.

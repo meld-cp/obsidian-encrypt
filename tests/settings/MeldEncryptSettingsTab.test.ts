@@ -5,6 +5,7 @@ import type MeldEncrypt from '../../src/main.ts';
 import type { IMeldEncryptPluginSettings } from '../../src/settings/MeldEncryptPluginSettings.ts';
 import MeldEncryptSettingsTab from '../../src/settings/MeldEncryptSettingsTab.ts';
 import FeatureInplaceEncrypt from '../../src/features/feature-inplace-encrypt/FeatureInplaceEncrypt.ts';
+import { RIBBON_ICON_TITLES } from '../../src/settings/RibbonIcons.ts';
 
 const secretControl = vi.hoisted(() => ({ created: vi.fn(), value: '', change: async (_value: string | null) => {} }));
 const service = vi.hoisted(() => ({
@@ -27,6 +28,7 @@ describe('searchable settings', () => {
 	let tab: MeldEncryptSettingsTab;
 	let settings: IMeldEncryptPluginSettings;
 	const saveSettings = vi.fn().mockResolvedValue(undefined);
+	const setRibbonIconVisible = vi.fn().mockResolvedValue(undefined);
 	beforeEach(() => {
 		vi.clearAllMocks();
 		const fragment = { createEl: () => fragment, createTBody: () => fragment };
@@ -37,7 +39,7 @@ describe('searchable settings', () => {
 			featureWholeNoteEncrypt: {},
 			featureInplaceEncrypt: { expandToWholeLines: true, markerSearchLimit: 1000, showMarkerWhenReadingDefault: false },
 		};
-		tab = new MeldEncryptSettingsTab({} as App, { saveSettings } as unknown as MeldEncrypt, settings, []);
+		tab = new MeldEncryptSettingsTab({} as App, { saveSettings, setRibbonIconVisible } as unknown as MeldEncrypt, settings, []);
 	});
 	afterEach(() => vi.unstubAllGlobals());
 
@@ -61,7 +63,7 @@ describe('searchable settings', () => {
 
 	it('indexes all settings and preserves conditional visibility', () => {
 		expect(tab.getSettingDefinitions().map(item => 'name' in item ? item.name : item.heading)).toEqual([
-			'Confirm password?', 'Remember password?', 'Remember passwords by:', 'Remember password timeout', 'Keychain secret', 'External file paths',
+			'Confirm password?', 'Remember password?', 'Remember passwords by:', 'Remember password timeout', 'Keychain secret', 'External file paths', 'Ribbon icons',
 		]);
 		const visible = (name: string) => (row(name).visible as () => boolean)();
 		expect(visible('Remember password timeout')).toBe(true);
@@ -72,6 +74,19 @@ describe('searchable settings', () => {
 		settings.rememberPassword = false;
 		expect(visible('External file paths')).toBe(false);
 		expect(visible('Remember passwords by:')).toBe(false);
+	});
+
+	it('exposes independent searchable visibility controls for every ribbon icon', async () => {
+		const definitions = tab.getSettingDefinitions();
+		const group = definitions[definitions.length - 1] as { heading: string; items: SettingDefinitionRender[] };
+		expect(group.heading).toBe('Ribbon icons');
+		expect(group.items.map(item => item.name)).toEqual(RIBBON_ICON_TITLES);
+		for (const [index, item] of group.items.entries()) {
+			await changeHandler(item)(false);
+			expect(setRibbonIconVisible).toHaveBeenLastCalledWith(RIBBON_ICON_TITLES[index], false);
+			await changeHandler(item)(true);
+			expect(setRibbonIconVisible).toHaveBeenLastCalledWith(RIBBON_ICON_TITLES[index], true);
+		}
 	});
 
 	it('selects and clears a native Keychain ID without persisting its password', async () => {

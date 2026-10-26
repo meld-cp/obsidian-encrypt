@@ -92,3 +92,7 @@ div[data-type="meld-encrypted-view"] .view-content {
 .meld-encrypt-external-paths-control {
 	width: 80%;
 }
+
+.meld-encrypt-ribbon-hidden {
+	display: none !important;
+}

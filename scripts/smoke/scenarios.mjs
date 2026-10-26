@@ -59,6 +59,28 @@ export async function runScenarios({ pluginId, version, expectedVault, fixture, 
 			assert(actualVault === expectedVault, 'Refusing to run smoke checks in an unexpected vault');
 			assert(app.plugins.plugins[pluginId]?.manifest.version === version, 'Packaged plugin version is not loaded');
 		});
+		await step('ribbon visibility survives delayed plugin reload', async () => {
+			const titles = ['New encrypted note', 'Lock and close all open encrypted notes', 'Convert to or from an encrypted note', 'Encrypt selection', 'Decrypt at Cursor'];
+			const element = title => app.plugins.plugins[pluginId].ribbonIcons.get(title);
+			const hidden = title => getComputedStyle(element(title)).display === 'none';
+			let plugin = app.plugins.plugins[pluginId];
+			const commandIds = Object.keys(app.commands.commands).filter(id => id.startsWith(`${pluginId}:`)).sort();
+			assert(titles.every(title => element(title)?.isConnected && !hidden(title)), 'Default ribbon icons are missing');
+			await plugin.setRibbonIconVisible(titles[0], false);
+			assert(hidden(titles[0]) && !hidden(titles[1]), 'Ribbon controls are not independent');
+			// Obsidian may reapply native visibility after a late plugin load.
+			app.workspace.leftRibbon.onChange(false);
+			assert(hidden(titles[0]), 'Native ribbon refresh overrode plugin visibility');
+			await app.plugins.disablePlugin(pluginId);
+			await app.plugins.enablePlugin(pluginId);
+			plugin = app.plugins.plugins[pluginId];
+			assert(hidden(titles[0]) && !hidden(titles[1]), 'Hidden ribbon preference was lost on reload');
+			for (const title of titles) await plugin.setRibbonIconVisible(title, false);
+			assert(titles.every(hidden), 'Could not hide every ribbon icon');
+			assert(JSON.stringify(Object.keys(app.commands.commands).filter(id => id.startsWith(`${pluginId}:`)).sort()) === JSON.stringify(commandIds), 'Hiding ribbon icons changed commands');
+			for (const title of titles) await plugin.setRibbonIconVisible(title, true);
+			assert(titles.every(title => !hidden(title)), 'Could not restore ribbon icons');
+		});
 		await step('create and edit a v3 whole note', async () => {
 			const plugin = app.plugins.plugins[pluginId];
 			app.secretStorage.setSecret('meld-encrypt-smoke', fixture.password);

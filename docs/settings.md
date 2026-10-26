@@ -13,6 +13,17 @@ To customize the plugin, follow these steps:
    
 The following tables list the available settings and their descriptions:
 
+## Ribbon icons
+
+Under **Ribbon icons**, choose which of Meld Encrypt's five icons to show. Changes
+apply immediately and are saved across plugin reloads and updates, including when
+a plugin loader delays startup. Turn off all five to hide every Meld Encrypt ribbon
+icon. Command palette and context menu actions remain available.
+
+These controls can keep an icon hidden even if Obsidian's ribbon menu resets its
+visibility. When you turn an icon back on here, Obsidian's own ribbon visibility
+setting still applies; enable it in the ribbon menu too if necessary.
+
 ## Password Settings
 
 | Setting | Description |

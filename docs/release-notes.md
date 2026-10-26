@@ -18,6 +18,10 @@ The full change log can be found on the [releases](https://github.com/meld-cp/ob
 
 ## Unreleased
 
+### Improvements
+
+* Added persistent visibility controls for each ribbon icon, including delayed plugin startup. Hidden icons leave commands available ([#220](https://github.com/meld-cp/obsidian-encrypt/issues/220)).
+
 ### Bug Fixes
 
 * Allowed Enter in an empty optional password hint field to submit whole-note and inline encryption dialogs. Enter still advances through the password fields to the hint, where it can be entered or explicitly skipped ([#221](https://github.com/meld-cp/obsidian-encrypt/issues/221)).

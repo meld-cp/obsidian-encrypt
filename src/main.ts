@@ -1,4 +1,4 @@
-import { Notice, Plugin } from 'obsidian';
+import { Notice, Plugin, type IconName } from 'obsidian';
 import MeldEncryptSettingsTab from './settings/MeldEncryptSettingsTab.ts';
 import { IMeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings.ts';
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature.ts';
@@ -10,6 +10,8 @@ import FeatureWholeNoteEncryptV2 from './features/feature-whole-note-encrypt/Fea
 export default class MeldEncrypt extends Plugin {
 
 	private pluginSettings: IMeldEncryptPluginSettings;
+
+	private ribbonIcons = new Map<string, HTMLElement>();
 
 	private enabledFeatures : IMeldEncryptPluginFeature[] = [];
 
@@ -60,9 +62,26 @@ export default class MeldEncrypt extends Plugin {
 		super.onunload();
 	}
 
+	override addRibbonIcon(icon: IconName, title: string, callback: (evt: MouseEvent) => unknown): HTMLElement {
+		const element = super.addRibbonIcon(icon, title, callback);
+		this.ribbonIcons.set(title, element);
+		element.toggleClass('meld-encrypt-ribbon-hidden', this.pluginSettings.hiddenRibbonIcons?.includes(title) ?? false);
+		return element;
+	}
+
+	async setRibbonIconVisible(title: string, visible: boolean): Promise<void> {
+		const hidden = new Set(this.pluginSettings.hiddenRibbonIcons ?? []);
+		if (visible) hidden.delete(title);
+		else hidden.add(title);
+		this.pluginSettings.hiddenRibbonIcons = [...hidden];
+		this.ribbonIcons.get(title)?.toggleClass('meld-encrypt-ribbon-hidden', !visible);
+		await this.saveSettings();
+	}
+
 	async loadSettings() {
 		
 		const DEFAULT_SETTINGS: IMeldEncryptPluginSettings = {
+			hiddenRibbonIcons: [],
 			confirmPassword: true,
 			keychainSecretId: '',
 			rememberPassword: true,
