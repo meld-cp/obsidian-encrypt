@@ -41,6 +41,10 @@ discards the result.
 3. Enter the correct password if prompted.
 4. Click **Decrypt**. A remembered password may unlock the note automatically.
 
+Switch between Editing and Reading views using Obsidian's view controls. The note
+keeps its cursor selection and scroll position across mode switches, so you can
+continue from the same place when you return to editing.
+
 ## To Change an Encrypted Note's Password and Hint
 
 1. Go to **Files** by clicking the **Files** icon ![files](assets/fil_ico.png).  

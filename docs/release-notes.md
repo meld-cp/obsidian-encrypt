@@ -16,11 +16,13 @@ Please report any bugs or features requests [here](https://github.com/meld-cp/ob
 
 The full change log can be found on the [releases](https://github.com/meld-cp/obsidian-encrypt/releases) page.
 
-## Unreleased
+## v3.1.1
 
 ### Improvements
 
 * Added persistent visibility controls for each ribbon icon, including delayed plugin startup. Hidden icons leave commands available ([#220](https://github.com/meld-cp/obsidian-encrypt/issues/220)).
+* Expanded setup, password-provider, recovery, and encryption/security documentation.
+* Updated password-dialog styling to follow Obsidian community CSS guidelines.
 
 ### Bug Fixes
 

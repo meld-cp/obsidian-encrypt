@@ -29,6 +29,10 @@ Requires Obsidian **1.13.0 or later**. Meld Encrypt supports desktop and mobile.
 
 Open the command palette with **Ctrl+P** on Windows/Linux or **Cmd+P** on macOS, or use Obsidian's **Open command palette** action on mobile. Search for the Meld Encrypt commands below.
 
+Choose which ribbon icons to show under **Settings → Meld Encrypt → Ribbon icons**.
+These choices persist across restarts and updates; commands remain available when
+their icons are hidden.
+
 ### Encrypt an entire note
 
 1. Run **Meld Encrypt: Create new encrypted note**.
