@@ -146,11 +146,33 @@ describe.each(['whole-note', 'inline'] as const)('%s password dialog', kind => {
 		expect(dialog.resultConfirmed).toBe(false);
 	});
 
-	it('submits a completed hint with Enter', () => {
+	it.each(['', 'hint'])('submits hint %j with Enter', hint => {
 		const dialog = modal(true, false, 'secret'); dialog.open();
 		input('Password').enter();
 		expect(ui.focused).toBe(input('Optional password hint'));
-		input('Optional password hint').change('hint'); input('Optional password hint').enter();
+		input('Optional password hint').change(hint); input('Optional password hint').enter();
+		expect(dialog.resultConfirmed).toBe(true);
+		expect(ui.closed).toBe(1);
+		if (dialog instanceof PluginPasswordModal) {
+			expect(dialog.resultPassword).toEqual({ password: 'secret', hint });
+		} else {
+			expect(dialog.resultPassword).toBe('secret');
+			expect(dialog.resultHint).toBe(hint);
+		}
+	});
+
+	it('rejects mismatched passwords when submitting an empty hint with Enter', () => {
+		const dialog = modal(); dialog.open();
+		input('Password').change('secret');
+		input('Confirm password').change('different');
+		input('Optional password hint').enter();
+		expect(dialog.resultConfirmed).toBe(false);
+		expect(ui.closed).toBe(0);
+		expect(row('Confirm password').description).toBe("Passwords don't match");
+		input('Confirm password').change('secret'); input('Confirm password').enter();
+		expect(ui.focused).toBe(input('Optional password hint'));
+		expect(dialog.resultConfirmed).toBe(false);
+		input('Optional password hint').enter();
 		expect(dialog.resultConfirmed).toBe(true);
 		expect(ui.closed).toBe(1);
 	});
@@ -180,6 +202,21 @@ it('allows reserved marker characters in whole-note hints', () => {
 	dialog.open(); confirm();
 	expect(dialog.resultPassword.hint).toBe('🔐💡 hint');
 	expect(dialog.resultConfirmed).toBe(true);
+});
+
+it.each(['🔐', '💡'])('rejects reserved inline hint marker %s when submitting with Enter', marker => {
+	const dialog = new PasswordModal({} as App, true, false, true, 'secret', '');
+	dialog.open();
+	input('Optional password hint').change(`hint ${marker}`);
+	input('Optional password hint').enter();
+	expect(dialog.resultConfirmed).toBe(false);
+	expect(ui.closed).toBe(0);
+	expect(row('Optional password hint').description).not.toBe('');
+	input('Optional password hint').change('');
+	input('Optional password hint').enter();
+	expect(dialog.resultConfirmed).toBe(true);
+	expect(dialog.resultHint).toBe('');
+	expect(ui.closed).toBe(1);
 });
 
 it('returns the inline visibility and text controls on submission', () => {

@@ -9,6 +9,11 @@ nav_order: 1
 
 This feature opens a text window and saves your note to an encrypted `.mdenc` file.
 
+In encryption password dialogs, Enter advances through the password, confirmation,
+and optional hint fields as applicable. Press Enter in the hint field to submit,
+whether you enter a hint or leave it empty. Closing the dialog before submission
+discards the result.
+
 ## To Create a New Encrypted Note
 
 ### Option 1: Use the Command Palette

@@ -16,6 +16,12 @@ Please report any bugs or features requests [here](https://github.com/meld-cp/ob
 
 The full change log can be found on the [releases](https://github.com/meld-cp/obsidian-encrypt/releases) page.
 
+## Unreleased
+
+### Bug Fixes
+
+* Allowed Enter in an empty optional password hint field to submit whole-note and inline encryption dialogs. Enter still advances through the password fields to the hint, where it can be entered or explicitly skipped ([#221](https://github.com/meld-cp/obsidian-encrypt/issues/221)).
+
 ## v3.1.0
 
 ### New Features

@@ -86,7 +86,7 @@ export class PasswordForm {
 					this.hintSetting.setDesc(this.hintError() ?? '');
 				});
 				input.inputEl.on('keypress', '*', (event, target) => {
-					if (event.key === 'Enter' && target.instanceOf(HTMLInputElement) && target.value.length > 0) {
+					if (event.key === 'Enter' && target.instanceOf(HTMLInputElement)) {
 						event.preventDefault();
 						this.submit();
 					}

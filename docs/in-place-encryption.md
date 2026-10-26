@@ -78,4 +78,5 @@ are upgraded to the current encryption format when saved this way.
 
 In the password dialog, Enter moves through the password, confirmation, and
 hint fields as applicable. Moving to the hint field does not accept the dialog;
-closing it before final confirmation discards the result.
+press Enter there to submit, whether you enter a hint or leave it empty. Closing
+the dialog before submission discards the result.
