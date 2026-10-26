@@ -37,6 +37,10 @@ vi.mock('obsidian', () => ({
 
 		async setState(): Promise<void> {}
 
+		getMode(): string { return 'source'; }
+
+		getEphemeralState(): Record<string, unknown> { return {}; }
+
 		setEphemeralState(_state: unknown): void {}
 
 		async save(): Promise<void> {
@@ -75,6 +79,41 @@ vi.mock('obsidian', () => ({
 }));
 
 import { EncryptedMarkdownView } from '../../../src/features/feature-whole-note-encrypt/EncryptedMarkdownView.ts';
+
+describe('mode-switch position preservation', () => {
+	afterEach(() => vi.restoreAllMocks());
+
+	it.each(['preview', 'source'])('restores cursor and scroll after reloading plaintext in %s', async mode => {
+		const view = new EncryptedMarkdownView({ detach: vi.fn(), app: {} } as any);
+		view.isSavingEnabled = true;
+		const position = { cursor: { from: { line: 150, ch: 4 }, to: { line: 152, ch: 8 } }, scroll: 149.5 };
+		Object.assign(view, { editor: { getCursor: (end: string) => end === 'anchor' ? position.cursor.from : position.cursor.to } });
+		const order: string[] = [];
+		vi.spyOn(view, 'getMode').mockReturnValue(mode === 'source' ? 'preview' : 'source');
+		vi.spyOn(view, 'getEphemeralState').mockImplementation(() => {
+			order.push('capture');
+			return mode === 'source' ? { scroll: position.scroll } : position;
+		});
+		vi.spyOn(view, 'save').mockImplementation(async () => { order.push('save'); });
+		vi.spyOn(MarkdownView.prototype, 'setState').mockImplementation(async () => { order.push('switch'); });
+		vi.spyOn(MarkdownView.prototype, 'setViewData').mockImplementation(() => { order.push('reload'); });
+		const restore = vi.spyOn(MarkdownView.prototype, 'setEphemeralState').mockImplementation(() => { order.push('restore'); });
+		await view.setState({ mode }, { history: false });
+		expect(order).toEqual(mode === 'preview' ? ['capture', 'save', 'switch', 'reload', 'restore'] : ['capture', 'switch', 'reload', 'restore']);
+		expect(restore).toHaveBeenCalledWith(position);
+		expect(view.isSavingEnabled).toBe(true);
+	});
+
+	it.each([false, true])('does not restore position on initial load or unchanged mode (unlocked: %s)', async unlocked => {
+		const view = new EncryptedMarkdownView({ detach: vi.fn(), app: {} } as any);
+		view.isSavingEnabled = unlocked;
+		const capture = vi.spyOn(view, 'getEphemeralState');
+		const restore = vi.spyOn(MarkdownView.prototype, 'setEphemeralState');
+		await view.setState({ mode: unlocked ? 'source' : 'preview' }, { history: false });
+		expect(capture).not.toHaveBeenCalled();
+		expect(restore).not.toHaveBeenCalled();
+	});
+});
 
 describe('EncryptedMarkdownView save upgrades versions', () => {
 	let view: EncryptedMarkdownView;

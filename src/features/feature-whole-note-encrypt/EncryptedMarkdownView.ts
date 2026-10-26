@@ -294,7 +294,13 @@ export class EncryptedMarkdownView extends MarkdownView {
 	}
 
 	override async setState(state: unknown, result: ViewStateResult): Promise<void> {
-		//console.debug('setState', state, result, this.cachedUnencryptedData);
+		const position = this.isSavingEnabled && typeof state === 'object' && state !== null
+			&& 'mode' in state && (state.mode === 'source' || state.mode === 'preview') && state.mode !== this.getMode()
+			? {
+				...this.getEphemeralState(),
+				// Reading view omits the inactive editor's selection from its state.
+				cursor: { from: this.editor.getCursor('anchor'), to: this.editor.getCursor('head') },
+			} : null;
 		if ( typeof state === 'object' && state != null && 'mode' in state && state.mode == 'preview' ){
 			await this.save(); // save before preview
 		}
@@ -302,6 +308,9 @@ export class EncryptedMarkdownView extends MarkdownView {
 		try{
 			await super.setState(state, result);
 			super.setViewData(this.cachedUnencryptedData, false);
+			// Reinjecting plaintext reloads the document; restore the position through
+			// MarkdownView so each mode can apply its own cursor and scroll handling.
+			if (position) this.setEphemeralState(position);
 		}finally{
 			this.isSavingEnabled = true;
 		}

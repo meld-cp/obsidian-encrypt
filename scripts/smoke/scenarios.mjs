@@ -169,6 +169,25 @@ export async function runScenarios({ pluginId, version, expectedVault, fixture, 
 					await leaf.openFile(file, { eState: { subpath: '#subtitle' } });
 					await headingWait(() => headingView.currentMode.getScroll() > 100, `${file.extension}: incoming heading navigation failed in ${mode}`);
 				}
+				for (const source of [false, true]) {
+					await headingView.setState({ ...headingView.getState(), mode: 'source', source }, {});
+					const cursor = { line: 150, ch: 4 };
+					headingView.setEphemeralState({ line: cursor.line, scroll: cursor.line });
+					headingView.editor.setCursor(cursor);
+					await new Promise(resolve => setTimeout(resolve, 200));
+					const before = headingView.currentMode.getScroll();
+					for (const mode of ['preview', 'source', 'preview', 'source']) {
+						await headingView.setState({ ...headingView.getState(), mode }, {});
+						await new Promise(resolve => setTimeout(resolve, 200));
+						assert(Math.abs(headingView.currentMode.getScroll() - before) < 5, `${file.extension} ${mode}: position reset from ${before} to ${headingView.currentMode.getScroll()}`);
+					}
+					// Live Preview can move a cursor slightly while rendering Markdown;
+					// allow the same small adjustment for plain and encrypted views.
+					assert(Math.abs(headingView.editor.getCursor().line - cursor.line) <= 2, `${file.extension}: cursor reset after switching modes: ${JSON.stringify(headingView.editor.getCursor())}`);
+					assert(headingView.editor.getValue() === text, 'Mode switch changed note content');
+				}
+				await save(headingView);
+				if (file === encrypted) assert(await diskFormat(file) === '3.0' && !(await app.vault.read(file)).includes('Paragraph 99'), 'Mode switch save exposed plaintext');
 			}
 			assert(!app.metadataCache.getFileCache(encrypted)?.headings?.length, 'Encrypted headings leaked into shared metadata');
 		});

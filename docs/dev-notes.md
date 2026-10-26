@@ -127,7 +127,7 @@ This Linux-only command builds the production plugin and runs nine functional
 checks in a fresh vault: plugin loading, ribbon visibility across delayed plugin
 reloads, whole-note encryption, password changes
 and reopening, conversion of unsaved edits, heading navigation in Reading view
-and Live Preview, inline editing with hints and marker visibility, and legacy whole-note and inline upgrades. It was verified with
+and Live Preview, cursor and scroll preservation across mode switches, inline editing with hints and marker visibility, and legacy whole-note and inline upgrades. It was verified with
 Obsidian 1.14.4. It is separate from `npm test` and `release:check`.
 
 Use `--obsidian /path/to/Obsidian.AppImage` to choose an executable, or
