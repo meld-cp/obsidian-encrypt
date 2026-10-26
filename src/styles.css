@@ -9,11 +9,16 @@
 	margin-top: var(--meld-password-dialog-top);
 	margin-bottom: auto;
 	max-height: calc(100% - var(--meld-password-dialog-top) - 8px);
-	max-height: min(calc(100% - var(--meld-password-dialog-top) - 8px), calc(100dvh - var(--meld-password-dialog-top) - 8px));
 	padding: 12px;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
+}
+
+@supports (height: 100dvh) {
+	.is-mobile .modal.meld-encrypt-password-dialog {
+		max-height: min(calc(100% - var(--meld-password-dialog-top) - 8px), calc(100dvh - var(--meld-password-dialog-top) - 8px));
+	}
 }
 
 .is-mobile .meld-encrypt-password-dialog .modal-content {
@@ -35,7 +40,7 @@
 
 /* Obsidian stretches mobile setting controls equally by default. Keep the
    reveal button touch-sized and give the rest of the row to the input. */
-.is-mobile .meld-encrypt-password-dialog .setting-item-control:has(> input) > button {
+.is-mobile .meld-encrypt-password-dialog .setting-item-control > button.meld-encrypt-password-reveal {
 	flex: 0 0 44px;
 	width: 44px;
 	min-width: 44px;
@@ -93,6 +98,6 @@ div[data-type="meld-encrypted-view"] .view-content {
 	width: 80%;
 }
 
-.meld-encrypt-ribbon-hidden {
-	display: none !important;
+.workspace-ribbon .side-dock-ribbon-action.meld-encrypt-ribbon-hidden {
+	display: none;
 }

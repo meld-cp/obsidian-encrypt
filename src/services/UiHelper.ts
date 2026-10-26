@@ -39,6 +39,7 @@ export class UiHelper{
 			.setName(name)
 			.setDesc(desc)
 			.addButton( cb => {
+				cb.buttonEl.addClass('meld-encrypt-password-reveal');
 				cb.buttonEl.tabIndex = -1;
 				cb
 					.setIcon( 'reading-glasses' )

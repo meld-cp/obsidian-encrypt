@@ -43,7 +43,7 @@ vi.mock('obsidian', () => {
 	}
 	class Button {
 		label = '';
-		buttonEl = { tabIndex: 0 };
+		buttonEl = { tabIndex: 0, addClass(_className: string) {} };
 		click = () => {};
 		setIcon(_icon: string) { return this; }
 		setButtonText(value: string) { this.label = value; return this; }
