@@ -8,6 +8,7 @@ import PluginPasswordModal from "../../PluginPasswordModal.ts";
 import { PasswordAndHint, SessionPasswordService } from "../../services/SessionPasswordService.ts";
 import { FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.ts";
 import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "../../services/Constants.ts";
+import { t } from "../../i18n/i18n.ts";
 
 export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeature {
 
@@ -32,14 +33,14 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 
 		this.plugin.addCommand({
 			id: 'create-new-note',
-			name: 'Create new encrypted note',
+			name: t('command.createNewNote'),
 			icon: 'file-lock-2',
 			callback: async () => { await this.processCreateNewEncryptedNoteCommand( this.getDefaultFileFolder() ); },
 		});
 
 		this.plugin.addCommand({
 			id: 'close-and-forget',
-			name: 'Lock and close all open encrypted notes',
+			name: t('command.lockAndCloseAll'),
 			icon: 'book-lock',
 			callback: async () => { await this.processLockAndCloseAllEncryptedNotesCommand(); },
 		});
@@ -49,7 +50,7 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 				if (file instanceof TFolder){
 					menu.addItem( (item) => {
 						item
-							.setTitle('New encrypted note')
+							.setTitle(t('menu.newEncryptedNote'))
 							.setIcon('file-lock-2')
 							.onClick( () => this.processCreateNewEncryptedNoteCommand( file ) );
 						}
@@ -144,13 +145,13 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 	private addEncryptedNoteMenuItems(menu: Menu, view: EncryptedMarkdownView): void {
 		menu.addItem(item => {
 			item
-				.setTitle('Change password')
+				.setTitle(t('menu.changePassword'))
 				.setIcon('key-round')
 				.onClick(async () => { await view.changePassword(); });
 		});
 		menu.addItem(item => {
 			item
-				.setTitle('Lock & close')
+				.setTitle(t('menu.lockAndClose'))
 				.setIcon('lock')
 				.onClick(() => { view.lockAndClose(); });
 		});
@@ -178,18 +179,18 @@ export default class FeatureWholeNoteEncryptV2 implements IMeldEncryptPluginFeat
 
 	private async processCreateNewEncryptedNoteCommand( parentFolder: TFolder ) : Promise<void> {
 		
-		const newFilename = window.moment().format( `[Untitled] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
+		const newFilename = window.moment().format( `[${t('file.untitled')}] YYYYMMDD hhmmss[.${ENCRYPTED_FILE_EXTENSION_DEFAULT}]`);
 		const newFilepath = normalizePath( parentFolder.path + "/" + newFilename );
 		
 		const pwm = new PluginPasswordModal(
-			this.plugin.app, 'Encrypt note', true, this.settings?.confirmPassword ?? true,
+			this.plugin.app, t('modal.encryptNote.title'), true, this.settings?.confirmPassword ?? true,
 			await SessionPasswordService.getByPathAsync(newFilepath)
 		);
 		let pwh: PasswordAndHint;
 		try { pwh = await pwm.openAsync(); } catch { return; }
 
 		if ( !pwh.password.length ){
-			new Notice('A password is required to create an encrypted note');
+			new Notice(t('notice.passwordRequired'));
 			return;
 		}
 

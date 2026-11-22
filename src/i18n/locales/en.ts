@@ -1,0 +1,115 @@
+// English is the source locale: every key must be defined here.
+// Other locales fall back to these strings for any key they omit.
+// Placeholders such as {name} are replaced at runtime and must be kept as-is.
+export const en = {
+	// Commands (command palette)
+	'command.clearSessionCache': 'Clear session password cache',
+	'command.createNewNote': 'Create new encrypted note',
+	'command.lockAndCloseAll': 'Lock and close all open encrypted notes',
+	'command.convertNote': 'Convert to or from an encrypted note',
+	'command.encryptSelection': 'Encrypt selection',
+	'command.decrypt': 'Decrypt',
+
+	// Ribbon icon labels
+	'ribbon.newEncryptedNote': 'New encrypted note',
+	'ribbon.lockAndCloseAll': 'Lock and close all open encrypted notes',
+	'ribbon.convertNote': 'Convert to or from an encrypted note',
+	'ribbon.encryptSelection': 'Encrypt selection',
+	'ribbon.decryptAtCursor': 'Decrypt at Cursor',
+
+	// Context menus and view actions
+	'menu.encryptNote': 'Encrypt note',
+	'menu.decryptNote': 'Decrypt note',
+	'menu.newEncryptedNote': 'New encrypted note',
+	'menu.changePassword': 'Change password',
+	'menu.lockAndClose': 'Lock & close',
+	'action.changePassword': 'Change password',
+	'action.lockAndClose': 'Lock & Close',
+
+	// Password dialogs
+	'modal.encryptNote.title': 'Encrypt note',
+	'modal.decryptNote.title': 'Decrypt note',
+	'modal.decryptFile.title': 'Decrypt "{name}"',
+	'modal.changePassword.title': 'Change password for "{name}"',
+	'modal.encryptText.title': 'Encrypt text',
+	'modal.decryptText.title': 'Decrypt text',
+	'form.password': 'Password',
+	'form.passwordHintPlaceholder': 'Hint: {hint}',
+	'form.confirmPassword': 'Confirm password',
+	'form.optionalHint': 'Optional password hint',
+	'form.hintPlaceholder': 'Password hint',
+	'form.encrypt': 'Encrypt',
+	'form.decrypt': 'Decrypt',
+	'form.passwordsDontMatch': "Passwords don't match",
+	'form.showMarkerInReadingView': 'Show encrypted marker in reading view',
+	'form.textToEncrypt': 'Text to encrypt',
+	'form.hintMarkerError': 'Password hints cannot contain {hintMarker} or {encryptedMarker}. Remove these markers to continue.',
+
+	// Decrypted text dialog
+	'decryptModal.save': 'Save',
+	'decryptModal.copy': 'Copy',
+	'decryptModal.copied': 'Copied!',
+	'decryptModal.decryptInPlace': 'Decrypt in-place',
+
+	// Notices
+	'notice.itemsCleared': 'Items cleared: {count}',
+	'notice.noteEncrypted': '🔐 Note was encrypted 🔐',
+	'notice.noteDecrypted': '🔓 Note was decrypted 🔓',
+	'notice.decryptionFailed': 'Decryption failed',
+	'notice.inlineDecryptionFailed': '❌ Decryption failed!',
+	'notice.passwordRequired': 'A password is required to create an encrypted note',
+	'notice.saveBeforeDetachFailed': 'Failed to save the file before detaching the view',
+	'notice.viewDataDecryptFailed': 'Failed to decrypt the data that was set to the view',
+	'notice.passwordChanged': 'Password changed',
+	'notice.passwordNotChanged': "Password wasn't changed",
+	'notice.selectTextToEncrypt': 'Please select text to encrypt.',
+	'notice.selectTextToDecrypt': 'Please select text to decrypt or place Cursor on encrypted text.',
+	'notice.nothingToEncrypt': 'Nothing to Encrypt.',
+	'notice.nothingToDecrypt': 'Nothing to Decrypt.',
+	'notice.unableToEncrypt': 'Unable to encrypt that.',
+	'notice.unableToDecrypt': 'Unable to decrypt that.',
+	'notice.inlineDialogFailed': 'Failed to process inline encryption dialog. Your text has not been saved.',
+	'notice.externalPasswordFileNotFound': 'External password file not found',
+
+	// Keychain explanations
+	'keychain.settingsExplanation': 'The selected secret supplies the default password for encryption and decryption. Changing it does not update existing encrypted content. Changing a note or block’s password does not update the secret.',
+	'keychain.passwordChangeExplanation': 'This change affects only this note or inline block. Your Keychain secret and other encrypted content stay unchanged.',
+
+	// Settings
+	'settings.confirmPassword.name': 'Confirm password?',
+	'settings.confirmPassword.desc': 'Confirm password when encrypting. (Recommended)',
+	'settings.rememberPassword.name': 'Remember password?',
+	'settings.rememberPassword.desc': 'Reuse passwords from the session cache or the selected password provider.',
+	'settings.rememberBy.name': 'Remember passwords by:',
+	'settings.rememberBy.vault': 'Vault',
+	'settings.rememberBy.folder': 'Folder',
+	'settings.rememberBy.file': 'File',
+	'settings.rememberBy.externalFile': 'External file',
+	'settings.rememberBy.keychain': 'Obsidian keychain',
+	'settings.rememberBy.optionLabel': '{option}:',
+	'settings.rememberBy.vaultDesc': 'Reuse the last password across the vault.',
+	'settings.rememberBy.folderDesc': 'Remember a separate password for each folder.',
+	'settings.rememberBy.fileDesc': 'Remember a separate password for each file.',
+	'settings.rememberBy.externalFileDesc': 'Read the password from the first readable, nonempty file.',
+	'settings.rememberBy.keychainDesc': 'Read the password from the selected secret.',
+	'settings.rememberTimeout.name': 'Remember password timeout',
+	'settings.rememberTimeout.desc': 'Minutes to remember passwords. Zero means until Obsidian is closed.',
+	'settings.keychainSecret.name': 'Keychain secret',
+	'settings.keychainSecret.manageDesc': 'Manage secrets in Obsidian Settings → Keychain. Configure the secret on each device. Clearing the session cache does not remove it.',
+	'settings.externalFilePaths.name': 'External file paths',
+	'settings.externalFilePaths.desc': 'One path per line, relative to the vault (including ../). Desktop also supports absolute paths. Access depends on platform permissions.',
+	'settings.externalFilePaths.placeholder': 'Enter one path per line',
+	'settings.externalFilePaths.checkTooltip': 'Check paths',
+	'settings.ribbonIcons.heading': 'Ribbon icons',
+	'settings.ribbonIcons.desc': 'Show this ribbon icon. Commands remain available when hidden.',
+	'settings.inplace.heading': 'In-place encryption',
+	'settings.inplace.expandToWholeLines.name': 'Expand selection to whole line?',
+	'settings.inplace.expandToWholeLines.desc': 'Partial selections will get expanded to the whole line.',
+	'settings.inplace.markerSearchLimit.name': 'Search limit for markers',
+	'settings.inplace.markerSearchLimit.desc': 'How far to look for markers when encrypting/decrypting.',
+	'settings.inplace.showMarkerWhenReading.name': 'By default, show encrypted marker when reading',
+	'settings.inplace.showMarkerWhenReading.desc': 'When encrypting inline text, should the default be to have a visible marker in reading view?',
+
+	// Default name for new encrypted notes
+	'file.untitled': 'Untitled',
+} as const;

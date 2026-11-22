@@ -42,6 +42,21 @@ To add your plugin to the community plugin list:
 2. Run `npm i` or `yarn` to install dependencies.
 3. Run `npm run dev` to start the compiler in watch mode.
 
+## Translations
+
+UI text lives in `src/i18n/locales`. `en.ts` is the source locale and defines every key; other locales fall back to English for any key they omit. The plugin picks the locale once at startup from Obsidian's `getLanguage()`, so a language change takes effect when Obsidian restarts.
+
+To add a language:
+
+1. Copy `src/i18n/locales/en.ts` to `src/i18n/locales/<code>.ts`, using the language code Obsidian reports (for example `de`, `ja`, `pt-BR`), and translate the values. Keep the keys and any `{placeholder}` tokens unchanged.
+2. Type the export as `Translation` to have missing keys reported by `npm run typecheck`, as `ko.ts` does.
+3. Register it in the `locales` map in `src/i18n/i18n.ts`.
+4. Run `npm test`. `tests/i18n/i18n.test.ts` checks every registered locale for unknown keys, empty text, and mismatched placeholders.
+
+When adding new UI text, add a key to `en.ts` and read it with `t('your.key')` instead of writing the string inline.
+
+Some values are identifiers, not UI text, and must stay untranslated: command IDs, the ribbon icon titles in `src/settings/RibbonIcons.ts` (hidden icons are saved under these titles; only the label from `getRibbonIconLabel()` is translated), the encryption markers in `FeatureInplaceConstants.ts`, and console/debug messages.
+
 ## Community review: standalone Node CLI
 
 The community review scans `tools/src/mdenc.ts` even though it is a standalone

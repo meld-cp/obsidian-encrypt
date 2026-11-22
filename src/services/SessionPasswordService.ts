@@ -1,5 +1,6 @@
 import { type SecretStorage, DataAdapter, FileSystemAdapter, Platform, Notice, TFile } from "obsidian";
 import { MemoryCache } from "./MemoryCache.ts";
+import { t } from "../i18n/i18n.ts";
 
 export type PasswordAndHint = {
 	password: string;
@@ -24,8 +25,6 @@ export class SessionPasswordService{
 	public static LevelVault = 'vault';
 	public static LevelExternalFile = 'externalFile';
 	public static LevelKeychain = 'keychain';
-	public static readonly keychainSettingsExplanation = 'The selected secret supplies the default password for encryption and decryption. Changing it does not update existing encrypted content. Changing a note or block’s password does not update the secret.';
-	public static readonly keychainPasswordChangeExplanation = 'This change affects only this note or inline block. Your Keychain secret and other encrypted content stay unchanged.';
 	private static secretStorage: Pick<SecretStorage, 'getSecret'> | undefined;
 	private static secretId = '';
 
@@ -215,7 +214,7 @@ export class SessionPasswordService{
 					console.error(err, {relFilePath});
 				}
 			}
-			new Notice('External password file not found', 10000);
+			new Notice(t('notice.externalPasswordFileNotFound'), 10000);
 			return defaultValue;
 		}
 		return this.cache.get( key, defaultValue );

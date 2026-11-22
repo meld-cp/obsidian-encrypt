@@ -2,6 +2,7 @@ import { App, Modal, Setting } from 'obsidian';
 import { SessionPasswordService } from '../../services/SessionPasswordService.ts';
 import { PasswordForm } from '../../services/PasswordForm.ts';
 import { getInlineHintError } from './InlineHintValidation.ts';
+import { t } from '../../i18n/i18n.ts';
 
 export default class PasswordModal extends Modal {
 	public resultConfirmed = false;
@@ -31,9 +32,9 @@ export default class PasswordModal extends Modal {
 
 		let showInReadingView = this.showInReadingView;
 		let textToEncrypt = '';
-		this.setTitle(this.isEncrypting ? 'Encrypt text' : 'Decrypt text');
+		this.setTitle(this.isEncrypting ? t('modal.encryptText.title') : t('modal.decryptText.title'));
 		if (this.isEncrypting && SessionPasswordService.getLevel() === SessionPasswordService.LevelKeychain) {
-			new Setting(contentEl).setDesc(SessionPasswordService.keychainPasswordChangeExplanation);
+			new Setting(contentEl).setDesc(t('keychain.passwordChangeExplanation'));
 		}
 
 		const form = new PasswordForm({
@@ -55,7 +56,7 @@ export default class PasswordModal extends Modal {
 		});
 
 		const visibilitySetting = new Setting(contentEl)
-			.setName('Show encrypted marker in reading view')
+			.setName(t('form.showMarkerInReadingView'))
 			.addToggle(toggle => {
 				toggle.setValue(showInReadingView).onChange(value => {
 					showInReadingView = value;
@@ -65,7 +66,7 @@ export default class PasswordModal extends Modal {
 		if (!this.isEncrypting) visibilitySetting.settingEl.hide();
 
 		const textSetting = new Setting(contentEl)
-			.setName('Text to encrypt')
+			.setName(t('form.textToEncrypt'))
 			.addTextArea(input => {
 				input.setValue('').onChange(value => {
 					textToEncrypt = value;

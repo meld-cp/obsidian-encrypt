@@ -4,6 +4,7 @@ import { PasswordAndHint, SessionPasswordService } from "../../services/SessionP
 import PluginPasswordModal from "../../PluginPasswordModal.ts";
 import { ENCRYPTED_FILE_EXTENSIONS } from "../../services/Constants.ts";
 import { getDecryptedMarkdownMetadata } from "../../services/DecryptedMarkdownMetadata.ts";
+import { t } from "../../i18n/i18n.ts";
 
 export class EncryptedMarkdownView extends MarkdownView {
 
@@ -42,13 +43,13 @@ export class EncryptedMarkdownView extends MarkdownView {
 		// add view actions
 		this.addAction(
 			'key-round',
-			'Change password',
+			t('action.changePassword'),
 			() => this.changePassword(),
 		)
 
 		this.addAction(
 			'lock',
-			'Lock & Close',
+			t('action.lockAndClose'),
 			() => { this.lockAndClose(); },
 		)
 	}
@@ -113,7 +114,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 				// prompt for password
 				passwordAndHint = await new PluginPasswordModal(
 					this.app,
-					`Decrypt "${file.basename}"`,
+					t('modal.decryptFile.title', { name: file.basename }),
 					false,
 					false,
 					{ password: '', hint: encryptedData.hint }
@@ -129,7 +130,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 				decryptedText = await FileDataHelper.decrypt( encryptedData, passwordAndHint.password );
 				if (!isCurrentRequest()) return;
 				if ( decryptedText == null ) {
-					new Notice('Decryption failed');
+					new Notice(t('notice.decryptionFailed'));
 				}
 			}
 
@@ -178,7 +179,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 			})
 			.catch( (reason:unknown) => {
 				console.error('Failed to save the file before detaching the view', reason);
-				new Notice('Failed to save the file before detaching the view');
+				new Notice(t('notice.saveBeforeDetachFailed'));
 			})
 		;
 	}
@@ -283,7 +284,7 @@ export class EncryptedMarkdownView extends MarkdownView {
 			}).catch( (reason:unknown) => {
 				if (request !== this.viewDataRequest || this.file !== file) return;
 				console.error('Failed to decrypt the data that was set to the view', reason);
-				new Notice('Failed to decrypt the data that was set to the view');
+				new Notice(t('notice.viewDataDecryptFailed'));
 			});
 		}catch{
 			this.dataWasChangedSinceLastSave = true;
@@ -432,12 +433,12 @@ export class EncryptedMarkdownView extends MarkdownView {
 		try{
 			const pwm = new PluginPasswordModal(
 				this.app,
-				`Change password for "${file.basename}"`,
+				t('modal.changePassword.title', { name: file.basename }),
 				true,
 				true,
 				await SessionPasswordService.getByFile( file ),
 				SessionPasswordService.getLevel() === SessionPasswordService.LevelKeychain
-					? SessionPasswordService.keychainPasswordChangeExplanation : undefined
+					? t('keychain.passwordChangeExplanation') : undefined
 			);
 			const newPwh = await pwm.openAsync();
 
@@ -453,9 +454,9 @@ export class EncryptedMarkdownView extends MarkdownView {
 			this.saveInProgress = this.encryptAndSave(undefined, newPwh);
 			await this.saveInProgress;
 
-			new Notice( 'Password changed' );
+			new Notice( t('notice.passwordChanged') );
 		} catch {
-			new Notice( 'Password wasn\'t changed' );
+			new Notice( t('notice.passwordNotChanged') );
 		} finally {
 			this.isChangingPassword = false;
 		}

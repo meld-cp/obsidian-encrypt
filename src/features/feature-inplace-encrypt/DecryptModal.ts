@@ -1,4 +1,5 @@
 import { App, Modal, Notice, Setting, TextAreaComponent } from 'obsidian';
+import { t } from '../../i18n/i18n.ts';
 
 export default class DecryptModal extends Modal {
 	text: string;
@@ -41,7 +42,7 @@ export default class DecryptModal extends Modal {
 		if (!this.readOnly) {
 			sActions.addButton(cb => {
 				cb
-					.setButtonText('Save')
+					.setButtonText(t('decryptModal.save'))
 					.onClick( _ =>{
 						this.save = true;
 						this.text = cTextArea.getValue();
@@ -53,10 +54,10 @@ export default class DecryptModal extends Modal {
 		sActions
 			.addButton( cb =>{
 				cb
-					.setButtonText('Copy')
+					.setButtonText(t('decryptModal.copy'))
 					.onClick( async _ =>{
 						await navigator.clipboard.writeText( cTextArea.getValue() );
-						new Notice('Copied!');
+						new Notice(t('decryptModal.copied'));
 					})
 				;
 			})
@@ -64,7 +65,7 @@ export default class DecryptModal extends Modal {
 		if (!this.readOnly && this.canDecryptInPlace){
 			sActions.addButton( cb =>{
 				cb.setDestructive()
-				.setButtonText('Decrypt in-place')
+				.setButtonText(t('decryptModal.decryptInPlace'))
 				.onClick( _ =>{
 					this.decryptInPlace = true;
 					this.text = cTextArea.getValue();
