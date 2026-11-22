@@ -2,6 +2,7 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import type { App, PluginManifest } from 'obsidian';
 import MeldEncrypt from '../src/main.ts';
 import { RIBBON_ICON_TITLES } from '../src/settings/RibbonIcons.ts';
+import { setLocale } from '../src/i18n/i18n.ts';
 
 const state = vi.hoisted(() => ({ saved: null as Record<string, unknown> | null }));
 vi.mock('obsidian', () => ({
@@ -13,7 +14,7 @@ vi.mock('obsidian', () => ({
 		});
 		addRibbonIcon(_icon: string, _title: string, callback: unknown) {
 			const classes = new Set<string>();
-			return { callback, classes, toggleClass: (name: string, enabled: boolean) => {
+			return { label: _title, callback, classes, toggleClass: (name: string, enabled: boolean) => {
 				if (enabled) classes.add(name);
 				else classes.delete(name);
 			} };
@@ -27,7 +28,7 @@ vi.mock('../src/services/SessionPasswordService.ts', () => ({
 	},
 }));
 
-beforeEach(() => { state.saved = null; });
+beforeEach(() => { state.saved = null; setLocale('en'); });
 
 async function plugin() {
 	const plugin = new MeldEncrypt({} as App, {} as PluginManifest);
@@ -37,7 +38,7 @@ async function plugin() {
 function register(plugin: MeldEncrypt, title: string) {
 	const callback = vi.fn();
 	const element = plugin.addRibbonIcon('lock', title, callback) as unknown as {
-		classes: Set<string>; callback: () => void;
+		classes: Set<string>; callback: () => void; label: string;
 	};
 	return { element, callback };
 }
@@ -78,4 +79,19 @@ it('can hide all icons and restore just one without clearing unrelated preferenc
 	for (const title of RIBBON_ICON_TITLES) expect(hidden(register(instance, title).element)).toBe(true);
 	await instance.setRibbonIconVisible(RIBBON_ICON_TITLES[2], true);
 	expect(state.saved?.hiddenRibbonIcons).toEqual(RIBBON_ICON_TITLES.filter((_, index) => index !== 2));
+});
+
+it('translates ribbon labels while saving visibility under the stable English titles', async () => {
+	setLocale('ko');
+	const instance = await plugin();
+	const { element } = register(instance, RIBBON_ICON_TITLES[0]);
+	expect(element.label).toBe('새 암호화 노트');
+	await instance.setRibbonIconVisible(RIBBON_ICON_TITLES[0], false);
+	expect(hidden(element)).toBe(true);
+	expect(state.saved?.hiddenRibbonIcons).toEqual([RIBBON_ICON_TITLES[0]]);
+	// A preference saved in one language still applies after switching languages.
+	setLocale('en');
+	const reloaded = register(await plugin(), RIBBON_ICON_TITLES[0]);
+	expect(reloaded.element.label).toBe(RIBBON_ICON_TITLES[0]);
+	expect(hidden(reloaded.element)).toBe(true);
 });

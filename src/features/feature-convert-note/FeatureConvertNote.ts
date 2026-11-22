@@ -8,6 +8,7 @@ import { FileDataHelper, JsonFileEncoding } from "../../services/FileDataHelper.
 import { Utils } from "../../services/Utils.ts";
 import { ENCRYPTED_FILE_EXTENSIONS, ENCRYPTED_FILE_EXTENSION_DEFAULT } from "../../services/Constants.ts";
 import { EncryptedMarkdownView } from "../feature-whole-note-encrypt/EncryptedMarkdownView.ts";
+import { t } from "../../i18n/i18n.ts";
 
 export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 	
@@ -21,7 +22,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 
 		this.plugin.addCommand({
 			id: 'convert-to-or-from-encrypted-note',
-			name: 'Convert to or from an encrypted note',
+			name: t('command.convertNote'),
 			icon: 'file-lock-2',
 			checkCallback: (checking) => this.processCommandConvertActiveNote( checking ),
 		});
@@ -39,7 +40,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 					if ( file.extension == 'md' ){
 						menu.addItem( (item) => {
 							item
-								.setTitle('Encrypt note')
+								.setTitle(t('menu.encryptNote'))
 								.setIcon('file-lock-2')
 								.onClick( () => { this.processCommandEncryptNote( file ); } );
 							}
@@ -48,7 +49,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 					if ( ENCRYPTED_FILE_EXTENSIONS.includes( file.extension ) ){
 						menu.addItem( (item) => {
 							item
-								.setTitle('Decrypt note')
+								.setTitle(t('menu.decryptNote'))
 								.setIcon('file')
 								.onClick( () => { this.processCommandDecryptNote( file ); } );
 							}
@@ -136,7 +137,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			// try to get password from session password service
 			let password = await SessionPasswordService.getByFile( file );
 
-			const pm = new PluginPasswordModal( this.plugin.app, 'Encrypt note', true, this.pluginSettings?.confirmPassword ?? true, password );
+			const pm = new PluginPasswordModal( this.plugin.app, t('modal.encryptNote.title'), true, this.pluginSettings?.confirmPassword ?? true, password );
 			password = await pm.openAsync();
 			await this.closeUpdateRememberPasswordThenReopen(
 				file,
@@ -145,7 +146,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 				password
 			);
 			
-			new Notice( '🔐 Note was encrypted 🔐' );
+			new Notice( t('notice.noteEncrypted') );
 
 		}catch( error ){
 			if ( error instanceof Error ){
@@ -175,20 +176,20 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			if ( cachedContent == null ){
 				const encryptedFileContent = await this.plugin.app.vault.read( file );
 				const encryptedData = JsonFileEncoding.decode( encryptedFileContent );
-				const pwm = new PluginPasswordModal(this.plugin.app, 'Decrypt note', false, false, { password: '', hint: encryptedData.hint } );
+				const pwm = new PluginPasswordModal(this.plugin.app, t('modal.decryptNote.title'), false, false, { password: '', hint: encryptedData.hint } );
 				passwordAndHint = await pwm.openAsync();
 				if (!pwm.resultConfirmed){
 					return;
 				}
 				if ( await this.decryptFile( file, passwordAndHint.password ) == null ){
-					throw new Error('Decryption failed');
+					throw new Error(t('notice.decryptionFailed'));
 				}
 			}
 
 			await this.closeUpdateRememberPasswordThenReopen(
 				file, 'md', () => this.decryptFile( file, passwordAndHint.password ), passwordAndHint
 			);
-			new Notice( '🔓 Note was decrypted 🔓' );
+			new Notice( t('notice.noteDecrypted') );
 		}catch(error){
 			if ( error instanceof Error ){
 				new Notice(error.message, 10000);
@@ -244,7 +245,7 @@ export default class FeatureConvertNote implements IMeldEncryptPluginFeature {
 			// Read only after unloading: the final save may contain additional edits.
 			const content = await convertContent();
 			if ( content == null ){
-				throw new Error('Decryption failed');
+				throw new Error(t('notice.decryptionFailed'));
 			}
 			const newFilepath = Utils.getFilePathWithNewExtension(file, newFileExtension);
 			await this.plugin.app.fileManager.renameFile( file, newFilepath );

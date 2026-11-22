@@ -3,7 +3,8 @@ import { IMeldEncryptPluginFeature } from "../features/IMeldEncryptPluginFeature
 import { SessionPasswordService } from "../services/SessionPasswordService.ts";
 import MeldEncrypt from "../main.ts";
 import { IMeldEncryptPluginSettings } from "./MeldEncryptPluginSettings.ts";
-import { RIBBON_ICON_TITLES } from './RibbonIcons.ts';
+import { RIBBON_ICON_TITLES, getRibbonIconLabel } from './RibbonIcons.ts';
+import { t, type TranslationKey } from '../i18n/i18n.ts';
 
 export default class MeldEncryptSettingsTab extends PluginSettingTab {
 	plugin: MeldEncrypt;
@@ -29,14 +30,14 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 		const external = () => settings.rememberPasswordLevel === SessionPasswordService.LevelExternalFile;
 		return [
 			{
-				name: 'Confirm password?', desc: 'Confirm password when encrypting. (Recommended)',
+				name: t('settings.confirmPassword.name'), desc: t('settings.confirmPassword.desc'),
 				render: row => { row.addToggle(toggle => toggle.setValue(settings.confirmPassword).onChange(async value => {
 					settings.confirmPassword = value;
 					await this.plugin.saveSettings();
 				})); },
 			},
 			{
-				name: 'Remember password?', desc: 'Reuse passwords from the session cache or the selected password provider.',
+				name: t('settings.rememberPassword.name'), desc: t('settings.rememberPassword.desc'),
 				render: row => { row.addToggle(toggle => toggle.setValue(settings.rememberPassword).onChange(async value => {
 					settings.rememberPassword = value;
 					SessionPasswordService.setActive(value);
@@ -45,14 +46,14 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 				})); },
 			},
 			{
-				name: 'Remember passwords by:', desc: this.buildRememberPasswordDescription(),
+				name: t('settings.rememberBy.name'), desc: this.buildRememberPasswordDescription(),
 				visible: () => settings.rememberPassword,
 				render: row => { row.addDropdown(dropdown => dropdown
-					.addOption(SessionPasswordService.LevelVault, 'Vault')
-					.addOption(SessionPasswordService.LevelParentPath, 'Folder')
-					.addOption(SessionPasswordService.LevelFilename, 'File')
-					.addOption(SessionPasswordService.LevelExternalFile, 'External file')
-					.addOption(SessionPasswordService.LevelKeychain, 'Obsidian keychain')
+					.addOption(SessionPasswordService.LevelVault, t('settings.rememberBy.vault'))
+					.addOption(SessionPasswordService.LevelParentPath, t('settings.rememberBy.folder'))
+					.addOption(SessionPasswordService.LevelFilename, t('settings.rememberBy.file'))
+					.addOption(SessionPasswordService.LevelExternalFile, t('settings.rememberBy.externalFile'))
+					.addOption(SessionPasswordService.LevelKeychain, t('settings.rememberBy.keychain'))
 					.setValue(settings.rememberPasswordLevel).onChange(async value => {
 						settings.rememberPasswordLevel = value;
 						SessionPasswordService.setLevel(value);
@@ -61,7 +62,7 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 					})); },
 			},
 			{
-				name: 'Remember password timeout', desc: 'Minutes to remember passwords. Zero means until Obsidian is closed.',
+				name: t('settings.rememberTimeout.name'), desc: t('settings.rememberTimeout.desc'),
 				visible: () => settings.rememberPassword && !external() && !keychain(),
 				render: row => { row.addSlider(slider => slider.setLimits(0, 120, 5)
 					.setValue(settings.rememberPasswordTimeout).onChange(async value => {
@@ -71,8 +72,8 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 					})); },
 			},
 			{
-				name: 'Keychain secret',
-				desc: SessionPasswordService.keychainSettingsExplanation + ' Manage secrets in Obsidian Settings → Keychain. Configure the secret on each device. Clearing the session cache does not remove it.',
+				name: t('settings.keychainSecret.name'),
+				desc: t('keychain.settingsExplanation') + ' ' + t('settings.keychainSecret.manageDesc'),
 				visible: () => settings.rememberPassword && keychain(),
 				render: row => { row.addComponent(el => new SecretComponent(this.app, el)
 					.setValue(settings.keychainSecretId).onChange(async value => {
@@ -83,8 +84,8 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 			},
 
 			{
-				name: 'External file paths',
-				desc: 'One path per line, relative to the vault (including ../). Desktop also supports absolute paths. Access depends on platform permissions.',
+				name: t('settings.externalFilePaths.name'),
+				desc: t('settings.externalFilePaths.desc'),
 				visible: () => settings.rememberPassword && external(),
 				render: row => {
 					row.addTextArea(text => {
@@ -93,10 +94,10 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 							SessionPasswordService.setExternalFilePaths(settings.rememberPasswordExternalFilePaths);
 							await this.plugin.saveSettings();
 						});
-						text.inputEl.placeholder = 'Enter one path per line';
+						text.inputEl.placeholder = t('settings.externalFilePaths.placeholder');
 						text.inputEl.classList.add('meld-encrypt-external-paths');
 						text.inputEl.rows = 4;
-					}).addButton(button => button.setIcon('check').setTooltip('Check paths').onClick(async () => {
+					}).addButton(button => button.setIcon('check').setTooltip(t('settings.externalFilePaths.checkTooltip')).onClick(async () => {
 						for (const path of settings.rememberPasswordExternalFilePaths) {
 							new Notice(`${await SessionPasswordService.canFetchContents(path) ? '✔️' : '❌'} ${path}`);
 						}
@@ -107,10 +108,10 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 			...this.features.flatMap(feature => feature.getSettingDefinitions(() => this.plugin.saveSettings())),
 			{
 				type: 'group',
-				heading: 'Ribbon icons',
+				heading: t('settings.ribbonIcons.heading'),
 				items: RIBBON_ICON_TITLES.map(title => ({
-					name: title,
-					desc: 'Show this ribbon icon. Commands remain available when hidden.',
+					name: getRibbonIconLabel(title),
+					desc: t('settings.ribbonIcons.desc'),
 					render: row => { row.addToggle(toggle => toggle
 						.setValue(!settings.hiddenRibbonIcons?.includes(title))
 						.onChange(value => this.plugin.setRibbonIconVisible(title, value))); },
@@ -121,29 +122,30 @@ export default class MeldEncryptSettingsTab extends PluginSettingTab {
 
 	private buildRememberPasswordDescription( ) : DocumentFragment {
 		const f = new DocumentFragment();
+		const optionLabel = (key: TranslationKey) => t('settings.rememberBy.optionLabel', { option: t(key) });
 
 		const tbody = f.createEl( 'table' ).createTBody();
 
 		
 		let tr = tbody.createEl( 'tr' );
-		tr.createEl( 'th', { text: 'Vault:', attr: { 'align': 'right'} });
-		tr.createEl( 'td', { text: 'Reuse the last password across the vault.' });
+		tr.createEl( 'th', { text: optionLabel('settings.rememberBy.vault'), attr: { 'align': 'right'} });
+		tr.createEl( 'td', { text: t('settings.rememberBy.vaultDesc') });
 		
 		tr = tbody.createEl( 'tr' );
-		tr.createEl( 'th', { text: 'Folder:', attr: { 'align': 'right'} });
-		tr.createEl( 'td', { text: 'Remember a separate password for each folder.' });
+		tr.createEl( 'th', { text: optionLabel('settings.rememberBy.folder'), attr: { 'align': 'right'} });
+		tr.createEl( 'td', { text: t('settings.rememberBy.folderDesc') });
 		
 		tr = tbody.createEl( 'tr' );
-		tr.createEl( 'th', { text: 'File:', attr: { 'align': 'right'} });
-		tr.createEl( 'td', { text: 'Remember a separate password for each file.' });
+		tr.createEl( 'th', { text: optionLabel('settings.rememberBy.file'), attr: { 'align': 'right'} });
+		tr.createEl( 'td', { text: t('settings.rememberBy.fileDesc') });
 		
 		tr = tbody.createEl( 'tr' );
-		tr.createEl( 'th', { text: 'External file:', attr: { 'align': 'right', 'style': 'width:12em;'} });
-		tr.createEl( 'td', { text: 'Read the password from the first readable, nonempty file.' });
+		tr.createEl( 'th', { text: optionLabel('settings.rememberBy.externalFile'), attr: { 'align': 'right', 'style': 'width:12em;'} });
+		tr.createEl( 'td', { text: t('settings.rememberBy.externalFileDesc') });
 
 		tr = tbody.createEl('tr');
-		tr.createEl('th', { text: 'Obsidian keychain:' });
-		tr.createEl('td', { text: 'Read the password from the selected secret.' });
+		tr.createEl('th', { text: optionLabel('settings.rememberBy.keychain') });
+		tr.createEl('td', { text: t('settings.rememberBy.keychainDesc') });
 
 		return f;
 	}

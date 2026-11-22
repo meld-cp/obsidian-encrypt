@@ -1,6 +1,7 @@
 import { Setting, TextComponent } from 'obsidian';
 import { UiHelper } from './UiHelper.ts';
 import type { PasswordAndHint } from './SessionPasswordService.ts';
+import { t } from '../i18n/i18n.ts';
 
 interface PasswordFormOptions {
 	container: HTMLElement;
@@ -28,8 +29,8 @@ export class PasswordForm {
 
 		UiHelper.buildPasswordSetting({
 			container: options.container,
-			name: 'Password',
-			placeholder: options.isEncrypting || !this.hint ? '' : `Hint: ${this.hint}`,
+			name: t('form.password'),
+			placeholder: options.isEncrypting || !this.hint ? '' : t('form.passwordHintPlaceholder', { hint: this.hint }),
 			initialValue: this.password,
 			tabIndex: options.tabIndexes?.password,
 			autoFocus: !focusConfirmation,
@@ -53,7 +54,7 @@ export class PasswordForm {
 
 		this.confirmationSetting = UiHelper.buildPasswordSetting({
 			container: options.container,
-			name: 'Confirm password',
+			name: t('form.confirmPassword'),
 			tabIndex: options.tabIndexes?.confirmation,
 			autoFocus: focusConfirmation,
 			onChangeCallback: value => {
@@ -74,10 +75,10 @@ export class PasswordForm {
 		if (!options.confirmPassword) this.confirmationSetting.settingEl.hide();
 
 		this.hintSetting = new Setting(options.container)
-			.setName('Optional password hint')
+			.setName(t('form.optionalHint'))
 			.setDesc(this.hintError() ?? '')
 			.addText(input => {
-				input.inputEl.placeholder = 'Password hint';
+				input.inputEl.placeholder = t('form.hintPlaceholder');
 				if (options.tabIndexes) input.inputEl.tabIndex = options.tabIndexes.hint;
 				input.setValue(this.hint);
 				input.onChange(value => {
@@ -98,7 +99,7 @@ export class PasswordForm {
 	public addConfirmButton(): void {
 		new Setting(this.options.container).addButton(button => {
 			if (this.options.tabIndexes) button.buttonEl.tabIndex = this.options.tabIndexes.submit;
-			button.setButtonText(this.options.isEncrypting ? 'Encrypt' : 'Decrypt').onClick(() => this.submit());
+			button.setButtonText(this.options.isEncrypting ? t('form.encrypt') : t('form.decrypt')).onClick(() => this.submit());
 		});
 	}
 
@@ -118,7 +119,7 @@ export class PasswordForm {
 		this.hintSetting.setDesc(hintError ?? '');
 		if (hintError) return false;
 		if (this.options.confirmPassword && this.password !== this.confirmation) {
-			this.confirmationSetting.setDesc("Passwords don't match");
+			this.confirmationSetting.setDesc(t('form.passwordsDontMatch'));
 			return false;
 		}
 		return true;

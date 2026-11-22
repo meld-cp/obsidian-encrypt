@@ -52,6 +52,12 @@ To encrypt an existing Markdown note, right-click it in the file explorer and se
 
 See the guides for [whole encrypted notes](https://meld-cp.github.io/obsidian-encrypt/whole-encrypted-notes.html), [selected-text encryption](https://meld-cp.github.io/obsidian-encrypt/in-place-encryption.html), and [settings](https://meld-cp.github.io/obsidian-encrypt/settings.html) for more details.
 
+## Languages
+
+Meld Encrypt follows the language you selected in Obsidian. English and Korean (한국어) are included; other languages fall back to English.
+
+To add or improve a translation, see [Translations](docs/dev-notes.md#translations) in the development notes.
+
 ## Ongoing Maintenance and Development
 
 If you find this plugin useful please support the ongoing maintenance and development by:

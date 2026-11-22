@@ -1,4 +1,4 @@
-import { Notice, Plugin, type IconName } from 'obsidian';
+import { Notice, Plugin, getLanguage, type IconName } from 'obsidian';
 import MeldEncryptSettingsTab from './settings/MeldEncryptSettingsTab.ts';
 import { IMeldEncryptPluginSettings } from './settings/MeldEncryptPluginSettings.ts';
 import { IMeldEncryptPluginFeature } from './features/IMeldEncryptPluginFeature.ts';
@@ -6,6 +6,8 @@ import { SessionPasswordService } from './services/SessionPasswordService.ts';
 import FeatureInplaceEncrypt from './features/feature-inplace-encrypt/FeatureInplaceEncrypt.ts';
 import FeatureConvertNote from './features/feature-convert-note/FeatureConvertNote.ts';
 import FeatureWholeNoteEncryptV2 from './features/feature-whole-note-encrypt/FeatureWholeNoteEncrypt.ts';
+import { setLocale, t } from './i18n/i18n.ts';
+import { getRibbonIconLabel } from './settings/RibbonIcons.ts';
 
 export default class MeldEncrypt extends Plugin {
 
@@ -17,6 +19,9 @@ export default class MeldEncrypt extends Plugin {
 
 	async onload() {
 		
+		// Must run before any UI text is created.
+		setLocale(getLanguage());
+
 		SessionPasswordService.init(this.app.vault.adapter);
 
 		// Settings
@@ -40,11 +45,11 @@ export default class MeldEncrypt extends Plugin {
 
 		this.addCommand({
 			id: 'clear-password-cache',
-			name: 'Clear session password cache',
+			name: t('command.clearSessionCache'),
 			icon: 'shield-ellipsis',
 			callback: () => {
 				const itemsCleared = SessionPasswordService.clear();
-				new Notice( `Items cleared: ${itemsCleared}` );
+				new Notice( t('notice.itemsCleared', { count: itemsCleared }) );
 			},
 		});
 
@@ -62,8 +67,12 @@ export default class MeldEncrypt extends Plugin {
 		super.onunload();
 	}
 
+	// `title` is the stable English identifier from RIBBON_ICON_TITLES. It keys the
+	// saved visibility preference; only the label shown to the user is translated.
+	// Obsidian keys its own ribbon order by the displayed label, so that order is
+	// per language for non-English users.
 	override addRibbonIcon(icon: IconName, title: string, callback: (evt: MouseEvent) => unknown): HTMLElement {
-		const element = super.addRibbonIcon(icon, title, callback);
+		const element = super.addRibbonIcon(icon, getRibbonIconLabel(title), callback);
 		this.ribbonIcons.set(title, element);
 		element.toggleClass('meld-encrypt-ribbon-hidden', this.pluginSettings.hiddenRibbonIcons?.includes(title) ?? false);
 		return element;
